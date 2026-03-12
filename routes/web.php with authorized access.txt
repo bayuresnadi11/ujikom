@@ -1,0 +1,104 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\Admin\KategoriController;
+use App\Http\Controllers\Admin\KomunitasController;
+use App\Http\Controllers\Admin\RoleRequestController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Pemilik\HomeController as PemilikHomeController;
+use App\Http\Controllers\Penyewa\HomeController as PenyewaHomeController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+
+
+// Default Route - Redirect ke login
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+// Guest Routes (Belum Login)
+Route::middleware(['guest'])->group(function () {
+    // Login
+    Route::get('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/login', [AuthController::class, 'submitLogin'])->name('login.submit');
+    
+    // Register
+    Route::get('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/register', [AuthController::class, 'submitRegister'])->name('register.submit');
+    
+    // OTP Verification
+    Route::get('/otp', [AuthController::class, 'formOtp'])->name('otp.form');
+    Route::post('/otp', [AuthController::class, 'submitOtp'])->name('otp.submit');
+    Route::post('/otp/resend', [AuthController::class, 'resendOtp'])->name('otp.resend');
+    
+    // Forgot Password
+    Route::get('/forgot-password', [ResetPasswordController::class, 'showForgetForm'])->name('password.request');
+    Route::post('/forgot-password', [ResetPasswordController::class, 'sendResetLink'])->name('password.whatsapp');
+    
+    // Reset Password
+    Route::get('/reset-password', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
+});
+
+// Authenticated Routes (Sudah Login)
+Route::middleware(['auth'])->group(function () {
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    
+    // **Admin Routes - HANYA untuk role admin**
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard.index');
+        
+        // Profile Routes
+        Route::get('/dashboard/profile', [ProfileController::class, 'index'])
+            ->name('dashboard.profile');
+            
+        Route::get('/dashboard/profile/edit', [ProfileController::class, 'edit'])
+            ->name('dashboard.profile.edit');
+        
+        // Resource Routes
+        Route::resource('kategori', KategoriController::class);
+        Route::resource('komunitas', KomunitasController::class);
+        Route::resource('user', UserController::class);
+        
+        // Role Request Routes
+        Route::get('/role-request', [RoleRequestController::class, 'index'])
+            ->name('rolerequest.index');
+            
+        Route::post('/role-request/approve', [RoleRequestController::class, 'approve'])
+            ->name('rolerequest.approve');
+            
+        Route::post('/role-request/reject', [RoleRequestController::class, 'reject'])
+            ->name('rolerequest.reject');
+    });
+    
+    // Pemilik Routes
+    Route::middleware(['role:pemilik'])->prefix('pemilik')->name('pemilik.')->group(function () {
+        Route::get('/home', [PemilikHomeController::class, 'index'])->name('home.index');
+    });
+    
+    // Penyewa Routes
+    Route::middleware(['role:penyewa'])->prefix('penyewa')->name('penyewa.')->group(function () {
+        Route::get('/home', [PenyewaHomeController::class, 'index'])->name('home.index');
+        Route::get('/profile', [PenyewaHomeController::class, 'profile'])->name('profile');
+    });
+});
+
+// Public Routes (Tanpa Authentication)
+Route::get('/menu', function () {
+    return view('menu');
+})->name('menu');
+
+Route::get('/jelajah', function () {
+    return view('jelajah');
+})->name('jelajah');
+
+Route::get('/profile', function () {
+    return view('profile');
+})->name('profile.public'); // Ubah name agar tidak conflict
+
+Route::get('/chat', function () {
+    return view('chat');
+})->name('chat');
