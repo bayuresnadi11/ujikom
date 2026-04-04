@@ -21,18 +21,7 @@
             <p class="page-subtitle" id="realTimeStatus">Kelola jadwal lapangan Anda</p>
         </section>
         
-        <!-- Flash Messages -->
-        @if(session('success'))
-            <div class="alert alert-success" style="margin: 20px;">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
-            </div>
-        @endif
-        
-        @if(session('error'))
-            <div class="alert alert-danger" style="margin: 20px;">
-                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-            </div>
-        @endif
+        {{-- Notifikasi ditangani otomatis oleh komponen toast-alert di layout --}}
 
         <!-- Stats Overview -->
         <div class="stats-grid">

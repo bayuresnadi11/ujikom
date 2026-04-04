@@ -340,5 +340,8 @@
     });
     @endauth
     </script>
+
+    {{-- Global Toast Alert Component --}}
+    @include('components.toast-alert')
 </body>
 </html>

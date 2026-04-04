@@ -221,18 +221,7 @@
     <!-- CSRF Token untuk JavaScript -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Toast Notification (jika ada session success) -->
-    @if(session('success'))
-    <div class="toast show" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <span>{{ session('success') }}</span>
-    </div>
-    <script>
-        setTimeout(() => {
-            document.getElementById('toast').classList.remove('show');
-        }, 3000);
-    </script>
-    @endif
+    {{-- Notifikasi ditangani otomatis oleh komponen toast-alert di layout --}}
 
     <!-- Main Container -->
     <div class="mobile-container">
@@ -432,7 +421,7 @@
                                 <h4 style="margin-bottom: 15px; color: #333;">
                                     <i class="fas fa-plus-circle"></i> Tambah Lapangan Baru
                                 </h4>
-                                <form action="{{ route('landowner.section-lapangan.store') }}" method="POST">
+                                <form action="{{ route('landowner.section-lapangan.store') }}" method="POST" id="add-section-form-submit-{{ $venue->id }}" onsubmit="return validateAddSection(event, {{ $venue->id }})">
                                     @csrf
                                     <input type="hidden" name="venue_id" value="{{ $venue->id }}">
                                     
@@ -442,17 +431,17 @@
                                             Nama Lapangan *
                                         </label>
                                         <input type="text" class="form-control" 
-                                               name="section_name" 
-                                               placeholder="Contoh: Lapangan A" required>
+                                               name="section_name" id="add-section-name-{{ $venue->id }}"
+                                               placeholder="Contoh: Lapangan A">
                                     </div>
                                     
                                     <div class="form-group">
                                         <label class="form-label">
                                             <i class="fas fa-align-left"></i>
-                                            Deskripsi (Opsional)
+                                            Deskripsi *
                                         </label>
                                         <textarea class="form-control" 
-                                                  name="description" rows="3" 
+                                                  name="description" id="add-section-description-{{ $venue->id }}" rows="3" 
                                                   placeholder="Deskripsi lapangan..."></textarea>
                                     </div>
                                     
@@ -503,7 +492,7 @@
                                             <h4 style="margin-bottom: 15px; color: #333;">
                                                 <i class="fas fa-edit"></i> Edit Lapangan
                                             </h4>
-                                            <form action="{{ route('landowner.section-lapangan.update', $section->id) }}" method="POST">
+                                            <form action="{{ route('landowner.section-lapangan.update', $section->id) }}" method="POST" id="edit-section-form-submit-{{ $section->id }}" onsubmit="return validateEditSection(event, {{ $section->id }})">
                                                 @csrf
                                                 @method('PUT')
                                                 <input type="hidden" name="venue_id" value="{{ $venue->id }}">
@@ -516,13 +505,13 @@
                                                     <input type="text" class="form-control" 
                                                            name="section_name" 
                                                            id="edit-section-name-{{ $section->id }}"
-                                                           value="{{ $section->section_name }}" required>
+                                                           value="{{ $section->section_name }}">
                                                 </div>
                                                 
                                                 <div class="form-group">
                                                     <label class="form-label">
                                                         <i class="fas fa-align-left"></i>
-                                                        Deskripsi (Opsional)
+                                                        Deskripsi *
                                                     </label>
                                                     <textarea class="form-control" 
                                                               name="description" 
@@ -703,18 +692,106 @@
             document.getElementById(`edit-section-form-${sectionId}`).style.display = 'none';
         }
         
-        // Confirm delete function
-        function confirmDelete(title, text) {
-            return Swal.fire({
-                title: title,
-                text: text,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            });
+        // confirmDelete is now handled globally by toast-alert component
+
+        function validateAddSection(e, venueId) {
+            const form = document.getElementById(`add-section-form-submit-${venueId}`);
+            form.querySelectorAll('.js-error').forEach(el => el.remove());
+            form.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
+            
+            let isValid = true;
+            const nameInput = document.getElementById(`add-section-name-${venueId}`);
+            const descInput = document.getElementById(`add-section-description-${venueId}`);
+            
+            if (!nameInput.value.trim()) {
+                nameInput.style.borderColor = '#E74C3C';
+                let formGroup = nameInput.closest('.form-group');
+                if (formGroup) {
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Nama lapangan belum diisi`;
+                    formGroup.appendChild(errorDiv);
+                }
+                isValid = false;
+            }
+
+            if (!descInput.value.trim()) {
+                descInput.style.borderColor = '#E74C3C';
+                let formGroup = descInput.closest('.form-group');
+                if (formGroup) {
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Deskripsi belum diisi`;
+                    formGroup.appendChild(errorDiv);
+                }
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        }
+
+        function validateEditSection(e, sectionId) {
+            const form = document.getElementById(`edit-section-form-submit-${sectionId}`);
+            form.querySelectorAll('.js-error').forEach(el => el.remove());
+            form.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
+            
+            let isValid = true;
+            const nameInput = document.getElementById(`edit-section-name-${sectionId}`);
+            const descInput = document.getElementById(`edit-section-description-${sectionId}`);
+            
+            if (!nameInput.value.trim()) {
+                nameInput.style.borderColor = '#E74C3C';
+                let formGroup = nameInput.closest('.form-group');
+                if (formGroup) {
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Nama lapangan belum diisi`;
+                    formGroup.appendChild(errorDiv);
+                }
+                isValid = false;
+            }
+
+            if (!descInput.value.trim()) {
+                descInput.style.borderColor = '#E74C3C';
+                let formGroup = descInput.closest('.form-group');
+                if (formGroup) {
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Deskripsi belum diisi`;
+                    formGroup.appendChild(errorDiv);
+                }
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
         }
     </script>
 @endpush

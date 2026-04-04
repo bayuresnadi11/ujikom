@@ -226,7 +226,7 @@
             <span class="input-group-text">
               <i class="bi bi-person"></i>
             </span>
-            <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" id="name" placeholder="Masukkan nama lengkap" required value="{{ old('name') }}">
+            <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" id="name" placeholder="Masukkan nama lengkap" value="{{ old('name') }}">
           </div>
           @error('name') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
@@ -237,7 +237,7 @@
             <span class="input-group-text">
               <i class="bi bi-phone"></i>
             </span>
-            <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone" id="phone" placeholder="Contoh: 628123456789" required value="{{ old('phone') }}">
+            <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone" id="phone" placeholder="Contoh: 628123456789" value="{{ old('phone') }}">
           </div>
           @error('phone') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
@@ -249,7 +249,7 @@
               <span class="input-group-text">
                 <i class="bi bi-lock"></i>
               </span>
-              <input type="password" class="form-control @error('password') is-invalid @enderror" name="password" id="password" placeholder="Minimal 6 karakter" required>
+              <input type="password" class="form-control @error('password') is-invalid @enderror" name="password" id="password" placeholder="Minimal 6 karakter">
             </div>
             <button type="button" class="password-toggle" id="togglePassword">
               <i class="bi bi-eye"></i>
@@ -299,6 +299,11 @@
         submitText.textContent = 'Memproses...';
         spinner.classList.remove('d-none');
 
+        // Reset custom errors from previous submit
+        document.querySelectorAll('.js-error').forEach(el => el.remove());
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => input.classList.remove('is-invalid'));
+
         let isValid = true;
         const requiredFields = ['name', 'phone', 'password'];
         requiredFields.forEach(fieldId => {
@@ -306,6 +311,24 @@
           if (!field.value.trim()) {
             isValid = false;
             field.classList.add('is-invalid');
+            
+            let errorDiv = document.createElement('div');
+            errorDiv.className = 'text-danger js-error mt-1';
+            errorDiv.style.fontSize = '0.875rem';
+            
+            if (fieldId === 'name') {
+                errorDiv.textContent = 'Nama lengkap belum diisi';
+            } else if (fieldId === 'phone') {
+                errorDiv.textContent = 'No telepon belum diisi';
+            } else if (fieldId === 'password') {
+                errorDiv.textContent = 'Password belum diisi';
+            }
+            
+            if (fieldId === 'password') {
+              field.closest('.position-relative').after(errorDiv);
+            } else {
+              field.closest('.input-group').after(errorDiv);
+            }
           }
         });
 

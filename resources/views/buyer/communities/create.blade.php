@@ -630,7 +630,7 @@
                         <label class="form-label" for="category_id">
                             <i class="fas fa-tag"></i> Kategori
                         </label>
-                        <select name="category_id" id="category_id" class="form-select" required>
+                        <select name="category_id" id="category_id" class="form-select">
                             <option value="">Pilih Kategori</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
@@ -657,7 +657,6 @@
                             class="form-control @error('name') error @enderror"
                             placeholder="Masukkan nama komunitas"
                             value="{{ old('name') }}"
-                            required
                         >
                         @error('name')
                             <div class="error-message">
@@ -677,7 +676,6 @@
                             class="form-control form-textarea @error('description') error @enderror"
                             placeholder="Deskripsikan komunitas Anda"
                             rows="3"
-                            required
                         >{{ old('description') }}</textarea>
                         <small class="text-muted" style="display: block; margin-top: 6px; font-size: 10px; color: var(--text-light);">
                             Jelaskan tujuan dan aktivitas komunitas Anda
@@ -757,7 +755,6 @@
                                     id="type-public"
                                     value="public"
                                     {{ old('type') == 'public' ? 'checked' : '' }}
-                                    required
                                     onchange="toggleApprovalOption()"
                                 >
                                 <label for="type-public" class="type-card">
@@ -775,7 +772,6 @@
                                     id="type-private"
                                     value="private"
                                     {{ old('type') == 'private' ? 'checked' : '' }}
-                                    required
                                     onchange="toggleApprovalOption()"
                                 >
                                 <label for="type-private" class="type-card">
@@ -915,47 +911,64 @@
             const description = document.getElementById('description');
             const typePublic = document.getElementById('type-public');
             const typePrivate = document.getElementById('type-private');
+            const cityValue = document.getElementById('cityValue');
             
             let isValid = true;
             
             // Clear previous errors
-            document.querySelectorAll('.form-control.error').forEach(el => {
+            document.querySelectorAll('.form-control.error, .form-select.error').forEach(el => {
                 el.classList.remove('error');
             });
+            document.querySelectorAll('.js-error').forEach(el => el.remove());
+
+            function addError(elementId, message) {
+                let element = document.getElementById(elementId);
+                let formGroup = element.closest('.form-group');
+                let errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message js-error mt-1';
+                errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                formGroup.appendChild(errorDiv);
+            }
             
             // Validate category
             if (!category.value) {
                 isValid = false;
                 category.classList.add('error');
-                showToast('Silakan pilih kategori', 'error');
+                addError('category_id', 'Kategori belum dipilih');
             }
             
             // Validate name
             if (!name.value.trim()) {
                 isValid = false;
                 name.classList.add('error');
-                showToast('Nama komunitas tidak boleh kosong', 'error');
+                addError('name', 'Nama komunitas belum diisi');
             } else if (name.value.trim().length < 3) {
                 isValid = false;
                 name.classList.add('error');
-                showToast('Nama komunitas minimal 3 karakter', 'error');
+                addError('name', 'Nama komunitas minimal 3 karakter');
             }
             
             // Validate description
             if (!description.value.trim()) {
                 isValid = false;
                 description.classList.add('error');
-                showToast('Deskripsi tidak boleh kosong', 'error');
+                addError('description', 'Deskripsi belum diisi');
             } else if (description.value.trim().length < 10) {
                 isValid = false;
                 description.classList.add('error');
-                showToast('Deskripsi minimal 10 karakter', 'error');
+                addError('description', 'Deskripsi minimal 10 karakter');
+            }
+
+            // Validate city
+            if (!cityValue.value.trim()) {
+                isValid = false;
+                addError('cityValue', 'Kota belum diisi');
             }
             
             // Validate type
             if (!typePublic.checked && !typePrivate.checked) {
                 isValid = false;
-                showToast('Silakan pilih tipe komunitas', 'error');
+                addError('type-public', 'Tipe komunitas belum dipilih');
             }
             
             if (!isValid) {

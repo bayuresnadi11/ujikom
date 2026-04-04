@@ -22,23 +22,7 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        @if(session('success'))
-            <div class="alert alert-success auto-hide" data-duration="4000">
-                <i class="fas fa-check-circle"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-error auto-hide" data-duration="6000">
-                <i class="fas fa-exclamation-circle"></i>
-                <div>
-                    @foreach($errors->all() as $error)
-                        <div>{{ $error }}</div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        {{-- Notifikasi success/error ditangani otomatis oleh komponen toast-alert di layout --}}
 
         <form method="POST" action="{{ route('landowner.profile.update') }}" enctype="multipart/form-data" id="profileForm">
             @csrf

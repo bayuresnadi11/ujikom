@@ -30,17 +30,17 @@ class AuthController extends Controller
             $user = Auth::user();
 
             if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard.index')->with('sukses', 'Berhasil login sebagai admin.');
+                return redirect()->route('admin.dashboard.index')->with('success', 'Selamat datang kembali, ' . $user->name . '! 👋');
             } elseif ($user->role === 'landowner') {
-                return redirect()->route('landowner.home')->with('sukses', 'Berhasil login sebagai landowner.');
+                return redirect()->route('landowner.home')->with('success', 'Selamat datang kembali, ' . $user->name . '! 👋');
             } elseif ($user->role === 'buyer') {
-                return redirect()->route('buyer.home')->with('sukses', 'Berhasil login sebagai buyer.');
+                return redirect()->route('buyer.home')->with('success', 'Selamat datang kembali, ' . $user->name . '! 👋');
             } elseif ($user->role === 'cashier') {
-                return redirect()->route('cashier.dashboard.index')->with('sukses', 'Berhasil login sebagai cashier.');
+                return redirect()->route('cashier.dashboard.index')->with('success', 'Selamat datang kembali, ' . $user->name . '! 👋');
             }
         }
 
-        return redirect()->back()->withInput()->with('gagal', 'Nomor telepon atau password salah.');
+        return redirect()->back()->withInput()->with('error', 'Nomor telepon atau password salah.');
     }
 
     public function register()
@@ -69,7 +69,7 @@ class AuthController extends Controller
 
         $this->kirimOtp($validated['phone'], $validated['name']);
 
-        return redirect()->route('otp.form')->with('sukses', 'Kode OTP dikirim ke WhatsApp.');
+        return redirect()->route('otp.form')->with('success', 'Kode OTP dikirim ke WhatsApp.');
     }
 
     private function kirimOtp($phone, $name)
@@ -94,7 +94,7 @@ class AuthController extends Controller
     public function formOtp()
     {
         if (!session()->has('pending_register')) {
-            return redirect()->route('register')->with('gagal', 'Session habis, silakan daftar ulang.');
+            return redirect()->route('register')->with('error', 'Session habis, silakan daftar ulang.');
         }
 
         return view('auth.otp', [
@@ -110,7 +110,7 @@ class AuthController extends Controller
 
         $data = session('pending_register');
         if (!$data) {
-            return redirect()->route('register')->with('gagal', 'Session habis, silakan daftar ulang.');
+            return redirect()->route('register')->with('error', 'Session habis, silakan daftar ulang.');
         }
 
         // Cari OTP yang valid
@@ -121,7 +121,7 @@ class AuthController extends Controller
             ->first();
 
         if (!$otpRecord) {
-            return back()->with('gagal', 'Kode OTP salah atau sudah kedaluwarsa.');
+            return back()->with('error', 'Kode OTP salah atau sudah kedaluwarsa.');
         }
 
         // OTP valid, hapus semua OTP untuk phone ini
@@ -138,7 +138,7 @@ class AuthController extends Controller
         session()->forget('pending_register');
         Auth::login($user);
 
-        return redirect()->route('buyer.home')->with('sukses', 'Registrasi berhasil! Selamat datang.');
+        return redirect()->route('buyer.home')->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . ' 🎉');
     }
 
     public function resendOtp()
@@ -149,7 +149,7 @@ class AuthController extends Controller
         }
 
         $this->kirimOtp($data['phone'], $data['name']);
-        return back()->with('sukses', 'Kode OTP baru sudah dikirim ke WhatsApp.');
+        return back()->with('success', 'Kode OTP baru sudah dikirim ke WhatsApp.');
     }
 
     public function logout(Request $request)
@@ -157,6 +157,6 @@ class AuthController extends Controller
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login')->with('sukses', 'Berhasil logout.');
+        return redirect()->route('login')->with('success', 'Anda berhasil logout. Sampai jumpa! 👋');
     }
 }
