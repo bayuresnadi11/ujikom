@@ -612,9 +612,10 @@ class CashierController extends Controller
                         // Jadwal hari ini tapi belum lewat
                         ->orWhere(function ($q) use ($today, $currentTime) {
                             $q->where('date', $today)
-                            ->where('end_time', '>', $currentTime);
+                            ->where('start_time', '>', $currentTime);
                         });
                 })
+                ->where('available', true)
                 ->orderBy('date')
                 ->orderBy('start_time')
                 ->get();

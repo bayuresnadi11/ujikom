@@ -121,8 +121,8 @@
         if (data.success) {
             showToast(
                 sectionId
-                    ? 'Section berhasil diperbarui'
-                    : 'Section berhasil ditambahkan',
+                    ? 'Lapangan berhasil diperbarui'
+                    : 'Lapangan berhasil ditambahkan',
                 'success'
             );
 

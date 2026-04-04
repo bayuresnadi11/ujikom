@@ -70,7 +70,7 @@
                                 <div class="section-schedules-container">
                                     <h5 class="section-schedules-title">
                                         <i class="fas fa-calendar-alt"></i>
-                                        Jadwal Tersedia ({{ $section->venueSchedules()->where('available', true)->count() }})
+                                        Jadwal Tersedia ({{ $section->venueSchedules()->where('available', true)->where('date', '>=', now()->toDateString())->count() }})
                                     </h5>
                                     
                                     @php

@@ -10,18 +10,27 @@ let autoRefreshInterval = null;
 let isAutoRefresh = false;
 
 // Initialize
-// Initialize
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Schedule page initialized');
     
-    // Set default date filter ke hari ini
-    const today = new Date().toISOString().split('T')[0];
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Restore saved filters or use defaults/URL params
+    const savedVenueId = localStorage.getItem('schedule_venue_id');
+    const savedSectionId = localStorage.getItem('schedule_section_id');
+    const savedDate = localStorage.getItem('schedule_date_filter');
+    
+    const venueId = urlParams.get('venue_id') || savedVenueId;
+    const sectionId = urlParams.get('section_id') || savedSectionId;
+    const defaultDate = urlParams.get('date') || savedDate || new Date().toISOString().split('T')[0];
+    
     const dateInput = document.getElementById('dateFilter');
     if(dateInput) {
-        if(!dateInput.value) dateInput.value = today;
+        dateInput.value = defaultDate;
         
         // Add event listeners
         dateInput.addEventListener('change', function() {
+            localStorage.setItem('schedule_date_filter', this.value);
             updateDateDisplay();
             loadSchedules();
         });
@@ -29,34 +38,55 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateDateDisplay();
     
-    // Initial load if section selected (e.g. from back button or query param)
-    // Check URL params first
-    const urlParams = new URLSearchParams(window.location.search);
-    const venueId = urlParams.get('venue_id');
-    const sectionId = urlParams.get('section_id');
-
     const venueSelect = document.getElementById('fieldFilter');
+    const sectionSelect = document.getElementById('sectionFilter');
     
-    // If venue_id is in URL, ensure it is selected (though Blade might have done it)
-    if (venueId && venueSelect) {
-        venueSelect.value = venueId;
-        // Load sections and then select section if present
-        loadSections(venueId).then(() => {
-            if (sectionId) {
-                 const sectionSelect = document.getElementById('sectionFilter');
-                 if (sectionSelect) {
-                     sectionSelect.value = sectionId;
-                     // Trigger change event or load schedules directly
-                     loadSchedules();
-                 }
+    if (venueSelect) {
+        venueSelect.addEventListener('change', function() {
+            if(this.value) {
+                localStorage.setItem('schedule_venue_id', this.value);
+            } else {
+                localStorage.removeItem('schedule_venue_id');
+            }
+            localStorage.removeItem('schedule_section_id');
+        });
+    }
+    
+    if (sectionSelect) {
+        sectionSelect.addEventListener('change', function() {
+            if(this.value) {
+                localStorage.setItem('schedule_section_id', this.value);
+            } else {
+                localStorage.removeItem('schedule_section_id');
             }
         });
+    }
+    
+    // Initial load if section selected (e.g. from localStorage or query param)
+    if (venueId && venueSelect) {
+        const optionExists = Array.from(venueSelect.options).some(opt => opt.value == venueId);
+        if (optionExists) {
+            venueSelect.value = venueId;
+            if (typeof updateActionLinks === 'function') updateActionLinks();
+            
+            loadSections(venueId).then(() => {
+                if (sectionId && sectionSelect) {
+                     const sectionOptionExists = Array.from(sectionSelect.options).some(opt => opt.value == sectionId);
+                     if (sectionOptionExists) {
+                         sectionSelect.value = sectionId;
+                         if (typeof updateActionLinks === 'function') updateActionLinks();
+                         loadSchedules();
+                     } else {
+                         localStorage.removeItem('schedule_section_id');
+                     }
+                }
+            });
+        }
     } else {
-        // Fallback or just normal load
-        const sectionSelect = document.getElementById('sectionFilter');
         if (sectionSelect && sectionSelect.value) {
             loadSchedules();
         }
+        if (typeof updateActionLinks === 'function') updateActionLinks();
     }
 });
 

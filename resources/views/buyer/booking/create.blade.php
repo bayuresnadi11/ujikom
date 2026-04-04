@@ -69,7 +69,7 @@
                             <p style="text-align: center; color: var(--text-light);">Tidak ada jadwal tersedia</p>
                         @endforelse
                     </div>
-                    <input type="hidden" name="schedule_id" id="schedule_id" required>
+                    <input type="hidden" name="schedule_id" id="schedule_id">
                     @error('schedule_id')
                         <span style="color: red; font-size: 12px;">{{ $message }}</span>
                     @enderror
@@ -99,7 +99,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Tipe Booking <span style="color: red;">*</span></label>
-                    <select class="form-control" name="type" id="bookingType" required onchange="toggleBookingType()">
+                    <select class="form-control" name="type" id="bookingType" onchange="toggleBookingType()">
                         <option value="">Pilih Tipe</option>
                         <option value="regular">Regular</option>
                         <option value="play_together">Main Bareng</option>
@@ -209,8 +209,8 @@
                         <input type="datetime-local" class="form-control" name="pt_payment_deadline" value="{{ old('pt_payment_deadline') }}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Jenis Kelamin</label>
-                        <input type="text" class="form-control" name="pt_gender" placeholder="Contoh: Laki-laki / Perempuan / Campur" value="{{ old('pt_gender') }}">
+                        <label class="form-label">Jenis Kelamin <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" name="pt_gender" id="pt_gender" placeholder="Contoh: Laki-laki / Perempuan / Campur" value="{{ old('pt_gender') }}">
                     </div>
 
                     <div class="form-group">
@@ -341,6 +341,19 @@
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+}
+
+.form-control.error {
+    border-color: #E74C3C;
+}
+
+.error-message {
+    color: #E74C3C;
+    font-size: 12px;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .schedule-cards-container {
@@ -714,27 +727,77 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
     const scheduleId = document.getElementById('schedule_id').value;
     const bookingType = document.getElementById('bookingType').value;
     
+    // Clear previous custom error messages
+    document.querySelectorAll('.js-error').forEach(el => el.remove());
+    document.querySelectorAll('.form-control.error').forEach(el => el.classList.remove('error'));
+    
+    let isValid = true;
+    
+    function addError(elementId, message) {
+        let element = document.getElementById(elementId);
+        if (!element) return;
+        if (element.classList.contains('form-control')) {
+            element.classList.add('error');
+        }
+        let formGroup = element.closest('.form-group');
+        if (formGroup) {
+            let errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message js-error mt-1';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            formGroup.appendChild(errorDiv);
+        }
+        isValid = false;
+    }
+
     if (!scheduleId) {
-        e.preventDefault();
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Silakan pilih jadwal terlebih dahulu!',
-        });
-        return false;
+        addError('schedule_id', 'Jadwal belum dipilih');
     }
     
     if (!bookingType) {
+        addError('bookingType', 'Tipe booking belum dipilih');
+    }
+
+    if (bookingType === 'play_together') {
+        if (!document.getElementById('pt_name').value.trim()) {
+            addError('pt_name', 'Nama Main Bareng belum diisi');
+        }
+        
+        const ptPrivacy = document.getElementById('pt_privacy').value;
+        if (ptPrivacy === 'community' && !document.getElementById('pt_community_id').value) {
+            addError('pt_community_id', 'Komunitas belum dipilih');
+        }
+        
+        if (!document.getElementById('pt_max_participants').value) {
+            addError('pt_max_participants', 'Maksimal participant belum diisi');
+        }
+
+        if (!document.getElementById('pt_gender').value.trim()) {
+            addError('pt_gender', 'Jenis kelamin belum diisi');
+        }
+
+        const ptType = document.getElementById('pt_type').value;
+        if (ptType === 'paid' && !document.getElementById('pt_price_per_person').value) {
+            addError('pt_price_per_person', 'Biaya per orang belum diisi');
+        }
+    }
+    
+    if (bookingType === 'sparring') {
+        if (!document.getElementById('sp_name').value.trim()) {
+            addError('sp_name', 'Nama Sparring belum diisi');
+        }
+
+        const spType = document.getElementById('sp_type').value;
+        if (spType === 'paid' && !document.getElementById('sp_cost_per_participant').value) {
+            addError('sp_cost_per_participant', 'Biaya per participant belum diisi');
+        }
+    }
+
+    if (!isValid) {
         e.preventDefault();
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Silakan pilih tipe booking!',
-        });
         return false;
     }
     
-    // Disable submit button to prevent double submission
+    // Disable submit button out to prevent double submission
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';

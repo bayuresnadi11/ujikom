@@ -8,18 +8,7 @@
     <!-- CSRF Token untuk JavaScript -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Toast Notification (jika ada session success) -->
-    @if(session('success'))
-    <div class="toast show" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <span>{{ session('success') }}</span>
-    </div>
-    <script>
-        setTimeout(() => {
-            document.getElementById('toast').classList.remove('show');
-        }, 3000);
-    </script>
-    @endif
+    {{-- Notifikasi ditangani otomatis oleh komponen toast-alert di layout --}}
 
     <!-- Main Container -->
     <div class="mobile-container">
@@ -98,18 +87,7 @@
                 @endif
             </div>
 
-            <!-- Flash Messages -->
-            @if(session('success'))
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> {{ session('success') }}
-                </div>
-            @endif
-            
-            @if(session('error'))
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                </div>
-            @endif
+            {{-- Notifikasi ditangani otomatis oleh komponen toast-alert di layout --}}
 
             <!-- Section Cards -->
             @if(request('venue_id') && $venues->isNotEmpty())

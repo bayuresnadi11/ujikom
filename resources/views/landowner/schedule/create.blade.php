@@ -35,7 +35,7 @@
 
             <div class="venue-list">
                 <div class="venue-card" style="padding: 0; border: none; background: transparent; box-shadow: none;">
-                <form action="{{ route('landowner.schedule.store') }}" method="POST" class="animate-fade-in">
+                <form action="{{ route('landowner.schedule.store') }}" method="POST" class="animate-fade-in" id="manualScheduleForm" novalidate>
                     @csrf
                     
                     @if(isset($selectedSection) && $selectedSection)
@@ -54,7 +54,7 @@
                             <label class="form-label">Tanggal</label>
                             <div class="input-group-icon">
                                 <i class="fas fa-calendar-day input-icon"></i>
-                                <input type="date" name="date" class="form-control with-icon" required value="{{ date('Y-m-d') }}">
+                                <input type="date" name="date" class="form-control with-icon" value="{{ date('Y-m-d') }}">
                             </div>
                         </div>
 
@@ -63,14 +63,14 @@
                                 <label class="form-label">Jam Mulai</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-hourglass-start input-icon"></i>
-                                    <input type="time" name="start_time" class="form-control with-icon" required>
+                                    <input type="time" name="start_time" class="form-control with-icon">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Jam Selesai</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-hourglass-end input-icon"></i>
-                                    <input type="time" name="end_time" class="form-control with-icon" required>
+                                    <input type="time" name="end_time" class="form-control with-icon">
                                 </div>
                             </div>
                         </div>
@@ -86,7 +86,7 @@
                             <label class="form-label">Harga Sewa (Rp)</label>
                             <div class="input-group-icon">
                                 <i class="fas fa-money-bill-wave input-icon"></i>
-                                <input type="number" name="rental_price" class="form-control with-icon" required min="0" placeholder="Contoh: 150000">
+                                <input type="number" name="rental_price" class="form-control with-icon" min="0" placeholder="Contoh: 150000">
                             </div>
                         </div>
 
@@ -153,6 +153,56 @@
                     venueSelect.value = selectedVenueId;
                     loadSections(selectedVenueId, selectedSectionId);
                 }
+            }
+        });
+
+        document.getElementById('manualScheduleForm').addEventListener('submit', function(e) {
+            document.querySelectorAll('.js-error').forEach(el => el.remove());
+            document.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
+            
+            let isValid = true;
+            
+            function addError(element, message) {
+                element.style.borderColor = '#E74C3C';
+                let formGroup = element.closest('.form-group');
+                if (formGroup) {
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                    formGroup.appendChild(errorDiv);
+                }
+                isValid = false;
+            }
+
+            const dateInput = document.querySelector('input[name="date"]');
+            const startTimeInput = document.querySelector('input[name="start_time"]');
+            const endTimeInput = document.querySelector('input[name="end_time"]');
+            const rentalPriceInput = document.querySelector('input[name="rental_price"]');
+
+            if (!dateInput.value) {
+                addError(dateInput, 'Tanggal belum diisi');
+            }
+            if (!startTimeInput.value) {
+                addError(startTimeInput, 'Jam mulai belum diisi');
+            }
+            if (!endTimeInput.value) {
+                addError(endTimeInput, 'Jam selesai belum diisi');
+            } else if (startTimeInput.value && startTimeInput.value >= endTimeInput.value) {
+                addError(startTimeInput, 'Waktu tidak valid');
+                addError(endTimeInput, 'Waktu tidak valid');
+            }
+            if (!rentalPriceInput.value) {
+                addError(rentalPriceInput, 'Harga sewa belum diisi');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
             }
         });
     </script>

@@ -26,7 +26,7 @@
 
             <div class="venue-list">
                 <div class="venue-card animate-fade-in" style="padding: 0; border: none; background: transparent; box-shadow: none;">
-                    <form action="{{ route('landowner.venue.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('landowner.venue.store') }}" method="POST" enctype="multipart/form-data" id="venueForm">
                         @csrf
                         
                         <!-- Section 1: Informasi Dasar -->
@@ -41,8 +41,8 @@
                                     <div class="input-group-icon">
                                         <i class="fas fa-chess-board input-icon"></i>
                                         <input type="text" class="form-control with-icon @error('venue_name') is-invalid @enderror" 
-                                               name="venue_name" value="{{ old('venue_name') }}"
-                                               placeholder="Nama venue Anda..." required>
+                                               name="venue_name" id="venue_name" value="{{ old('venue_name') }}"
+                                               placeholder="Nama venue Anda...">
                                     </div>
                                     @error('venue_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -53,7 +53,7 @@
                                     <label class="form-label">Kategori</label>
                                     <div class="input-group-icon">
                                         <i class="fas fa-tags input-icon"></i>
-                                        <select class="form-control with-icon @error('category_id') is-invalid @enderror" name="category_id" required>
+                                        <select class="form-control with-icon @error('category_id') is-invalid @enderror" name="category_id" id="category_id">
                                             <option value="">Pilih Kategori</option>
                                             @foreach($categories as $cat)
                                                 <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
@@ -73,8 +73,8 @@
                                 <div class="input-group-icon">
                                     <i class="fas fa-map-marker-alt input-icon"></i>
                                     <input type="text" class="form-control with-icon @error('location') is-invalid @enderror" 
-                                           name="location" value="{{ old('location') }}"
-                                           placeholder="Alamat lengkap..." required>
+                                           name="location" id="location" value="{{ old('location') }}"
+                                           placeholder="Alamat lengkap...">
                                 </div>
                                 @error('location')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -91,9 +91,9 @@
                             <div class="form-group">
                                 <label class="form-label">Deskripsi</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror" 
-                                          name="description" rows="5" 
+                                          name="description" id="description" rows="5" 
                                           style="border-radius: 14px; padding: 16px; line-height: 1.6;"
-                                          placeholder="Jelaskan fasilitas, keunggulan, dan info penting lainnya..." required>{{ old('description') }}</textarea>
+                                          placeholder="Jelaskan fasilitas, keunggulan, dan info penting lainnya...">{{ old('description') }}</textarea>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -184,6 +184,8 @@
         });
 
         function addFiles(files) {
+            let tooManyFiles = false;
+
             // Add new files to selected files (max 5)
             files.forEach(file => {
                 if (selectedFiles.length < 5) {
@@ -192,8 +194,22 @@
                     if (!exists) {
                         selectedFiles.push(file);
                     }
+                } else {
+                    tooManyFiles = true;
                 }
             });
+
+            if (tooManyFiles) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Hanya bisa mengunggah maksimal 5 foto!'
+                    });
+                } else {
+                    alert('Hanya bisa mengunggah maksimal 5 foto!');
+                }
+            }
 
             updateFileInput();
             renderPreviews();
@@ -250,5 +266,70 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        // Custom form validation
+        document.getElementById('venueForm').addEventListener('submit', function(e) {
+            // Clear previous errors
+            document.querySelectorAll('.js-error').forEach(el => el.remove());
+            document.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
+            
+            let isValid = true;
+            
+            function addError(elementId, message, isFile = false) {
+                let element = document.getElementById(elementId);
+                if (!element) return;
+                
+                if (isFile) {
+                    let container = document.getElementById(elementId).parentElement;
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                    container.appendChild(errorDiv);
+                } else {
+                    element.style.borderColor = '#E74C3C';
+                    let formGroup = element.closest('.form-group');
+                    if (formGroup) {
+                        let errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message js-error mt-1';
+                        errorDiv.style.color = '#E74C3C';
+                        errorDiv.style.fontSize = '12px';
+                        errorDiv.style.display = 'flex';
+                        errorDiv.style.alignItems = 'center';
+                        errorDiv.style.gap = '4px';
+                        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                        formGroup.appendChild(errorDiv);
+                    }
+                }
+                isValid = false;
+            }
+
+            if (!document.getElementById('venue_name').value.trim()) {
+                addError('venue_name', 'Nama venue belum diisi');
+            }
+            if (!document.getElementById('category_id').value) {
+                addError('category_id', 'Kategori belum dipilih');
+            }
+            if (!document.getElementById('location').value.trim()) {
+                addError('location', 'Lokasi belum diisi');
+            }
+            if (!document.getElementById('description').value.trim()) {
+                addError('description', 'Deskripsi belum diisi');
+            }
+            
+            // Validation for photos
+            if (selectedFiles.length === 0) {
+                addError('dropZone', 'Minimal 1 foto venue harus diupload', true);
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+        });
     </script>
 @endsection

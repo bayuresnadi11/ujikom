@@ -62,7 +62,7 @@
             </section>
 
 
-                    <form action="{{ route('landowner.schedule.generate') }}" method="POST">
+                    <form action="{{ route('landowner.schedule.generate') }}" method="POST" id="generateScheduleForm" novalidate>
                     @csrf
                     
                     @if(isset($selectedSection) && $selectedSection)
@@ -80,7 +80,7 @@
                                 <label class="form-label">Venue</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-building input-icon"></i>
-                                    <select id="venue_id" class="venue-select form-control with-icon" onchange="loadSections(this.value)" required>
+                                    <select id="venue_id" class="venue-select form-control with-icon" onchange="loadSections(this.value)">
                                         <option value="">-- Pilih Venue --</option>
                                         @foreach($venues as $venue)
                                             <option value="{{ $venue->id }}" {{ $selectedVenueId == $venue->id ? 'selected' : '' }}>{{ $venue->venue_name }}</option>
@@ -93,7 +93,7 @@
                                 <label class="form-label">Lapangan</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-layer-group input-icon"></i>
-                                    <select name="section_id" id="section_id" class="venue-select form-control with-icon" required {{ !$selectedVenueId ? 'disabled' : '' }}>
+                                    <select name="section_id" id="section_id" class="venue-select form-control with-icon" {{ !$selectedVenueId ? 'disabled' : '' }}>
                                         <option value="">-- Pilih Lapangan --</option>
                                     </select>
                                 </div>
@@ -112,14 +112,14 @@
                                 <label class="form-label">Dari Tanggal</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-calendar-check input-icon"></i>
-                                    <input type="date" name="start_date" class="form-control with-icon" required value="{{ date('Y-m-d') }}">
+                                    <input type="date" name="start_date" class="form-control with-icon" value="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Sampai Tanggal</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-calendar-times input-icon"></i>
-                                    <input type="date" name="end_date" class="form-control with-icon" required value="{{ date('Y-m-d', strtotime('+1 day')) }}">
+                                    <input type="date" name="end_date" class="form-control with-icon" value="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                 </div>
                             </div>
                         </div>
@@ -148,14 +148,14 @@
                                 <label class="form-label">Jam Mulai</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-hourglass-start input-icon"></i>
-                                    <input type="time" name="start_time" class="form-control with-icon" required value="08:00">
+                                    <input type="time" name="start_time" class="form-control with-icon" value="08:00">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Jam Selesai</label>
                                 <div class="input-group-icon">
                                     <i class="fas fa-hourglass-end input-icon"></i>
-                                    <input type="time" name="end_time" class="form-control with-icon" required value="22:00">
+                                    <input type="time" name="end_time" class="form-control with-icon" value="22:00">
                                 </div>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                             <label class="form-label">Durasi per Sesi (Jam)</label>
                             <div class="input-group-icon">
                                 <i class="fas fa-stopwatch input-icon"></i>
-                                <input type="number" name="rental_duration" class="form-control with-icon" required value="1" min="1" max="24">
+                                <input type="number" name="rental_duration" class="form-control with-icon" value="1" min="1" max="24">
                             </div>
                         </div>
 
@@ -172,7 +172,7 @@
                             <label class="form-label">Harga Sewa (Rp)</label>
                             <div class="input-group-icon">
                                 <i class="fas fa-money-bill-wave input-icon"></i>
-                                <input type="number" name="rental_price" class="form-control with-icon" required min="0" placeholder="Contoh: 150000">
+                                <input type="number" name="rental_price" class="form-control with-icon" min="0" placeholder="Contoh: 150000">
                             </div>
                         </div>
 
@@ -239,6 +239,69 @@
                     venueSelect.value = selectedVenueId;
                     loadSections(selectedVenueId, selectedSectionId);
                 }
+            }
+        });
+
+        document.getElementById('generateScheduleForm').addEventListener('submit', function(e) {
+            document.querySelectorAll('.js-error').forEach(el => el.remove());
+            document.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
+            
+            let isValid = true;
+            
+            function addError(element, message) {
+                element.style.borderColor = '#E74C3C';
+                let formGroup = element.closest('.form-group');
+                if (formGroup) {
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message js-error mt-1';
+                    errorDiv.style.color = '#E74C3C';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'flex';
+                    errorDiv.style.alignItems = 'center';
+                    errorDiv.style.gap = '4px';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                    formGroup.appendChild(errorDiv);
+                }
+                isValid = false;
+            }
+
+            const venueSelect = document.getElementById('venue_id');
+            const sectionSelect = document.getElementById('section_id');
+            const startDateInput = document.querySelector('input[name="start_date"]');
+            const endDateInput = document.querySelector('input[name="end_date"]');
+            const startTimeInput = document.querySelector('input[name="start_time"]');
+            const endTimeInput = document.querySelector('input[name="end_time"]');
+            const rentalDurationInput = document.querySelector('input[name="rental_duration"]');
+            const rentalPriceInput = document.querySelector('input[name="rental_price"]');
+
+            if (venueSelect && !venueSelect.value) {
+                addError(venueSelect, 'Venue belum dipilih');
+            }
+            if (sectionSelect && !sectionSelect.value) {
+                addError(sectionSelect, 'Lapangan belum dipilih');
+            }
+            if (startDateInput && !startDateInput.value) {
+                addError(startDateInput, 'Tanggal mulai belum diisi');
+            }
+            if (endDateInput && !endDateInput.value) {
+                addError(endDateInput, 'Tanggal selesai belum diisi');
+            }
+            if (startTimeInput && !startTimeInput.value) {
+                addError(startTimeInput, 'Jam mulai belum diisi');
+            }
+            if (endTimeInput && !endTimeInput.value) {
+                addError(endTimeInput, 'Jam selesai belum diisi');
+            }
+            if (rentalDurationInput && !rentalDurationInput.value) {
+                addError(rentalDurationInput, 'Durasi per sesi belum diisi');
+            }
+            if (rentalPriceInput && !rentalPriceInput.value) {
+                addError(rentalPriceInput, 'Harga sewa belum diisi');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
             }
         });
     </script>

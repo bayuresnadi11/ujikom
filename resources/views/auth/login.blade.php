@@ -422,8 +422,14 @@
       font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      justify-content: space-between;
       animation: slideDown 0.4s ease;
+    }
+
+    .alert > div {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
     @keyframes slideDown {
@@ -570,19 +576,7 @@
       <form class="form-horizontal" id="loginForm" action="{{route('login.submit')}}" method="POST">
         @csrf
         
-        @if(session('gagal'))
-        <div class="alert alert-danger" id="errorAlert">
-          <i class="bi bi-exclamation-triangle-fill"></i>
-          {{ session('gagal') }}
-        </div>
-        @endif
-
-        @if(session('success'))
-        <div class="alert alert-success">
-          <i class="bi bi-check-circle-fill"></i>
-          {{ session('success') }}
-        </div>
-        @endif
+        {{-- Flash messages ditangani oleh SweetAlert2 di bawah --}}
 
         <div class="form-group">
           <label for="phone" class="form-label">
@@ -599,7 +593,6 @@
               id="phone" 
               placeholder="628123456789"
               value="{{ old('phone') }}"
-              required
               autofocus>
           </div>
         </div>
@@ -618,8 +611,7 @@
                      class="form-control" 
                      name="password" 
                      id="password" 
-                     placeholder="••••••••"
-                     required>
+                     placeholder="••••••••">
             </div>
             <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password">
               <i class="bi bi-eye"></i>
@@ -661,6 +653,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -698,9 +691,21 @@
         const password = document.getElementById('password').value.trim();
         
         // Validation
-        if (!phone || !password) {
+        if (!phone && !password) {
           e.preventDefault();
-          showError('Harap isi semua field yang diperlukan');
+          showError('Harap isi no telepon dan password');
+          return;
+        }
+        
+        if (!phone) {
+          e.preventDefault();
+          showError('No telepon belum diisi');
+          return;
+        }
+
+        if (!password) {
+          e.preventDefault();
+          showError('Password belum diisi');
           return;
         }
 
@@ -716,29 +721,17 @@
         loginBtn.querySelector('span').style.opacity = '0';
       });
 
-      // Error alert auto-hide
-      const errorAlert = document.getElementById('errorAlert');
-      if (errorAlert) {
-        setTimeout(() => {
-          errorAlert.style.opacity = '0';
-          errorAlert.style.transition = 'opacity 0.4s ease';
-          setTimeout(() => {
-            errorAlert.style.display = 'none';
-          }, 400);
-        }, 5000);
-      }
-
       // Input focus effects
       const inputs = document.querySelectorAll('.form-control');
       inputs.forEach(input => {
         const icon = input.previousElementSibling;
         
         input.addEventListener('focus', function() {
-          icon.style.color = 'var(--primary-color)';
+          if (icon) icon.style.color = 'var(--primary-color)';
         });
         
         input.addEventListener('blur', function() {
-          if (!this.value) {
+          if (!this.value && icon) {
             icon.style.color = 'var(--text-secondary)';
           }
         });
@@ -754,23 +747,68 @@
         e.target.value = value;
       });
 
-      // Show error function
-      function showError(message) {
-        const existingAlert = document.querySelector('.alert.alert-danger:not(#errorAlert)');
-        if (existingAlert) existingAlert.remove();
+      // =============================================
+      // SweetAlert2 Popup Notifications
+      // =============================================
 
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-danger';
-        alertDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${message}`;
-        
-        form.insertBefore(alertDiv, form.firstChild);
-        
-        setTimeout(() => {
-          alertDiv.style.opacity = '0';
-          alertDiv.style.transition = 'opacity 0.4s ease';
-          setTimeout(() => alertDiv.remove(), 400);
-        }, 4000);
+      // Error popup (centered modal)
+      function showError(message) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: message,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#ef4444',
+          customClass: {
+            popup: 'swal-login-popup',
+          },
+          showClass: { popup: 'swal-center-show' },
+          hideClass: { popup: 'swal-center-hide' },
+        });
       }
+
+      // Auto-trigger flash session messages
+      @if(session('error'))
+        showError(@json(session('error')));
+      @endif
+
+      @if(session('gagal'))
+        showError(@json(session('gagal')));
+      @endif
+
+      @if(session('success'))
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: @json(session('success')),
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#10b981',
+          timer: 3000,
+          timerProgressBar: true,
+          customClass: {
+            popup: 'swal-login-popup',
+          },
+          showClass: { popup: 'swal-center-show' },
+          hideClass: { popup: 'swal-center-hide' },
+        });
+      @endif
+
+      @if(session('sukses'))
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: @json(session('sukses')),
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#10b981',
+          timer: 3000,
+          timerProgressBar: true,
+          customClass: {
+            popup: 'swal-login-popup',
+          },
+          showClass: { popup: 'swal-center-show' },
+          hideClass: { popup: 'swal-center-hide' },
+        });
+      @endif
 
       // Create background pattern function
       function createPattern() {
@@ -794,9 +832,39 @@
       // Add animation to logo on load
       setTimeout(() => {
         const logoIcon = document.querySelector('.logo-icon');
-        logoIcon.style.transform = 'scale(1)';
+        if (logoIcon) logoIcon.style.transform = 'scale(1)';
       }, 300);
     });
   </script>
+
+  <style>
+    /* SweetAlert2 custom for login page */
+    .swal-login-popup {
+      border-radius: 20px !important;
+      padding: 32px 28px !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+      max-width: 340px !important;
+      width: 90% !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+    .swal-center-show {
+      animation: swalCenterIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+    .swal-center-hide {
+      animation: swalCenterOut 0.2s ease-in !important;
+    }
+    @keyframes swalCenterIn {
+      0%   { opacity: 0; transform: scale(0.8) translateY(-20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes swalCenterOut {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.9); }
+    }
+    .swal2-backdrop-show {
+      background: rgba(0, 0, 0, 0.45) !important;
+      backdrop-filter: blur(2px) !important;
+    }
+  </style>
 </body>
 </html>

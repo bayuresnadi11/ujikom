@@ -41,20 +41,7 @@
     
     {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // Global delete confirmation
-        function confirmDelete(title = 'Apakah Anda yakin?', text = "Data yang dihapus tidak dapat dikembalikan!", icon = 'warning') {
-            return Swal.fire({
-                title: title,
-                text: text,
-                icon: icon,
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            });
-        }
-    </script>
+    {{-- Global Toast Alert Component --}}
+    @include('components.toast-alert')
 </body>
 </html>

@@ -39,18 +39,7 @@
                 </div>
             </div>
 
-            <!-- Flash Messages -->
-            @if(session('success'))
-                <div class="alert alert-success" style="margin: 20px;">
-                    <i class="fas fa-check-circle"></i> {{ session('success') }}
-                </div>
-            @endif
-            
-            @if(session('error'))
-                <div class="alert alert-danger" style="margin: 20px;">
-                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                </div>
-            @endif
+            {{-- Notifikasi ditangani otomatis oleh komponen toast-alert di layout --}}
 
             @if(!$cashiers->isEmpty())
             <!-- Action Bar -->
