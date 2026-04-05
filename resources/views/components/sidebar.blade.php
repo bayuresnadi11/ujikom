@@ -79,12 +79,7 @@
                 </a>
             </li>
 
-            
-            <li class="nav-section">
-                <span class="section-title">Permissions</span>
-            </li>
-
-            <li>
+                        <li>
                 <a href="{{ route('admin.daftar_admin.index') }}"
                     class="{{ request()->routeIs('admin.daftar_admin.*') ? 'active' : '' }}"
                     data-tooltip="Daftar Admin">
@@ -96,6 +91,10 @@
                 </a>
             </li>
 
+            
+            <li class="nav-section">
+                <span class="section-title">Permissions</span>
+            </li>
 
             <li>
                 <a href="{{ route('admin.rolerequest.index') }}"
@@ -105,17 +104,6 @@
                         <i class="bi bi-person-check"></i>
                     </div>
                     <span class="nav-text">Approve/Reject Role</span>
-                    <div class="active-indicator"></div>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.pencairan.index') }}"
-                    class="{{ request()->routeIs('admin.pencairan.*') ? 'active' : '' }}"
-                    data-tooltip="Role Requests">
-                    <div class="nav-icon">
-                        <i class="bi bi-person-check"></i>
-                    </div>
-                    <span class="nav-text">Pencairan Dana</span>
                     <div class="active-indicator"></div>
                 </a>
             </li>
