@@ -5,7 +5,6 @@
     let availableCameras = [];
     let currentCameraId = null;
 
-    // Modern Notification System
     function showNotification(type, title, message, duration = 3000) {
         const container = document.getElementById('notification-container');
         const notification = document.createElement('div');
@@ -35,7 +34,19 @@
         }, duration);
     }
 
-    // Green Flash Effect saat scan berhasil
+    function showQr(ticketCode) {
+        document.getElementById('qrContainer').innerHTML = '';
+        document.getElementById('ticketCode').innerText = ticketCode;
+
+        new QRCode(document.getElementById('qrContainer'), {
+            text: ticketCode,
+            width: 220,
+            height: 220
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+        modal.show();
+    }
     function showGreenFlash() {
         const scanner = document.getElementById('qr-reader');
         const flash = document.createElement('div');
@@ -67,7 +78,6 @@
         setTimeout(() => flash.remove(), 500);
     }
 
-    // Toggle scan mode
     document.querySelectorAll('.mode-toggle button').forEach((btn, index) => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
@@ -82,7 +92,6 @@
         });
     });
 
-    // Camera selection change
     document.getElementById('camera-select').addEventListener('change', function() {
         const selectedCameraId = this.value;
         if (selectedCameraId && selectedCameraId !== currentCameraId) {
@@ -90,7 +99,6 @@
         }
     });
 
-    // Initialize scanner saat DOM ready
     document.addEventListener('DOMContentLoaded', function() {
         initScanner();
     });
@@ -134,7 +142,6 @@
                 availableCameras = cameras;
                 populateCameraSelect(cameras);
                 
-                // Prioritas kamera belakang
                 let defaultCameraId = cameras[cameras.length - 1].id;
                 currentCameraId = defaultCameraId;
                 
@@ -177,9 +184,7 @@
 
     function startScanning(cameraId) {
     const config = {
-        fps: 10, // PALING AMAN
-        // qrbox removed to allow full screen scanning verification
-        // aspectRatio: 1.0, // Optional: Force square aspect ratio if needed, but auto is often better
+        fps: 10,
         disableFlip: false
     };
 
@@ -215,36 +220,29 @@
     }
 
     function onScanSuccess(decodedText, decodedResult) {
-        if (isScanning) return;  // Prevent double scan
+        if (isScanning) return;
         isScanning = true;
 
         console.log('QR Code detected:', decodedText);
 
-        // Haptic feedback: Vibrate
         if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);  // Pattern vibration
+            navigator.vibrate([200, 100, 200]);
         }
 
-        // Validate ticket
         validateTicket(decodedText);
     }
 
     function onScanError(errorMessage) {
-        // Ignore error messages - terlalu banyak false positive
-        // console.warn('Scan error:', errorMessage);
     }
 
     function validateTicket(ticketCode) {
-        // Remove placeholder if exists
         const placeholder = document.getElementById('scan-placeholder');
         if (placeholder) {
             placeholder.remove();
         }
 
-        // Generate unique ID for this scan
         const scanId = 'scan-' + Date.now();
         
-        // Append loading card
         const logContainer = document.getElementById('scan-log');
         const loadingCard = document.createElement('div');
         loadingCard.id = scanId;
@@ -256,7 +254,7 @@
                 <small class="text-muted text-break">${ticketCode}</small>
             </div>
         `;
-        logContainer.insertBefore(loadingCard, logContainer.firstChild); // Insert at top
+        logContainer.insertBefore(loadingCard, logContainer.firstChild);
 
         fetch('/cashier/scan/validate', {
             method: 'POST',
@@ -280,13 +278,11 @@
                 showErrorResult(data, scanId);
             }
             
-            // Reset scanning flag mechanism
             let delay = data.success ? 1500 : 3000; 
             setTimeout(() => { isScanning = false; }, delay);
         })
         .catch(error => {
             console.error('Validation error:', error);
-            // Replace loading with error
             const card = document.getElementById(scanId);
             if(card) {
                 card.innerHTML = `
@@ -300,14 +296,12 @@
                         </div>
                     </div>
                 `;
-                // Auto remove system error too
                 setTimeout(() => {
                     card.classList.add('fade-out');
                     setTimeout(() => card.remove(), 500);
                 }, 7000);
             }
             
-
             setTimeout(() => { isScanning = false; }, 2000);
         });
     }
@@ -416,12 +410,10 @@
         card.innerHTML = html;
 
         
-        // Auto remove error result after 7 seconds
         setTimeout(() => {
             card.classList.add('fade-out');
             setTimeout(() => {
                 card.remove();
-                // Check if empty, show placeholder
                 const logContainer = document.getElementById('scan-log');
                 if (logContainer && logContainer.children.length === 0) {
                      logContainer.innerHTML = `
@@ -469,14 +461,12 @@
         beep(1500, t + 0.15, 0.15);
     }
 
-    // Cleanup saat halaman ditutup
     window.addEventListener('beforeunload', function() {
         if (html5QrCode && html5QrCode.isScanning) {
             html5QrCode.stop();
         }
     });
 
-    // Debug: Log scanner state
     setInterval(() => {
         if (html5QrCode) {
             console.log('Scanner state:', {

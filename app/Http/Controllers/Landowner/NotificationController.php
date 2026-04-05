@@ -14,13 +14,14 @@ class NotificationController extends Controller
     {
         $user = auth()->user();
 
-        // Get notifications directly from database without soft deletes check
+        // Logika Koleksi Data: Mengambil notifikasi langsung dari DB (Raw) untuk fleksibilitas tipe data
         $notifications = DB::table('notifications')
             ->where('notifiable_id', $user->id)
             ->where('notifiable_type', 'App\Models\User')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($notification) {
+                // Mendekode payload JSON untuk dipetakan ke atribut visual (icon, color, URL aksi)
                 $data = json_decode($notification->data, true) ?? [];
 
                 return [
@@ -41,7 +42,7 @@ class NotificationController extends Controller
             })
             ->toArray();
 
-        // Count unread notifications without soft deletes check
+        // Logika Agregasi: Menghitung jumlah notifikasi yang belum dibaca (read_at is NULL)
         $unreadCount = DB::table('notifications')
             ->where('notifiable_id', $user->id)
             ->where('notifiable_type', 'App\Models\User')

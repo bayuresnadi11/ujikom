@@ -16,7 +16,7 @@ use Carbon\Carbon;
 class HomeController extends Controller
 {
     /**
-     * Display the home page for pemilik
+     * Menampilkan halaman beranda (dashboard) untuk role pemilik
      */
     public function index()
     {
@@ -34,7 +34,7 @@ class HomeController extends Controller
         
         // PERBAIKAN: Sesuai dengan model Venue, kolom yang digunakan adalah 'created_by'
         $venues = Venue::where('created_by', $user->id)
-            ->with(['photos', 'category']) // Eager load photos and category
+            ->with(['photos', 'category']) // Memuat relasi foto dan kategori secara paralel (Eager load)
             ->withCount('venueSections')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -52,25 +52,28 @@ class HomeController extends Controller
         $totalField = 0;
         
         if ($venues->isNotEmpty()) {
-            // Ambil semua section ID dari venue pemilik
+            // Logika Relasional: Mengambil relasi bertingkat (Venue -> Section).
+            // array $venueIds dipakai untuk mem-filter jadwal berdasarkan lapangan/section yang benar-benar dimiliki akun ini.
             $venueIds = $venues->pluck('id')->toArray();
             $sectionIds = VenueSection::whereIn('venue_id', $venueIds)
                 ->pluck('id')
                 ->toArray();
                 
-            // Hitung statistik
+            // Logika Agregasi: Menghitung total booking spesifik untuk tanggal server hari ini 
+            // (hanya status available = 0 yang dianggap sudah ada transaksi).
             $totalBookingHariIni = VenueSchedule::whereIn('section_id', $sectionIds)
                 ->whereDate('date', Carbon::today())
                 ->where('available', 0)
                 ->count();
                 
+            // Logika Analitik: Menjumlahkan harga sewa (rental_price) khusus pada bulan ini untuk kalkulasi pendapatan bulanan.
             $pendapatanBulanIni = VenueSchedule::whereIn('section_id', $sectionIds)
                 ->whereMonth('date', Carbon::now()->month)
                 ->whereYear('date', Carbon::now()->year)
                 ->where('available', 0)
                 ->sum('rental_price');
                 
-            $totalField = count($sectionIds); // Jumlah total lapangan (sections)
+            $totalField = count($sectionIds); // Menyimpan agregat jumlah lapangan aktif
             
             // PERBAIKAN: Mengubah 'booking' menjadi 'bookings' (plural)
             // Juga tambahkan relasi 'section' jika belum ada di model VenueSchedule
@@ -93,7 +96,7 @@ class HomeController extends Controller
             $bookingTerbaru = collect();
             
             // Debug jika tidak ada venue
-            Log::info('No Venues Found', [
+            Log::info('Tidak Ada Venue', [
                 'user_id' => $user->id,
                 'message' => 'User tidak memiliki venue yang terdaftar'
             ]);

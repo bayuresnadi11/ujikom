@@ -695,6 +695,7 @@
                 </div>
 
                 <!-- Cek jika data bank belum lengkap -->
+                {{-- Logika Validasi UI: Landowner tidak bisa melakukan withdraw jika info bank di profil belum di atur / lengkap --}}
                 @if(!$isBankDataComplete)
                     <div class="incomplete-data-container fade-in">
                         <div class="incomplete-icon">
@@ -745,6 +746,7 @@
                     </div>
                 @else
                     <!-- Warning jika ada pending withdrawal -->
+                    {{-- Logika Validasi Flow: Jika user punya withdraw yang belum selesai, ia tidak diizinkan submit form dobel --}}
                     @if($hasPendingOrApproved)
                         <div class="alert-warning fade-in">
                             <div class="alert-content">

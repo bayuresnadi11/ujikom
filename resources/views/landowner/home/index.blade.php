@@ -56,12 +56,14 @@
                 @else
                     <div class="venues-slider" id="venuesSlider">
                         @foreach($venues as $venue)
+                            {{-- Ambil jumlah lapangan di dalam venue ini (menggunakan relasi yang sudah di-load dengan withCount) --}}
                             @php
                                 // Menggunakan venue_sections_count (snake_case from withCount)
                                 $sectionCount = $venue->venue_sections_count ?? 0;
 
                                 // Tentukan ikon berdasarkan category atau jenis olahraga
                                 $sportIcon = 'map-marker-alt'; // default
+
 
                                 // Jika Anda memiliki data category atau jenis olahraga di venue
                                 if($venue->category) {
@@ -180,6 +182,7 @@
                         <p style="font-size: 13px; margin-top: 8px; color: var(--text-light);">Booking akan muncul di sini setelah ada pemesanan</p>
                     </div>
                 @else
+                    {{-- Loop melalui data booking terbaru untuk ditampilkan dalam list --}}
                     @foreach($bookingTerbaru as $jadwal)
                         @php
                             // Tentukan ikon berdasarkan jenis olahraga
@@ -224,7 +227,7 @@
                                 ? $jadwal->section->nama_section
                                 : 'Lapangan';
 
-                            // Status booking
+                            // Status booking ditentukan berdasarkan perbandingan tanggal booking dengan waktu saat ini
                             $isToday = \Carbon\Carbon::parse($jadwal->date)->isToday();
                             $isTomorrow = \Carbon\Carbon::parse($jadwal->date)->isTomorrow();
                             $isPast = \Carbon\Carbon::parse($jadwal->date)->isPast() && !$isToday;
@@ -232,9 +235,12 @@
                             $statusClass = 'status-confirmed'; // Default Green (Berlangsung/Confirmed)
                             $statusText = 'Berlangsung';
 
+                            // Penetapan class CSS dan teks status berdasarkan hasil cek tanggal
                             if ($isPast) {
                                  $statusClass = 'status-completed'; // Gray
                                  $statusText = 'Selesai';
+
+
                             } elseif ($isToday) {
                                  $statusClass = 'status-confirmed'; // Green
                                  $statusText = 'Berlangsung';

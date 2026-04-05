@@ -14,7 +14,8 @@ class ReportController extends Controller
     {
         $search = $request->query('search');
 
-        // Get all paid bookings for this landowner (regardless of scan status)
+        // Logika Filter Laporan: Menarik semua rekam jejak pesanan yang berstatus 'full' (Lunas Dini)
+        // terlepas dari apakah tiket QR Code-nya sudah diklaim (di-scan) ataupun belum oleh pembeli di lapangan.
         $allBookings = Booking::with(['user', 'venue', 'schedule.venueSection'])
             ->where('booking_payment', 'full')
             ->whereHas('venue', fn($q) => $q->where('created_by', auth()->id()))
@@ -28,7 +29,8 @@ class ReportController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Paginated bookings for display
+        // Logika Pagination Tampilan: Memecah volume data raksasa menjadi per halaman (10 per hal) 
+        // agar browser tidak nge-freeze saat merender baris riwayat.
         $bookings = Booking::with(['user', 'venue', 'schedule.venueSection'])
             ->where('booking_payment', 'full')
             ->whereHas('venue', fn($q) => $q->where('created_by', auth()->id()))

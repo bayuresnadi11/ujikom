@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<!-- Fixed Header -->
+<!-- Header Tetap (Fixed Header) -->
 <div class="fixed-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -25,11 +25,12 @@
     </div>
 </div>
 
-<!-- Main Container - NO SCROLL -->
+<!-- Kontainer Utama Scan - Tata Letak Tanpa Scroll -->
 <div class="scan-container">
-    <!-- Left Panel - Scanner (75%) -->
+    <!-- Panel Kiri - Area Scanner Kamera (75%) -->
     <div class="scanner-panel">
         <div class="scanner-controls">
+            <!-- Pilihan Mode: Masuk Venue atau Masuk Lapangan -->
             <div class="mode-toggle btn-group" role="group">
                 <button type="button" class="btn btn-outline-success active">
                     <i class="fas fa-door-open"></i> Masuk Venue
@@ -39,12 +40,13 @@
                 </button>
             </div>
             
+            <!-- Pilihan Kamera Aktif -->
             <select id="camera-select" class="form-select">
                 <option value="">Loading kamera...</option>
             </select>
         </div>
 
-        <!-- Scanner Wrapper -->
+        <!-- Area Video Kamera Scanner -->
         <div class="scanner-wrapper">
             <div id="qr-reader"></div>
             <div class="scanner-status">
@@ -53,7 +55,7 @@
         </div>
     </div>
 
-    <!-- Right Panel - Results (25%) -->
+    <!-- Panel Kanan - Ringkasan Hasil Scan (25%) -->
     <div class="results-panel">
         <div class="results-header">
             <i class="fas fa-clipboard-check me-2"></i>Hasil Scan
@@ -62,7 +64,7 @@
             <div id="scan-log">
                 <div id="scan-placeholder" class="text-center text-muted py-5">
                     <i class="fas fa-qrcode fa-4x mb-3 opacity-50"></i>
-                    <p class="small">Arahkan QR code ke scanner untuk memulai scan</p>
+                    <p class="small">Arahkan QR code ke scanner untuk mulai scan</p>
                 </div>
             </div>
         </div>

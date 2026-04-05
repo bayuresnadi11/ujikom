@@ -9,9 +9,11 @@
 @php
     use Carbon\Carbon;
 
+    // Inisialisasi waktu sekarang dan koleksi jadwal
     $currentTime = Carbon::now();
     $allSchedules = collect();
 
+    // Loop melalui setiap bagian lapangan (section) dalam venue ini
     foreach ($venue->venueSections as $section) {
         foreach ($section->schedules as $schedule) {
 
@@ -56,14 +58,18 @@
     }
 
     // ===============================
-    // SORT & FILTER
+    // URUTKAN & FILTER JADWAL
     // ===============================
+    // Urutkan berdasarkan waktu mulai
     $allSchedules = $allSchedules->sortBy('start_datetime')->values();
 
+    // Ambil jadwal yang belum lewat (mendatang)
     $upcomingSchedules = $allSchedules->where('is_passed', false)->values();
 
+    // Identifikasi jadwal yang sedang berlangsung (sekarang)
     $currentRunningSchedules = $upcomingSchedules->where('is_current', true)->values();
 
+    // Jadwal berikutnya yang akan tampil di grid (maksimal 9 item)
     $gridSchedules = $upcomingSchedules->where('is_current', false)->take(9)->values();
 
     $displaySchedules = $currentRunningSchedules;

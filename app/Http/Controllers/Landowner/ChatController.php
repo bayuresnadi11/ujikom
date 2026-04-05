@@ -13,10 +13,10 @@ class ChatController extends Controller
      */
     public function index()
     {
-        // Get authenticated user
+        // Logika Pengambilan Data: Mengambil identitas user dan daftar percakapan (chats) yang terkait
         $user = Auth::user();
         
-        // You can load chat data from database here
+        // Memuat data chat dari database (saat ini menggunakan helper getUserChats)
         $chats = $this->getUserChats($user);
         
         return view('landowner.chat.index', [

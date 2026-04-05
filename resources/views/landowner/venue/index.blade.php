@@ -1,5 +1,6 @@
 @extends('layouts.main', ['title' => 'Kelola Venue'])
 
+{{-- Menghitung total lapangan (sections) dan total jadwal booking dari keseluruhan venue yang dimiliki --}}
 @php
     $totalSections = 0;
     $totalBookings = 0;
@@ -8,6 +9,7 @@
         $totalBookings += $venue->bookings_count ?? 0;
     }
 @endphp
+
 
 @push('styles')
     @include('landowner.venue.partials.venue-style')
@@ -277,14 +279,17 @@
             <!-- Venue List -->
             @if($venues->count() > 0)
                 <div class="venue-list" id="venueCards">
+                    {{-- Me-looping semua data venue yang ada dan menampilkan masing-masing dalam wujud Card UI --}}
                     @foreach($venues as $venue)
                         @php
+                            // Format nama kategori agar bisa dijadikan class CSS
                             $categoryClass = strtolower($venue->category->category_name ?? 'umum');
                             $categoryClass = preg_replace('/[^a-z]/', '', $categoryClass);
                             $status = 'active';
                            
                             
                             // Ambil photos
+
                             $photos = $venue->photos;
                             if ($photos->isEmpty() && $venue->photo) {
                                 $photos = collect([ (object)['photo_path' => $venue->photo] ]);

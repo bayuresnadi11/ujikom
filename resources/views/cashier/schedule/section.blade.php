@@ -9,10 +9,11 @@
 @php
     use Carbon\Carbon;
     
+    // Inisialisasi waktu sekarang dan koleksi jadwal mendatang
     $currentTime = Carbon::now();
     $upcomingSchedules = collect();
 
-    // Load schedules dengan relasi booking
+    // Loop melalui jadwal lapangan ini (Section)
     foreach ($section->schedules as $schedule) {
         $startTime = Carbon::parse($schedule->start_time);
         $endTime   = Carbon::parse($schedule->end_time);
@@ -52,29 +53,30 @@
         ]);
     }
 
-    // Sort by start time
+    // Urutkan jadwal berdasarkan waktu mulai
     $upcomingSchedules = $upcomingSchedules->sortBy('start_datetime')->values();
 
-    // Filter hanya jadwal hari ini
+    // Filter jadwal agar hanya menampilkan jadwal hari ini
     $today = Carbon::today();
     $upcomingSchedules = $upcomingSchedules->filter(function($schedule) use ($today) {
         $scheduleDate = Carbon::parse($schedule['date']);
         return $scheduleDate->isSameDay($today);
     })->values();
 
-    // Batasi maksimal 15 jadwal
+    // Batasi maksimal 9 jadwal untuk tampilan grid
     $upcomingSchedules = $upcomingSchedules->take(9);
     
-    // Temukan slot yang sedang berlangsung
+    // Cari slot waktu yang sedang berlangsung saat ini
     $currentSlot = $upcomingSchedules->where('is_current', true)->first();
     $currentIndex = $upcomingSchedules->search(fn($s) => ($s['id'] ?? null) === ($currentSlot['id'] ?? null));
     
-    // Jika tidak ada slot sekarang, ambil slot berikutnya
+    // Jika tidak ada jadwal sedang berlangsung, ambil jadwal terdekat berikutnya sebagai default display
     if (!$currentSlot && $upcomingSchedules->isNotEmpty()) {
         $currentSlot = $upcomingSchedules->first();
         $currentIndex = 0;
     }
     
+    // Judul tampilan (Venue - Lapangan)
     $displayTitle = ($section->venue->venue_name ?? 'Venue') . ' - ' . ($section->section_name ?? 'Section');
     $today = Carbon::today()->format('d M Y');
 @endphp

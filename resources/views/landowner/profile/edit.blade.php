@@ -49,6 +49,7 @@
                                 <i class="fas fa-camera"></i>
                                 <span>Ganti Foto Profil</span>
                             </button>
+                            {{-- Field file disembunyikan dan di-trigger lewat tombol custom. onChange memicu fungsi JS Preview untuk menampilkan citra sebelum upload --}}
                             <input type="file" 
                                 id="avatar" 
                                 name="avatar" 
@@ -237,6 +238,7 @@
                         </small>
                     </div>
                 </div>
+                {{-- Logika Validasi Nomor WA: Menampilkan overlay form (state disabled) apabila nomor telpon user masih pending / belum melewati verifikasi OTP --}}
                 @if($pendingPhone)
                 <div class="phone-overlay">
                     <div class="spinner"></div>
@@ -299,6 +301,7 @@
                             Kata Sandi Baru
                         </label>
                         <div class="password-wrapper">
+                            {{-- Event onInput dipakai untuk validasi kekuatan string password secara real-time berdasarkan regex di JS --}}
                             <input type="password" 
                                    id="password" 
                                    name="password" 

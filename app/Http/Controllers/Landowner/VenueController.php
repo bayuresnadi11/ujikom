@@ -70,10 +70,12 @@ class VenueController extends Controller
                 'photo' => $mainPhotoPath, // Legacy support
             ]);
 
-            // Simpan semua foto ke table venue_photos
+            // Logika File System: Proses Multi-Upload Gambar. 
+            // Karena satu venue bisa memiliki banyak gambar, sistem melakukan iterasi ke array file yang masuk
+            // dan secara terpisah menyimpannya ke tabel venue_photos (Polymorphic / Relational concept).
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $index => $photo) {
-                    // Jika index 0, kita sudah punya pathnya, jika tidak upload baru
+                    // Jika index 0, kita sudah menggunakannya sebagai thumbnail warisan (backward compatibility), jika tidak upload baru
                     $path = ($index === 0) ? $mainPhotoPath : $photo->store('venues', 'public');
                     
                     \App\Models\VenuePhoto::create([
@@ -158,7 +160,8 @@ class VenueController extends Controller
                 }
             }
             
-            // Hapus foto yang dipilih untuk dihapus
+            // Logika Manajemen State File: Penghapusan foto-foto spesifik yang ditandai dari Form klien (via input hidden 'deleted_photos').
+            // Mekanisme ini memecah (explode) string ID menjadi array, kemudian menghapus file fisik di storage sebelum me-wipe row di Database.
             if ($request->filled('deleted_photos')) {
                 $deletedIds = explode(',', $request->deleted_photos);
                 foreach ($deletedIds as $photoId) {

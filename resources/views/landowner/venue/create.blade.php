@@ -55,6 +55,7 @@
                                         <i class="fas fa-tags input-icon"></i>
                                         <select class="form-control with-icon @error('category_id') is-invalid @enderror" name="category_id" id="category_id">
                                             <option value="">Pilih Kategori</option>
+                                            {{-- Menampilkan opsi kategori venue berdasarkan data yang dikirim dari controller --}}
                                             @foreach($categories as $cat)
                                                 <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
                                                     {{ $cat->category_name }}
@@ -62,6 +63,7 @@
                                             @endforeach
                                         </select>
                                     </div>
+
                                     @error('category_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -186,10 +188,10 @@
         function addFiles(files) {
             let tooManyFiles = false;
 
-            // Add new files to selected files (max 5)
+            // Logika iterasi: Menambahkan file baru yang dipilih ke dalam array (Maksimal 5 file)
             files.forEach(file => {
                 if (selectedFiles.length < 5) {
-                    // Check if file already exists
+                    // Validasi cek tipe dan ukuran agar tidak ada file ganda / duplikat yang dimasukkan
                     const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
                     if (!exists) {
                         selectedFiles.push(file);

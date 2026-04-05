@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-    <!-- Fixed Header -->
+    <!-- Header Tetap (Fixed Header) - Menampilkan judul dan ringkasan status -->
     <div class="fixed-header">
         <div>
             <div class="title">Riwayat Tiket</div>

@@ -19,7 +19,7 @@ class ProfileController extends Controller
      */
     public function index()
     {
-        // Get the authenticated user
+        // Logika Pengambilan Data: Mengambil data user yang sedang login beserta saldo dompetnya
         $user = Auth::user();
         
         Log::info('Pemilik Profile accessed', [
@@ -28,7 +28,7 @@ class ProfileController extends Controller
         ]);
         
         $balance = DepositService::getBalance($user->id);
-        // Return view dengan data user
+        // Mengembalikan view dengan menyertakan data profil dan saldo terkini
         return view('landowner.profile.index', [
             'user' => $user,
             'balance' => $balance,
@@ -44,6 +44,7 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
+        // Logika Status Verifikasi: Mengecek apakah user memiliki permintaan perubahan nomor telepon yang belum diverifikasi
         $pendingPhone = DB::table('phone_verify_tokens')
             ->where('user_id', $user->id)
             ->exists();
@@ -74,12 +75,13 @@ class ProfileController extends Controller
         ]);
 
         // =====================
-        // 2. AVATAR
+        // 2. LOGIKA MANAJEMEN AVATAR
         // =====================
         if ($request->hasFile('avatar')) {
+            // Menyimpan file gambar baru ke storage publik dan menghapus avatar lama jika ada (physical deletion)
             $path = $request->file('avatar')->store('avatars', 'public');
             $validated['avatar'] = $path;
-
+            
             if ($user->avatar) {
                 Storage::disk('public')->delete($user->avatar);
             }
@@ -115,9 +117,10 @@ class ProfileController extends Controller
         $user->update($validated);
 
         // =====================
-        // 6. KIRIM VERIFIKASI WA
+        // 6. LOGIKA VERIFIKASI WHATSAPP
         // =====================
         if ($phoneChanged) {
+            // Jika ada perubahan nomor hp, buat token verifikasi unik dan kirimkan tautan konfirmasi via WhatsApp
             $token = Str::random(64);
 
             DB::table('phone_verify_tokens')->updateOrInsert(

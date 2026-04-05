@@ -27,9 +27,11 @@
 
     <!-- Main Content -->
     <main class="main-content {{ isset($conversationId) ? 'chat-active' : '' }}">
+        {{-- Logika Kondisional: Menukar view dari List Chat menjadi Room Chat spesifik jika ID conversation terdeteksi --}}
         @if(!isset($conversationId))
             <!-- Chat List View -->
             <div id="chats-tab" class="tab-content" style="display: block;">
+                {{-- Data dirender menggunakan Livewire secara Async untuk update real-time --}}
                 @livewire('chat.chat-list')
             </div>
         @else

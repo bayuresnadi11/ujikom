@@ -62,9 +62,10 @@
 
         <!-- Notifications List -->
         <div class="notifications-list" id="notificationsList">
+            {{-- Melakukan loop koleksi data allNotifications yang bisa saja berasal dari module/tabel yang berbeda --}}
             @forelse($allNotifications as $notification)
                 @php
-                    // Determine notification type class
+                    // Logika Mapping Visual: Menentukan icon dan style list berdasarkan Tipe Notifikasinya
                     $typeClass = $notification['type'] ?? 'update';
                     $typeIcon = $notification['icon'] ?? 'fas fa-bell';
                     $typeColor = $notification['color'] ?? 'primary';
@@ -92,6 +93,7 @@
                     $isSystem = ($notification['type'] ?? '') === 'system';
 
                     // Determine action URL
+                    // URL Generator Dinamis: Action button akan mengarahkan user langsung ke objek spesifik (misal ke modul Schedule atau Profil)
                     $actionUrl = $notification['action_url'] ?? null;
                     if (!$actionUrl && $isVenueBooking && isset($notificationData['venue_id'])) {
                         $actionUrl = route('landowner.venue.show', $notificationData['venue_id']);

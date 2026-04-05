@@ -270,10 +270,11 @@ class DepositController extends Controller
     {
         $otp = rand(100000, 999999);
 
-        // Hapus OTP lama untuk phone ini
+        // Logika Sekuritas OTP: Menghapus OTP lama yang masih menggantung untuk nomor hp ini sebelum meng-generate yang baru.
+        // Hal ini untuk mencegah kerentanan bentrok token (race condition) dan mengurangi tumpukan data.
         Otp::where('phone', $phone)->delete();
 
-        // Buat OTP baru
+        // Buat sesi OTP baru dengan masa kedaluwarsa 1 menit dari sekarang
         Otp::create([
             'user_id' => Auth::id(),
             'phone' => $phone,
@@ -335,7 +336,8 @@ class DepositController extends Controller
             'status' => 'pending',
         ]);
 
-        // Buat deposit negatif
+        // Logika Akuntansi & Jurnal Umum: Menciptakan "Deposit Negatif" / mutasi kredit.
+        // Karena sistem dompet ini memanfaatkan tabel 'deposits' untuk mutasi keluar, kita menggunakan nilai amount minus (negatif)
         Deposit::create([
             'user_id' => $withdrawData['user_id'],
             'amount' => -$withdrawData['amount'],

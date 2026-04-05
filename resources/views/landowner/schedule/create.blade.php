@@ -117,6 +117,7 @@
 
     @push('scripts')
     <script>
+        // Fungsi AJAX Client-side untuk meload data Sub-Lapangan (sections) berdasarkan Venue ID yang dipilih
         function loadSections(venueId, selectedSectionId = null) {
             const sectionSelect = document.getElementById('section_id');
             sectionSelect.innerHTML = '<option value="">Loading...</option>';
@@ -127,11 +128,13 @@
                 return;
             }
 
+            // Melakukan request HTTP GET ke endpoint API section
             fetch(`{{ url('landowner/schedule/sections') }}/${venueId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         sectionSelect.innerHTML = '<option value="">-- Pilih Lapangan --</option>';
+                        // Mengisi ulang dropdown option berdasarkan referensi JSON response
                         data.sections.forEach(section => {
                             const isSelected = selectedSectionId && selectedSectionId == section.id ? 'selected' : '';
                             sectionSelect.innerHTML += `<option value="${section.id}" ${isSelected}>${section.section_name}</option>`;
@@ -190,6 +193,7 @@
             if (!startTimeInput.value) {
                 addError(startTimeInput, 'Jam mulai belum diisi');
             }
+            // Validasi tambahan: Jika jam selesai dipilih, pastikan angkanya lebih besar dari jam mulai
             if (!endTimeInput.value) {
                 addError(endTimeInput, 'Jam selesai belum diisi');
             } else if (startTimeInput.value && startTimeInput.value >= endTimeInput.value) {

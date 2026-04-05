@@ -48,6 +48,7 @@
                         <label class="form-label">
                             <i class="fas fa-lock"></i> Password Baru (Opsional)
                         </label>
+                        {{-- Logika Opsional: Jika input dibiarkan kosong, maka password lama akan tetap digunakan pada sistem --}}
                         <input type="password" name="password" class="form-control" placeholder="Isi jika ingin mengganti password">
                     </div>
 

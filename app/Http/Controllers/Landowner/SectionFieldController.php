@@ -20,7 +20,9 @@ class SectionFieldController extends Controller
             'description'  => 'nullable|string',
         ]);
 
-        // Validasi kepemilikan venue
+        // Logika Sekuritas & Otorisasi: Mencegah serangan kerentanan objek langsung (IDOR)
+        // dengan mem-validasi kembali secara eksplisit bahwa `venue_id` yang di-submit dari klien
+        // adalah benar-benar dimiliki oleh session user yang aktif.
         $venue = Venue::where('id', $request->venue_id)
             ->where('created_by', auth()->id())
             ->firstOrFail();
@@ -42,6 +44,8 @@ class SectionFieldController extends Controller
     {
         $section = VenueSection::with('venue')->findOrFail($id);
 
+        // Validasi Otorisasi Relasional Bersarang: Seseorang tidak boleh mengedit data Section
+        // apabila Induk Venue dari Section tersebut bukanlah miliknya.
         if ($section->venue->created_by !== auth()->id()) {
             abort(403, 'Akses ditolak');
         }

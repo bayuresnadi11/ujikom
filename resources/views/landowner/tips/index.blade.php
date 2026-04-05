@@ -31,6 +31,7 @@
                         <i class="fas fa-filter"></i>
                         Filter Kategori
                     </div>
+                    {{-- Logika Filter Client-side: Element dengan attribute data-category akan dimanfaatkan oleh JS lokal untuk menyembunyikan div tips yang tidak relevan --}}
                     <div class="filter-chips">
                         <div class="filter-chip active" data-category="all">Semua Tips</div>
                         <div class="filter-chip" data-category="pricing">Penentuan Harga</div>

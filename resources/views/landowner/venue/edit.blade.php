@@ -209,25 +209,26 @@
         const photoCounter = document.getElementById('photoCounter');
         const photoCount = document.getElementById('photoCount');
 
-        // Mark photo as deleted
+        // Fungsi Client-side untuk menandai foto yang akan dihapus dengan memberikan class CSS tertentu dan memasukkan ID-nya ke input tersembunyi
         function markPhotoDeleted(id) {
             const el = document.getElementById(`photo-${id}`);
             const btn = el.querySelector('.btn-delete-photo');
             
             if (deletedPhotoIds.includes(id)) {
-                // Undo delete
+                // Membatalkan tindakan hapus (undo delete) dengan mereset array dan mengembalikan style default
                 deletedPhotoIds = deletedPhotoIds.filter(pid => pid !== id);
                 el.classList.remove('photo-deleted');
                 btn.innerHTML = '<i class="fas fa-times"></i>';
                 btn.style.background = 'rgba(231, 76, 60, 0.9)';
             } else {
-                // Mark delete
+                // Memberikan state "Terhapus" berupa blur/grayscale lalu ID-nya disisipkan ke form data
                 deletedPhotoIds.push(id);
                 el.classList.add('photo-deleted');
                 btn.innerHTML = '<i class="fas fa-undo"></i>';
                 btn.style.background = 'rgba(52, 152, 219, 0.9)';
             }
             
+            // Menyematkan id foto yang dihapus (comma-separated) ke dalam input hidden 'deletedPhotos'
             document.getElementById('deletedPhotos').value = deletedPhotoIds.join(',');
         }
 

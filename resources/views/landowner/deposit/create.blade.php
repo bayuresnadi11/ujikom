@@ -254,14 +254,18 @@
     </div>
 
     <script>
+        // Logika ketika salah satu tombol preset (nominal cepat) diklik
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
+                // Mengambil value data-amount kemudian di-parse ke Integer
                 const amount = parseInt(this.dataset.amount);
 
+                // Mereset state aktif pada semua tombol, lalu me-set tombol ini sebagai aktif
                 document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
 
+                // Menyuntikkan nilai ke form input hidden dan visual
                 document.getElementById('amountInput').value = amount;
                 document.getElementById('amountDisplay').value = 'Rp ' + amount.toLocaleString('id-ID');
                 document.getElementById('amountCustom').style.display = 'none';
@@ -308,6 +312,7 @@
             }
         });
 
+        // Logika internal fungsi untuk memberikan warna peringatan jika batas batas minimal/maksimal topup dilanggar
         function updateAmountInfo(amount) {
             const info = document.getElementById('amountInfo');
             if (amount < 10000) {
