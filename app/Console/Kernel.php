@@ -19,9 +19,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->call(function () {
-            app(BookingController::class)->expireRegularBookings();
-        })->everyMinute();
+        $schedule->command('bookings:expire')->everyMinute();
     }
 
     /**

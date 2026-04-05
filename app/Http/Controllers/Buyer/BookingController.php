@@ -58,7 +58,6 @@ class BookingController extends Controller
                 ->firstOrFail();
             
             $schedules = VenueSchedule::where('section_id', $sectionId)
-                ->where('available', true)
                 ->where('date', '>=', now()->toDateString())
                 ->orderBy('date', 'asc')
                 ->orderBy('start_time', 'asc')
@@ -166,10 +165,6 @@ class BookingController extends Controller
         }
 
         $schedules = VenueSchedule::where('section_id', $booking->schedule->section_id)
-            ->where(function($query) use ($booking) {
-                $query->where('available', true)
-                    ->orWhere('id', $booking->schedule_id);
-            })
             ->where('date', '>=', now()->toDateString())
             ->orderBy('date', 'asc')
             ->orderBy('start_time', 'asc')
@@ -363,7 +358,6 @@ class BookingController extends Controller
     public function getSchedulesBySection($sectionId)
     {
         $schedules = VenueSchedule::where('section_id', $sectionId)
-            ->where('available', true)
             ->where('date', '>=', now()->toDateString())
             ->orderBy('date', 'asc')
             ->orderBy('start_time', 'asc')
