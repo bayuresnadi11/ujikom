@@ -93,6 +93,7 @@ class BookingController extends Controller
             'amount' => $schedule->rental_price,
             'pay_by' => $request->type === 'regular' ? null : $request->pay_by,
             'booking_payment' => 'pending',
+            'expired_at' => now()->addMinutes(15), // langsung masuk DB
         ]);
 
         // ====================== PLAY TOGETHER ======================

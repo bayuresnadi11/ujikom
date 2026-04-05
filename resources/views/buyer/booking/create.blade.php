@@ -105,7 +105,6 @@
                         <option value="">Pilih Tipe</option>
                         <option value="regular">Regular</option>
                         <option value="play_together">Main Bareng</option>
-                        <option value="sparring">Sparring</option>
                     </select>
                     @error('type')
                         <span style="color: red; font-size: 12px;">{{ $message }}</span>

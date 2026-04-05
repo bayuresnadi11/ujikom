@@ -37,6 +37,7 @@ class Booking extends Model
         'scan_time' => 'datetime',
         'paid_at' => 'datetime',
         'payment_expired_at' => 'datetime',
+        'expired_at' => 'datetime',
         'amount' => 'decimal:2',
         'total_paid' => 'decimal:2',
         'paid_amount' => 'decimal:2',
