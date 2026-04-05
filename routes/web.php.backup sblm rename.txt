@@ -1,0 +1,266 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Pemilik\VenueController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\Admin\KategoriController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KomunitasController;
+use App\Http\Controllers\Admin\DaftarAdminController;
+use App\Http\Controllers\Admin\RoleRequestController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Pemilik\HomeController as PemilikHomeController;
+use App\Http\Controllers\Pemilik\MenuController as PemilikMenuController;
+use App\Http\Controllers\Pemilik\DashboardController as PemilikDashboardController;
+use App\Http\Controllers\Pemilik\ProfileController as PemilikProfileController;
+use App\Http\Controllers\Penyewa\HomeController as PenyewaHomeController;
+use App\Http\Controllers\Penyewa\MenuController as PenyewaMenuController;
+use App\Http\Controllers\Penyewa\ChatController as PenyewaChatController;
+use App\Http\Controllers\Penyewa\JelajahController as PenyewaJelajahController;
+use App\Http\Controllers\Penyewa\ProfileController as PenyewaProfileController;
+
+/*
+|--------------------------------------------------------------------------
+| GUEST ROUTES (BELUM LOGIN)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/login', [AuthController::class, 'submitLogin'])->name('login.submit');
+
+    Route::get('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/register', [AuthController::class, 'submitRegister'])->name('register.submit');
+
+    Route::get('/otp', [AuthController::class, 'formOtp'])->name('otp.form');
+    Route::post('/otp', [AuthController::class, 'submitOtp'])->name('otp.submit');
+    Route::post('/otp/resend', [AuthController::class, 'resendOtp'])->name('otp.resend');
+
+    Route::get('/forgot-password', [ResetPasswordController::class, 'showForgetForm'])
+        ->name('password.request');
+
+    Route::post('/forgot-password', [ResetPasswordController::class, 'sendResetLink'])
+        ->name('password.whatsapp');
+
+    Route::get('/reset-password', [ResetPasswordController::class, 'showResetForm'])
+        ->name('password.reset');
+
+    Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])
+        ->name('password.update');
+});
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES (DAPAT DIAKSES TANPA LOGIN)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/', fn () => view('welcome'))->name('welcome');
+Route::get('/menu', fn () => view('menu'))->name('menu');
+Route::get('/jelajah', fn () => view('jelajah'))->name('jelajah');
+Route::get('/chat', fn () => view('chat'))->name('chat');
+Route::get('/profile', fn () => view('profile'))->name('profile');
+
+/*
+|--------------------------------------------------------------------------
+| AUTH ROUTES (SUDAH LOGIN)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Switch role
+    Route::post('/switch-to-pemilik', [RoleController::class, 'switchToPemilik'])
+        ->name('switch.to.pemilik');
+
+    Route::post('/switch-to-penyewa', [RoleController::class, 'switchToPenyewa'])
+        ->name('switch.to.penyewa');
+
+    // Switch back (testing / tombol)
+    Route::get('/switch-back-to-penyewa', function () {
+        session()->forget('temp_role');
+        return redirect()->route('penyewa.home.index');
+    })->name('switch.back.to.penyewa');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN ROUTES
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:admin')
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+
+            // Dashboard
+            Route::get('/dashboard', [DashboardController::class, 'index'])
+                ->name('dashboard.index');
+
+            // Kategori
+            Route::resource('kategori', KategoriController::class);
+
+            // Komunitas
+            Route::resource('komunitas', KomunitasController::class);
+
+            // Daftar Admin - CRUD dengan modal popup
+            Route::prefix('daftar_admin')->name('daftar_admin.')->group(function () {
+                Route::get('/', [DaftarAdminController::class, 'index'])->name('index');
+                Route::post('/', [DaftarAdminController::class, 'store'])->name('store');
+                Route::get('/{id}', [DaftarAdminController::class, 'show'])->name('show');
+                Route::put('/{id}', [DaftarAdminController::class, 'update'])->name('update');
+                Route::delete('/{id}', [DaftarAdminController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::get('/check-current-user', [DaftarAdminController::class, 'checkCurrentUser'])
+                ->name('check_current_user');
+
+            // User (Penyewa & Pemilik)
+            Route::resource('user', UserController::class);
+
+            // Role Request
+            Route::get('/role-request', [RoleRequestController::class, 'index'])
+                ->name('rolerequest.index');
+
+            Route::post('/role-request/approve', [RoleRequestController::class, 'approve'])
+                ->name('rolerequest.approve');
+
+            Route::post('/role-request/reject', [RoleRequestController::class, 'reject'])
+                ->name('rolerequest.reject');
+
+            // Admin Profile Routes
+            Route::prefix('profile')->name('profile.')->group(function () {
+                Route::get('/', [AdminProfileController::class, 'index'])->name('index');
+                Route::get('/edit', [AdminProfileController::class, 'edit'])->name('edit');
+                Route::post('/update', [AdminProfileController::class, 'update'])->name('update');
+                
+                // Phone change routes
+                Route::get('/phone', [AdminProfileController::class, 'phone'])->name('phone');
+                Route::post('/phone/send-otp', [AdminProfileController::class, 'sendPhoneOtp'])->name('phone.send-otp');
+                Route::get('/phone/verify-otp', [AdminProfileController::class, 'showVerifyPhoneOtp'])->name('verify-phone-otp');
+                Route::post('/phone/verify-otp', [AdminProfileController::class, 'verifyPhoneOtp'])->name('phone.verify-otp');
+                Route::post('/phone/resend-otp', [AdminProfileController::class, 'resendPhoneOtp'])->name('phone.resend-otp');
+                
+                // Update password
+                Route::post('/update-password', [AdminProfileController::class, 'updatePassword'])->name('update-password');
+            });
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | PEMILIK ROUTES
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:pemilik')
+        ->prefix('pemilik')
+        ->name('pemilik.')
+        ->group(function () {
+
+            // Di dalam group pemilik, tambahkan:
+            Route::resource('venue', \App\Http\Controllers\Pemilik\VenueController::class);
+
+
+            Route::get('/home', [PemilikHomeController::class, 'index'])
+                ->name('home.index');
+
+            Route::get('/menu', [PemilikMenuController::class, 'index'])
+                ->name('menu.index');
+                
+            Route::get('/dashboard', [PemilikDashboardController::class, 'index'])
+                ->name('dashboard');
+
+            // Profile
+            Route::get('/profile', [PemilikProfileController::class, 'index'])
+                ->name('profile');
+
+            Route::post('/profile/update', [PemilikProfileController::class, 'update'])
+                ->name('profile.update');
+
+            Route::post('/profile/change-password', [PemilikProfileController::class, 'changePassword'])
+                ->name('profile.change-password');
+
+            Route::get('/profile/stats', [PemilikProfileController::class, 'getStats'])
+                ->name('profile.stats');
+
+            // Lapangan Routes - INI YANG DIPERBAIKI
+        Route::resource('lapangan', \App\Http\Controllers\Pemilik\VenueController::class);
+            // Switch back ke penyewa
+            Route::get('/switch-back', function () {
+                session()->forget('temp_role');
+                return redirect()->route('penyewa.home.index');
+            })->name('switch.back');
+
+            // Management
+            Route::view('/booking', 'pemilik.booking.index')->name('booking');
+            Route::view('/laporan', 'pemilik.laporan.index')->name('laporan');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | PENYEWA ROUTES
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:penyewa')
+        ->prefix('penyewa')
+        ->name('penyewa.')
+        ->group(function () {
+
+            Route::get('/home', [PenyewaHomeController::class, 'index'])
+                ->name('home.index');
+
+            // Profile routes
+            Route::get('/profile', [PenyewaProfileController::class, 'profile'])
+                ->name('profile');
+
+            Route::post('/profile/update', [PenyewaProfileController::class, 'update'])
+                ->name('profile.update');
+
+            Route::post('/profile/change-password', [PenyewaProfileController::class, 'changePassword'])
+                ->name('profile.change-password');
+
+            Route::get('/profile/stats', [PenyewaProfileController::class, 'getStats'])
+                ->name('profile.stats');
+
+            Route::get('/jelajah', [PenyewaJelajahController::class, 'jelajah'])
+                ->name('jelajah');
+
+            Route::get('/map', [PenyewaJelajahController::class, 'map'])
+                ->name('map');
+
+            Route::get('/chat', [PenyewaChatController::class, 'chat'])
+                ->name('chat');
+
+            Route::get('/menu', [PenyewaMenuController::class, 'menu'])
+                ->name('menu');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERAL PROFILE ROUTE (untuk redirect dari layout)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/layouts/pemilik/home/profile', function () {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $user = auth()->user();
+
+        if ($user->role === 'pemilik' || session('temp_role') === 'pemilik') {
+            return redirect()->route('pemilik.profile');
+        }
+
+        if ($user->role === 'penyewa') {
+            return redirect()->route('penyewa.profile');
+        }
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard.index');
+        }
+
+        return redirect('/');
+    })->name('layouts.pemilik.home.profile');
+});
