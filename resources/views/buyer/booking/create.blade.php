@@ -50,21 +50,26 @@
                     <label class="form-label">Pilih Jadwal <span style="color: red;">*</span></label>
                     <div class="schedule-cards-container" id="scheduleCardsContainer">
                         @forelse($schedules as $schedule)
-                            <div class="schedule-card" data-schedule-id="{{ $schedule->id }}" 
+                            <div class="schedule-card {{ $schedule->available ? '' : 'unavailable' }}" 
+                                 data-schedule-id="{{ $schedule->id }}" 
                                  data-price="{{ $schedule->rental_price }}"
                                  data-date="{{ $schedule->date }}"
                                  data-start="{{ $schedule->start_time }}"
                                  data-end="{{ $schedule->end_time }}"
                                  data-duration="{{ $schedule->rental_duration }}"
-                                 onclick="selectSchedule(this)">
-                                <div class="schedule-date">
+                                 onclick="{{ $schedule->available ? 'selectSchedule(this)' : '' }}">
+                                <div class="schedule-date {{ $schedule->available ? '' : 'unavailable-date' }}">
                                     <div class="date-day">{{ \Carbon\Carbon::parse($schedule->date)->format('d') }}</div>
                                     <div class="date-month">{{ \Carbon\Carbon::parse($schedule->date)->format('M') }}</div>
                                 </div>
                                 <div class="schedule-details">
                                     <div class="schedule-time">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</div>
                                     <div class="schedule-price">Rp {{ number_format($schedule->rental_price, 0, ',', '.') }}</div>
-                                    <span class="schedule-status available">Tersedia</span>
+                                    @if($schedule->available)
+                                        <span class="schedule-status available">Tersedia</span>
+                                    @else
+                                        <span class="schedule-status unavailable">Sudah di pesen</span>
+                                    @endif
                                 </div>
                             </div>
                         @empty
@@ -105,7 +110,6 @@
                         <option value="">Pilih Tipe</option>
                         <option value="regular">Regular</option>
                         <option value="play_together">Main Bareng</option>
-                        <option value="sparring">Sparring</option>
                     </select>
                     @error('type')
                         <span style="color: red; font-size: 12px;">{{ $message }}</span>
@@ -437,6 +441,23 @@
 .schedule-status.available {
     background: rgba(39, 174, 96, 0.1);
     color: var(--success);
+}
+
+.schedule-status.unavailable {
+    background: rgba(231, 76, 60, 0.1);
+    color: #E74C3C;
+}
+
+.schedule-card.unavailable {
+    opacity: 0.7;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.schedule-date.unavailable-date {
+    background: #95a5a6;
 }
 
 .schedule-info-card {
