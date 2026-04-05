@@ -38,17 +38,27 @@
                     <label class="form-label">Pilih Jadwal <span style="color: red;">*</span></label>
                     <div class="schedule-cards-container">
                         @foreach($schedules as $schedule)
-                            <div class="schedule-card {{ $schedule->id == $booking->schedule_id ? 'selected' : '' }}" 
+                            @php
+                                $isCurrent = $schedule->id == $booking->schedule_id;
+                                $isUnavailable = !$schedule->available && !$isCurrent;
+                            @endphp
+                            <div class="schedule-card {{ $isCurrent ? 'selected' : '' }} {{ $isUnavailable ? 'unavailable' : '' }}" 
                                  data-schedule-id="{{ $schedule->id }}" 
-                                 onclick="selectSchedule({{ $schedule->id }}, {{ $schedule->rental_price }})">
-                                <div class="schedule-date">
+                                 onclick="{{ $isUnavailable ? '' : 'selectSchedule('.$schedule->id.', '.$schedule->rental_price.')' }}">
+                                <div class="schedule-date {{ $isUnavailable ? 'unavailable-date' : '' }}">
                                     <div class="date-day">{{ \Carbon\Carbon::parse($schedule->date)->format('d') }}</div>
                                     <div class="date-month">{{ \Carbon\Carbon::parse($schedule->date)->format('M') }}</div>
                                 </div>
                                 <div class="schedule-details">
                                     <div class="schedule-time">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</div>
                                     <div class="schedule-price">Rp {{ number_format($schedule->rental_price, 0, ',', '.') }}</div>
-                                    <span class="schedule-status available">{{ $schedule->id == $booking->schedule_id ? 'Terpilih' : 'Tersedia' }}</span>
+                                    @if($isCurrent)
+                                        <span class="schedule-status available">Terpilih</span>
+                                    @elseif($schedule->available)
+                                        <span class="schedule-status available">Tersedia</span>
+                                    @else
+                                        <span class="schedule-status unavailable">Sudah di pesen</span>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -425,6 +435,23 @@
 .schedule-status.available {
     background: rgba(39, 174, 96, 0.1);
     color: var(--success);
+}
+
+.schedule-status.unavailable {
+    background: rgba(231, 76, 60, 0.1);
+    color: #E74C3C;
+}
+
+.schedule-card.unavailable {
+    opacity: 0.7;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.schedule-date.unavailable-date {
+    background: #95a5a6;
 }
 
 .schedule-info-card {
