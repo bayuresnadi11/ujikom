@@ -19,6 +19,7 @@
             </section>
 
             <!-- Menu Grid -->
+            {{-- Render visual grid-based mirip app launcher untuk mempercepat navigasi pengguna ke berbagai modul CRUD --}}
             <div class="menu-grid">
                 <!-- Featured Card - Kelola Lapangan -->
                 <div class="menu-card featured" onclick="window.location.href='{{ route('landowner.lapangan.index') }}'">

@@ -26,7 +26,7 @@
 
     body {
         font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-        background: linear-gradient(135deg, #f0faf5 0%, #e6f7ed 100%);
+        background: #f4f7f5; /* Ubah dari gradien hijau ke abu-abu sangat muda agar bersih */
         color: var(--text);
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
@@ -40,7 +40,9 @@
         position: relative;
         box-shadow: 0 0 35px rgba(10, 92, 54, 0.12);
         overflow-x: hidden;
-        padding-bottom: 70px;
+        padding-bottom: 80px;
+        max-width: 480px;
+        margin: 0 auto;
     }
     
     /* HEADER - SESUAIKAN UKURAN UNTUK MOBILE */
@@ -52,6 +54,9 @@
         background: var(--gradient-dark);
         z-index: 1100;
         box-shadow: var(--shadow-md);
+        backdrop-filter: blur(10px);
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .header-top {
@@ -84,13 +89,14 @@
 
     .logo-icon {
         background: rgba(255, 255, 255, 0.2);
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
+        font-size: 18px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .logo span {
@@ -198,28 +204,17 @@
 
     /* MAIN CONTENT */
     .main-content {
-        padding-top: 50px;
-        padding-bottom: 70px;
-        min-height: calc(100vh - 70px);
+        padding-top: 60px;
+        padding-bottom: 90px;
+        min-height: 100vh;
     }
 
     .page-header {
         padding: 40px 16px;
-        background: var(--gradient-light);
+        background: #ffffff; /* Ubah jadi putih polos agar lebih bersih */
         position: relative;
         overflow: hidden;
         border-bottom: 1px solid var(--light-gray);
-    }
-
-    .page-header::before {
-        content: "";
-        position: absolute;
-        top: -50px;
-        right: -50px;
-        width: 200px;
-        height: 200px;
-        background: radial-gradient(circle, rgba(46, 204, 113, 0.15) 0%, transparent 70%);
-        border-radius: 50%;
     }
 
     .page-title {

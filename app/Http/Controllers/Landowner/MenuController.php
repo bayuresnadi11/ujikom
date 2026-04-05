@@ -10,15 +10,15 @@ class MenuController extends Controller
 {
     public function index()
     {
-        // Hitung total lapangan milik user
+        // Logika Agregasi: Menghitung total pangkalan (Venue) dan sub-lapangan (Sections) milik user untuk ringkasan menu
         $totalVenue = Venue::where('created_by', auth()->id())->count();
         
-        // Hitung total sections dari lapangan milik user
+        // Menghitung total sections dengan filter relasi venue milik landowner yang sedang login
         $totalSections = VenueSection::whereHas('venue', function($query) {
             $query->where('created_by', auth()->id());
         })->count();
 
-        // Kembalikan view dengan data minimal
+        // Mengirimkan data statistik ke view menu
         return view('landowner.menu.index', compact(
             'totalVenue',
             'totalSections'

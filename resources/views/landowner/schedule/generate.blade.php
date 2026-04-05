@@ -127,6 +127,7 @@
                         <div class="form-group">
                             <label class="form-label">Hari Aktif</label>
                             <div class="days-grid">
+                                {{-- Melakukan loop untuk checkbox hari agar user bisa memilih hari aktif (generate massal) --}}
                                 @foreach(['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'] as $index => $day)
                                     <label>
                                         <input type="checkbox" name="active_days[]" value="{{ $index }}" class="day-checkbox" checked>
@@ -243,11 +244,13 @@
         });
 
         document.getElementById('generateScheduleForm').addEventListener('submit', function(e) {
+            // Menghapus elemen error sebelumnya sebelum melakukan validasi ulang
             document.querySelectorAll('.js-error').forEach(el => el.remove());
             document.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
             
             let isValid = true;
             
+            // Fungsi internal untuk menampilkan pesan error sesuai elemen input yang kosong/salah value
             function addError(element, message) {
                 element.style.borderColor = '#E74C3C';
                 let formGroup = element.closest('.form-group');

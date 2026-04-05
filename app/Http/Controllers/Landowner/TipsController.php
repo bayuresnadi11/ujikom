@@ -12,7 +12,7 @@ class TipsController extends Controller
      */
     public function index()
     {
-        // You can pass data from database here
+        // Logika Penyajian Data: Menyediakan daftar tips statis untuk membantu pemilik mengelola venue
         $tips = [
             [
                 'category' => 'pricing',
@@ -52,6 +52,7 @@ class TipsController extends Controller
             ]
         ];
 
+        // Definisi kategori tips untuk filter di sisi client/UI
         $categories = [
             'all' => 'Semua Tips',
             'pricing' => 'Penentuan Harga',

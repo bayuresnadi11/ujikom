@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<!-- Fixed Header -->
+<!-- Header Tetap (Fixed Header) - Menampilkan judul halaman dan informasi logout -->
 <div class="fixed-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -51,13 +51,14 @@
 <div class="main-content">
     <div class="content-wrapper">
         <div class="row g-3">
-            <!-- Field Selection -->
+            <!-- Bagian Kiri: Pemilihan Lapangan (Field Selection) -->
             <div class="col-lg-7">
                 <div class="card section-card">
                     <div class="card-header">
                         <h6 class="mb-0">Pilih Lapangan</h6>
                     </div>
                     <div class="card-body">
+                        <!-- Filter berdasarkan kategori dan pencarian nama lapangan -->
                         <div class="filter-section">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -74,6 +75,7 @@
                             </div>
                         </div>
 
+                        <!-- Grid untuk menampilkan daftar venue/lapangan yang tersedia -->
                         <div class="venue-grid" id="venue-list">
                             <div class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status">
@@ -86,13 +88,14 @@
                 </div>
             </div>
 
-            <!-- Cart & Payment -->
+            <!-- Bagian Kanan: Keranjang Pesanan & Ringkasan Pembayaran -->
             <div class="col-lg-5">
                 <div class="card section-card">
                     <div class="card-header">
                         <h6 class="mb-0">Keranjang & Pembayaran</h6>
                     </div>
                     <div class="card-body">
+                        <!-- Input untuk mencari pelanggan terdaftar (buyer) -->
                         <div class="mb-3 position-relative">
                             <label class="form-label fw-semibold">Nama Penyewa</label>
                             <input type="text" id="buyerSearch" class="form-control" placeholder="Cari nama penyewa..." autocomplete="off">
@@ -106,6 +109,7 @@
                             <input type="text" id="community" class="form-control" placeholder="Nama komunitas">
                         </div>
 
+                        <!-- Daftar item yang dimasukkan ke keranjang belanja -->
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-2">
                                 <h6 class="mb-0">Daftar Pesanan</h6>
@@ -119,6 +123,7 @@
                             </div>
                         </div>
 
+                        <!-- Ringkasan total biaya dan pemilihan metode pembayaran -->
                         <div class="payment-summary">
                             <div class="d-flex justify-content-between mb-1">
                                 <span>Subtotal</span>
@@ -145,6 +150,7 @@
                                 </div>
                             </div>
 
+                            <!-- Input nominal uang tunai jika metode Cash dipilih -->
                             <div class="mb-3" id="cashSection">
                                 <label class="form-label fw-semibold">Uang Diterima</label>
                                 <input type="number" id="cashInput" class="form-control" placeholder="Masukkan nominal">
@@ -153,6 +159,7 @@
                                     <small id="changeAmount">Rp 0</small>
                                 </div>
                             </div>
+                            <!-- Tombol Finalisasi Pembayaran -->
                             <button id="payButton" class="btn btn-success w-100 btn-pay" disabled>
                                 <i class="fa-solid fa-credit-card me-2"></i>Bayar & Cetak Struk
                             </button>

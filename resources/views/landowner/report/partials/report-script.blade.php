@@ -1,7 +1,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-    /* ===== TAB ===== */
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -12,7 +11,6 @@
         });
     });
 
-    /* ===== LIVE SEARCH ===== */
     const input = document.querySelector('.search-input');
     const history = document.getElementById('history');
     const noData = history.querySelector('.no-data');
@@ -76,7 +74,6 @@
             }
         });
 
-        // Tampilkan pesan jika tidak ada yang cocok
         if(visibleCount === 0){
             noData.style.display = 'block';
         } else {
@@ -84,7 +81,6 @@
         }
     }
 
-    // Live search langsung pas ngetik
     document.querySelector('.search-input').addEventListener('input', searchSection);
 
     const monthlyData = @json($monthlyData);

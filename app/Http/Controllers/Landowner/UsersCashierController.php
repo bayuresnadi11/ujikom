@@ -16,7 +16,7 @@ class UsersCashierController extends Controller
      */
     public function index()
     {
-        // Hanya tampilkan cashier yang dibuat oleh landowner yang login
+        // Logika Sekuritas Data: Hanya tampilkan akun cashier yang secara eksklusif dibuat oleh landowner yang sedang login
         $user = auth()->user();
         $cashiers = User::where('role', 'cashier')
                         ->where('created_by', $user->id)
@@ -25,10 +25,10 @@ class UsersCashierController extends Controller
 
         $totalCashiers = $cashiers->count();
         
-        // Get venues for stats (venues created by this landowner)
+        // Logika Analitik: Mendapatkan total venue yang dimiliki oleh landowner ini untuk keperluan statistik UI
         $venues = Venue::where('created_by', $user->id)->count();
 
-        // Pass manageable venues count for each cashier to view
+        // Menyematkan perhitungan statis jumlah venue yang berhak dikelola (manageable) oleh setiap kasir
         foreach ($cashiers as $cashier) {
             $cashier->manageable_venues_count = Venue::where('created_by', $cashier->created_by)->count();
         }

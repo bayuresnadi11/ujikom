@@ -51,6 +51,7 @@
                 @if($venues->isNotEmpty())
                     <form method="GET" action="{{ route('landowner.section-lapangan.index') }}" class="venue-selector-form">
                         <div class="form-group">
+                            {{-- Memilih venue secara dinamis. onchange akan otomatis mensubmit form (GET request) untuk me-refresh data --}}
                             <select name="venue_id" class="venue-select" onchange="this.form.submit()">
                                 <option value="">-- Pilih Venue --</option>
                                 @foreach($venues as $venue)
@@ -99,6 +100,7 @@
 
                 <div class="section-cards-container" id="sectionCards">
                     @if($sections->count() > 0)
+                        {{-- Menampilkan daftar sub-lapangan / section hasil query berdasarkan venue_id yang dipilih --}}
                         @foreach($sections as $section)
                             <div class="section-card" 
                                  data-section-name="{{ strtolower($section->section_name) }}"

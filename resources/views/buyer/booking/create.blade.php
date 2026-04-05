@@ -10,8 +10,8 @@
 <div class="mobile-container">
     @include('layouts.header')
 
-    <main class="main-content" style="padding: 60px 0 100px 0;"> <!-- Reduced top padding, removed side padding -->
-        <section class="page-header" style="padding: 40px 20px;">
+    <main class="main-content">
+        <section class="page-header">
             <h1 class="page-title">Buat Booking Baru</h1>
             <p class="page-subtitle">Isi form untuk membuat booking lapangan</p>
         </section>
@@ -34,14 +34,16 @@
                 <input type="hidden" name="venue_id" value="{{ $venue->id ?? '' }}" id="venue_id">
                 <input type="hidden" name="section_id" value="{{ $section->id ?? '' }}" id="section_id">
 
-                <div class="form-group">
-                    <label class="form-label">Venue</label>
-                    <input type="text" class="form-control" value="{{ $venue->venue_name ?? 'Pilih venue' }}" readonly>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Lapangan</label>
-                    <input type="text" class="form-control" value="{{ $section->section_name ?? 'Pilih section' }}" readonly>
+                <!-- Modern Information Cards -->
+                <div class="booking-info-cards">
+                    <div class="info-card-item">
+                        <span class="info-card-label"><i class="fas fa-building"></i> Venue</span>
+                        <span class="info-card-value">{{ $venue->venue_name ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-card-item">
+                        <span class="info-card-label"><i class="fas fa-running"></i> Lapangan</span>
+                        <span class="info-card-value">{{ $section->section_name ?? 'N/A' }}</span>
+                    </div>
                 </div>
 
                 <div class="form-group">

@@ -17,18 +17,19 @@ class PhoneChangeController extends Controller
         ]);
 
         $user = auth()->user();
+        // Logika Normalisasi: Mengubah format awal 0 menjadi 62 (Kode Negara Indonesia)
         $phoneNew = preg_replace('/^0/', '62', $request->phone);
 
         if ($phoneNew === $user->phone) {
             return back()->with('error', 'Nomor tidak berubah.');
         }
 
-        // ❗ HAPUS TOKEN LAMA (WAJIB)
+        // Logika Sekuritas: Membersihkan token lama sebelum membuat permintaan verifikasi baru
         DB::table('phone_verify_tokens')
             ->where('user_id', $user->id)
             ->delete();
 
-        // ❗ BUAT TOKEN BARU
+        // Membuat token acak baru untuk link verifikasi
         $token = Str::random(64);
 
         DB::table('phone_verify_tokens')->insert([
@@ -51,6 +52,7 @@ class PhoneChangeController extends Controller
             "Jika ini bukan Anda, abaikan pesan ini.\n\n" .
             "Tim SewaLapangan";
 
+        // Mengirim notifikasi WA ke nomor baru untuk proses konfirmasi kepemilikan
         kirimWa($phoneNew, $pesan);
 
         return back()->with('success', 'Link verifikasi dikirim ke nomor baru.');

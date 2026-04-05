@@ -64,12 +64,13 @@
 
     <script>
         document.getElementById('cashierForm').addEventListener('submit', function(e) {
-            // Clear previous errors
+            // Menghapus elemen error State sebelumnya (reset error view)
             document.querySelectorAll('.js-error').forEach(el => el.remove());
             document.querySelectorAll('.form-control').forEach(el => el.style.borderColor = '');
             
             let isValid = true;
             
+            // Helper function untuk memberikan response visual error berwarna merah di bawah input
             function addError(element, message) {
                 element.style.borderColor = '#E74C3C';
                 let formGroup = element.closest('.form-group');
@@ -91,6 +92,7 @@
             const phoneInput = document.querySelector('input[name="phone"]');
             const passwordInput = document.querySelector('input[name="password"]');
 
+            // Pengecekan field kosong satu per satu
             if (!nameInput.value.trim()) {
                 addError(nameInput, 'Nama cashier belum diisi');
             }
@@ -101,6 +103,7 @@
                 addError(passwordInput, 'Password belum diisi');
             }
 
+            // Mencegah form disubmit apabila terjadi error validasi data di sisi client
             if (!isValid) {
                 e.preventDefault();
                 return false;

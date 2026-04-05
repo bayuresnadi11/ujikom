@@ -25,6 +25,7 @@
 
         <!-- Stats Overview -->
         <div class="stats-grid">
+            {{-- Menampilkan sekilas jumlah booking hari ini dan total lapangan yang dikelola --}}
             <div class="stat-card">
                 <div class="stat-icon">
                     <i class="fas fa-calendar-check"></i>
@@ -36,10 +37,12 @@
                 <div class="stat-icon">
                     <i class="fas fa-layer-group"></i>
                 </div>
+                {{-- Menghitung total semua lapangan berdasarkan atribut venue_sections_count --}}
                 <div class="stat-number">{{ $fieldList->sum('venue_sections_count') }}</div>
                 <div class="stat-label">Total Lapangan</div>
             </div>
         </div>
+
 
         <!-- Field & Section Selection -->
         <div class="venue-selector-card">
@@ -123,6 +126,7 @@
 @push('scripts')
 @include('landowner.schedule.partials.schedule-script')
     <script>
+        // Fungsi untuk memperbarui link URL pada tombol "Generate Jadwal" & "Tambah Manual" agar membawa parameter venue & section
         function updateActionLinks() {
             const venueId = document.getElementById('fieldFilter').value;
             const sectionId = document.getElementById('sectionFilter').value;
@@ -130,6 +134,7 @@
             const generateBtn = document.querySelector('a[href*="landowner/schedule/generate"]');
             const createBtn = document.querySelector('a[href*="landowner/schedule/create"]');
             
+            // Menyusun query parameter berdasarkan pilihan Dropdown
             let queryParams = [];
             if (venueId) queryParams.push(`venue_id=${venueId}`);
             if (sectionId) queryParams.push(`section_id=${sectionId}`);
@@ -139,6 +144,7 @@
             const generateBaseUrl = "{{ route('landowner.schedule.generate') }}";
             const createBaseUrl = "{{ route('landowner.schedule.create') }}";
             
+            // Terapkan URL baru beserta query param ke dalam tombol
             if (generateBtn) generateBtn.href = generateBaseUrl + queryString;
             if (createBtn) createBtn.href = createBaseUrl + queryString;
         }

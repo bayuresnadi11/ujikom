@@ -19,7 +19,7 @@
             line-height: 1.2;
             color: #000;
             background: #fff;
-            width: 80mm;
+            width: 80mm; /* Lebar standar kertas thermal 80mm */
             max-width: 80mm;
             margin: 0 auto;
             padding: 5mm;
@@ -252,7 +252,7 @@
     <!-- Include QR Code CSS jika diperlukan -->
 </head>
 <body>
-    <!-- Print Button (only visible in browser) -->
+    <!-- Tombol Cetak & Tutup (Hanya muncul di browser, tidak ikut tercetak) -->
     <div class="no-print" style="text-align: center; margin-bottom: 20px;">
         <button onclick="window.print()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 5px; cursor: pointer;">
             🖨️ Cetak Struk
@@ -262,7 +262,7 @@
         </button>
     </div>
 
-    <!-- Receipt Header -->
+    <!-- Header Struk - Informasi Toko/Instansi -->
     <div class="receipt-header">
         <div class="store-name">{{ $appSettings->company_name ?? config('app.name', 'Field Rental') }}</div>
         <div class="store-tagline">{{ $appSettings->tagline ?? 'Penyewaan Lapangan Olahraga Profesional' }}</div>
@@ -273,7 +273,7 @@
         </div>
     </div>
 
-    <!-- Transaction Info -->
+    <!-- Informasi Transaksi Dasar -->
     <div class="transaction-info">
         <div class="info-row">
             <span class="info-label">No. Tiket:</span>
@@ -318,11 +318,11 @@
         </div>
     </div>
 
-    <!-- QR Code Section -->
+    <!-- Bagian QR Code untuk scan tiket masuk -->
     <div class="qr-section">
         <div class="qr-title">TIKET QR CODE</div>
         <div class="qr-code">
-            <!-- Generate QR Code -->
+            <!-- Menghasilkan QR Code menggunakan API eksternal -->
             @php
                 // Gunakan ticket code untuk QR
                 $qrContent = $transaction->transaction_code;

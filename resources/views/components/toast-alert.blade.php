@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
         max-width: 340px !important;
         width: 90% !important;
-        font-family: inherit !important;
+        font-family: 'Inter', sans-serif !important;
     }
 
     .swal-popup-title {
@@ -214,13 +214,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ===== SweetAlert2 Icon Size Adjustment ===== */
     .swal-popup-center .swal2-icon {
-        width: 60px !important;
-        height: 60px !important;
-        margin: 0 auto 16px !important;
+        margin: 0 auto 20px !important;
+        transform: scale(0.85); /* Mengecilkan sedikit tanpa memotong SVG internal */
     }
 
     .swal-popup-center .swal2-icon .swal2-icon-content {
-        font-size: 2rem !important;
+        font-size: 1.8rem !important;
     }
 
     /* ===== Overlay ===== */

@@ -13,45 +13,45 @@ use Carbon\Carbon;
 class BookingController extends Controller
 {
     /**
-     * Display a listing of the bookings.
+     * Menampilkan daftar pesanan (bookings) yang masuk.
      */
     public function index()
     {
         $user = Auth::user();
         
-        // Get all venues belonging to this user (via sections)
-        // We want to show schedules that have bookings (available = 0 and has bookings)
+        // Mengambil semua venue yang dimiliki oleh user ini (melalui relasi section)
+        // Tujuan kita adalah menampilkan jadwal yang sudah di-booking (available = 0)
         
-        // 1. Get Section IDs for this landowner
+        // 1. Mengambil ID Sub Lapangan (Section) khusus untuk landowner ini
         $sectionIds = VenueSection::whereHas('venue', function($q) use ($user) {
             $q->where('created_by', $user->id);
         })->pluck('id');
 
-        // 2. Get Schedules that are booked
-        // We assume 'available' = 0 means booked (or at least unavailable)
-        // Adjust query to ensure we only get actual bookings if you have a Booking model relation
+        // 2. Query Data: Mengambil rentetan jadwal berdasarkan kumpulan ID Sub Lapangan (Section) si pemilik yang tidak tersedia (available = 0)
+        // Kita berasumsi available = 0 berarti lapangan telah fully booked
         $bookings = VenueSchedule::whereIn('section_id', $sectionIds)
             ->where('available', 0)
             ->with(['bookings.user', 'section.venue'])
             ->orderBy('date', 'desc')
             ->orderBy('start_time', 'desc')
-            ->paginate(10); // Pagination
+            ->paginate(10); // Pembatasan baris data per halaman (Pagination)
 
         return view('landowner.home.booking-list', compact('bookings'));
     }
 
     /**
-     * Display the specified booking.
+     * Menampilkan detail pesanan secara spesifik.
      *
-     * @param  int  $id (Booking ID or Schedule ID? User clicked on a booking item which usually wraps a schedule or a booking)
-     * In index.blade.php, the link was route('buyer.booking.show', optional($booking)->id)
-     * So $id is likely the `bookings` table ID, NOT `venue_schedules` ID.
+     * @param  int  $id (ID pada tabel bookings)
+     * Pada index.blade.php, tautan yang digunakan adalah route('buyer.booking.show', optional($booking)->id)
+     * Jadi $id di sini merujuk pada primary key dari tabel `bookings`, bukan tabel `venue_schedules`.
      */
     public function show($id)
     {
         $user = Auth::user();
         
-        // Find the booking and ensure it belongs to a venue owned by this user
+        // Logika Sekuritas Data: Menggunakan whereHas untuk memastikan relasi bersarang (Booking -> Schedule -> Section -> Venue)
+        // secara ketat hanya bisa diakses bilamana 'created_by' dari Venue tersebut MATCHES dengan $user->id (Mencegah IDOR attack)
         $booking = Booking::with(['schedule.section.venue', 'user', 'schedule.section'])
             ->whereHas('schedule.section.venue', function($q) use ($user) {
                 $q->where('created_by', $user->id);

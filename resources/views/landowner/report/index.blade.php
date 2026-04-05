@@ -115,6 +115,7 @@
 
         <!-- ================= TAB LAPORAN ================= -->
         <section id="history" class="tab-content active history-list">
+            {{-- Loop untuk menampilkan semua data riwayat transaksi/booking untuk laporan --}}
             @forelse($bookings as $booking)
                 <div class="history-card">
 
@@ -129,11 +130,13 @@
                     <div class="card-middle">
                         <h3 class="user-name">{{ $booking->user->name }}</h3>
 
+                        {{-- Menampilkan nama venue beserta bagian lapangannya --}}
                         <p class="venue-name">
                             {{ $booking->venue->venue_name }} -
                             {{ $booking->schedule->venueSection->section_name ?? 'N/A' }}
                         </p>
 
+                        {{-- Memformat tanggal dan jam mulai-selesai menggunakan Carbon --}}
                         <p class="booking-date">
                             {{ \Carbon\Carbon::parse($booking->schedule->start_time)->format('d M Y') }}
                             |
@@ -142,6 +145,7 @@
                             {{ \Carbon\Carbon::parse($booking->schedule->end_time)->format('H:i') }}
                         </p>
                     </div>
+
 
                     <div class="card-right">
                         <a href="{{ route('landowner.report-lapangan.pdf', $booking->id) }}" class="btn-download-pdf" title="Unduh laporan">
@@ -219,6 +223,7 @@
                     <li>
                         <span>Booking Terbanyak</span>
                         <strong>
+                            {{-- Mengelompokkan booking berdasarkan nama venue lalu menghitung jumlah terbanyak menggunakan map & sortDesc --}}
                             @php
                                 $venueCounts = $allBookings->groupBy(fn($b) => $b->venue->venue_name)->map(fn($g) => $g->count());
                                 $topVenue = $venueCounts->sortDesc()->keys()->first() ?? '-';
@@ -230,6 +235,7 @@
                     <li>
                         <span>Lapangan Tersibuk</span>
                         <strong>
+                            {{-- Menginisialisasi perhitungan jumlah booking pada masing-masing lapangan/section --}}
                             @php
                                 $sectionCounts = $allBookings->filter(fn($b) => $b->schedule && $b->schedule->venueSection)
                                     ->groupBy(fn($b) => $b->schedule->venueSection->section_name)
@@ -243,6 +249,7 @@
                     <li>
                         <span>Bulan Tersibuk</span>
                         <strong>
+                            {{-- Menghitung bulan mana yang memiliki frekuensi booking tertinggi --}}
                             @php
                                 $monthCounts = $allBookings->filter(fn($b) => $b->schedule)
                                     ->groupBy(fn($b) => Carbon\Carbon::parse($b->schedule->date)->format('F Y'))

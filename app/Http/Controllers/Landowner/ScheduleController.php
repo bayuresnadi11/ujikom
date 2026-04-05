@@ -18,12 +18,12 @@ class ScheduleController extends Controller
     {
         $user = Auth::user();
         
-        // Get all venues created by this user
+        // Logika Analitik: Mendata seluruh Venue (termasuk jumlah lapangannya) eksklusif milik akun landowner ini
         $fieldList = Venue::where('created_by', $user->id)
             ->withCount('venueSections')
             ->get();
         
-        // Get total bookings today
+        // Logika Analitik: Menghitung secara dinamis total reservasi yang benar-benar masuk pada HARI INI
         $totalBookingHariIni = Booking::whereHas('venue', function($query) use ($user) {
             $query->where('created_by', $user->id);
         })
@@ -256,7 +256,8 @@ class ScheduleController extends Controller
             
             $user = Auth::user();
             
-            // Verify section belongs to user
+            // Logika Sekuritas Jaringan: Pastikan 'section_id' yang dilempar oleh Client valid dan 
+            // masih berada di bawah hirarki Venue milik akun landowner bersangkutan (Mencegah modifikasi DOM Inspect Element)
             $section = VenueSection::whereHas('venue', function($query) use ($user) {
                 $query->where('created_by', $user->id);
             })->where('id', $validated['section_id'])->first();
@@ -265,7 +266,7 @@ class ScheduleController extends Controller
                 return back()->with('error', 'Section tidak ditemukan');
             }
             
-            // Check for duplicate schedule
+            // Logika Validasi Konflik: Mencegah sistem menyimpan 2 jadwal berbeda pada Section, Tanggal, dan Rentang Waktu eksekusi yang persis sama.
             $exists = VenueSchedule::where('section_id', $validated['section_id'])
                 ->where('date', $validated['date'])
                 ->where('start_time', $validated['start_time'])
@@ -276,7 +277,8 @@ class ScheduleController extends Controller
                 return back()->with('error', 'Jadwal dengan waktu yang sama sudah ada')->withInput();
             }
             
-            // Calculate duration if not provided
+            // Logika Interpolasi Durasi: Jika kolom 'rental_duration' dikosongkan oleh pembuat, 
+            // sistem secara kalkulatif akan menghitung diff jam murni antara 'start_time' dan 'end_time'
             if (empty($validated['rental_duration'])) {
                 $start = Carbon::parse($validated['start_time']);
                 $end = Carbon::parse($validated['end_time']);

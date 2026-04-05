@@ -62,6 +62,7 @@
                 </div>
             @else
                 <div class="cashier-list" id="cashierList">
+                    {{-- Me-looping semua data cashier untuk ditampilkan sebagai kartu/list item --}}
                     @foreach($cashiers as $c)
                         <div class="cashier-card" data-name="{{ strtolower($c->name) }}">
                             <div class="cashier-info">
@@ -105,11 +106,13 @@
 
     <!-- Scripts -->
     <script>
+        // Logika Javascript untuk mencari (filter) data cashier berdasarkan nama tanpa me-reload halaman
         function searchCashier() {
             const input = document.getElementById('searchInput');
             const filter = input.value.toLowerCase();
             const cards = document.getElementsByClassName('cashier-card');
 
+            // Cek setiap card, lalu hide yang tidak cocok dengan kata kunci
             for (let i = 0; i < cards.length; i++) {
                 const name = cards[i].getAttribute('data-name');
                 if (name.indexOf(filter) > -1) {
