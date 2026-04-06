@@ -253,28 +253,7 @@
         </main>
 
         <!-- Bottom Nav -->
-        <nav class="bottom-nav">
-            <a href="{{ route('buyer.home') }}" class="nav-item">
-                <i class="fas fa-home nav-icon"></i>
-                Beranda
-            </a>
-            <a href="{{ route('buyer.main_bareng.index') }}" class="nav-item active">
-                <i class="fas fa-futbol nav-icon"></i>
-                Main Bareng
-            </a>
-            <a href="{{ route('buyer.explore') }}" class="nav-item">
-                <i class="fas fa-search nav-icon"></i>
-                Explore
-            </a>
-            <a href="{{ route('buyer.chat') }}" class="nav-item">
-                <i class="fas fa-comments nav-icon"></i>
-                Chat
-            </a>
-            <a href="{{ route('buyer.profile') }}" class="nav-item">
-                <i class="fas fa-user nav-icon"></i>
-                Profil
-            </a>
-        </nav>
+        @include('layouts.bottom-nav')
 
         <!-- Toast Container -->
         <div class="toast-container" id="toastContainer"></div>

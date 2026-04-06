@@ -996,7 +996,7 @@
                                         <button class="btn-pay" onclick="payParticipant({{ $playTogether->id }})">
                                             <i class="fas fa-wallet"></i> Bayar
                                             @if($remainingToPay > 0)
-                                                <small>Rp {{ number_format($remainingToPay, 0, ',', '.') }}</small>
+                                                <small>{{ number_format($biayaPerOrang, 0, ',', '.') }}</small>
                                             @endif
                                         </button>
                                     @endif
