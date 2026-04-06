@@ -16,7 +16,7 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = 10;
+        $perPage = 2;
         
         // Get total count (tidak terpengaruh search)
         $totalCustomers = User::where('created_by', auth()->id())

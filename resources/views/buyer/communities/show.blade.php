@@ -2169,9 +2169,6 @@
                 <button class="main-bareng-tab active" onclick="setTab('main-bareng')">
                     Main Bareng
                 </button>
-                <button class="main-bareng-tab" onclick="setTab('tanding')">
-                    Sparring
-                </button>
             </div>
 
             <div class="main-bareng-content">
@@ -2375,18 +2372,6 @@
                     </div>
                     <div class="activity-radio-indicator"></div>
                 </div>
-
-                <div class="activity-type-card" onclick="selectType(this, 'sparring')">
-                    <div class="activity-type-icon-wrapper">
-                        <i class="fas fa-futbol"></i>
-                    </div>
-                    <div class="activity-type-info">
-                        <div class="activity-type-name">Sparring</div>
-                        <div class="activity-type-desc">Temukan lawan tanding untuk komunitasmu.</div>
-                    </div>
-                    <div class="activity-radio-indicator"></div>
-                </div>
-
                 <button id="btnNextActivity" class="btn-next-activity" onclick="handleNextActivity()" disabled>
                     Selanjutnya
                 </button>

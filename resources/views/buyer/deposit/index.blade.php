@@ -793,25 +793,6 @@
                             Saldo terkini dari semua transaksi
                         </div>
                     </div>
-
-                    <!-- Withdrawable Balance -->
-                    <div class="withdrawable-card">
-                        <div class="withdrawable-header">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            <span class="withdrawable-label">Tersedia untuk ditarik</span>
-                        </div>
-                        <div class="withdrawable-amount">
-                            Rp {{ number_format($withdrawableAmount, 0, ',', '.') }}
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="quick-actions">
-                        <a href="{{ route('buyer.deposit.withdraw.saldo') }}" class="action-btn">
-                            <i class="fas fa-minus-circle"></i>
-                            <span class="action-label">Withdraw</span>
-                        </a>
-                    </div>
                 </div>
 
                 <!-- Transaction History Section -->
@@ -819,12 +800,12 @@
                     <div class="section-header">
                         <h2 class="section-title">
                             <i class="fas fa-receipt"></i>
-                            Riwayat Transaksi & Penarikan
+                            Riwayat Transaksi
                         </h2>
                     </div>
                     
                     <p class="section-subtitle">
-                        Catatan semua transaksi deposit dan penarikan saldo
+                        Catatan semua transaksi deposit
                     </p>
 
                     <!-- Filter Section -->
@@ -836,7 +817,6 @@
                         <div class="filter-chips" id="filterButtons">
                             <button class="filter-chip active" data-filter="all">Semua Transaksi</button>
                             <button class="filter-chip" data-filter="deposit">Deposit</button>
-                            <button class="filter-chip" data-filter="withdrawal">Penarikan</button>
                         </div>
                     </div>
 

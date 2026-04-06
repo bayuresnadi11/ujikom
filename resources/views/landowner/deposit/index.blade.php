@@ -652,7 +652,7 @@
                 <div style="margin-bottom: 24px;">
                     <h1 style="font-size: 24px; font-weight: 800; color: #2c3e50; margin-bottom: 8px;">
                         <i class="fas fa-wallet" style="color: var(--primary); margin-right: 10px;"></i>
-                        Deposit & Withdraw
+                        Deposit
                     </h1>
                     <p style="color: #7b8a8b; font-size: 14px;">
                         Kelola saldo dari booking lapangan Anda
@@ -675,10 +675,6 @@
                     </div>
                     
                     <div class="balance-actions">
-                        <a href="{{ route('landowner.withdraw.saldo') }}" class="balance-btn" id="withdrawBtn">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <span>Withdraw Saldo</span>
-                        </a>
                         <button onclick="refreshBalance()" class="balance-btn">
                             <i class="fas fa-sync-alt"></i>
                             <span>Refresh</span>
@@ -725,11 +721,6 @@
                                 <i class="fas fa-money-bill-wave"></i>
                                 <span>Deposit</span>
                                 <span class="badge" id="badge-deposit">0</span>
-                            </button>
-                            <button class="filter-btn" data-type="withdrawal">
-                                <i class="fas fa-hand-holding-usd"></i>
-                                <span>Penarikan</span>
-                                <span class="badge" id="badge-withdrawal">0</span>
                             </button>
                         </div>
                     </div>

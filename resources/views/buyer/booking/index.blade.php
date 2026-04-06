@@ -1,11 +1,20 @@
+{{--
+=============================================================================
+VIEW: MY BOOKINGS (BOOKINGAN SAYA)
+Menampilkan daftar semua booking milik user yang sedang login
+=============================================================================
+--}}
+
 @extends('layouts.main', ['title' => 'My Bookings'])
 
 @push('styles')
+{{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
 <link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
+{{-- Override CSS untuk memastikan konten terlihat penuh --}}
 <style>
 .section-content,
 .section-description {
@@ -18,7 +27,8 @@
 <div class="mobile-container">
     @include('layouts.header')
     
-    {{-- Loading Overlay --}}
+    {{-- ====================== LOADING OVERLAY ====================== --}}
+    {{-- Tampil saat proses pembayaran sedang berlangsung --}}
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">Sedang Memproses...</div>
@@ -26,20 +36,24 @@
     </div>
 
     <main class="main-content">
+        {{-- ====================== HEADER HALAMAN ====================== --}}
         <section class="page-header">
             <h1 class="page-title">Bookingan Saya</h1>
             <p class="page-subtitle">Kelola semua booking lapangan Anda</p>
         </section>
 
+        {{-- ====================== DAFTAR BOOKING ====================== --}}
         <div class="single-column-container">
             @forelse($bookings as $booking)
                 <div class="section-card booking-card">
+                    {{-- Header kartu booking: nama venue dan tombol aksi (edit/hapus) --}}
                     <div class="section-header">
                         <div>
                             <h3 class="section-title">{{ $booking->venue->venue_name }}</h3>
                             <p class="section-subtitle">{{ $booking->schedule->section->section_name }}</p>
                         </div>
                         <div style="display: flex; gap: 8px;">
+                            {{-- Tombol Edit & Hapus hanya untuk booking dengan status pending --}}
                             @if($booking->booking_payment === 'pending')
                                 <a href="{{ route('buyer.booking.edit', $booking->id) }}" class="card-action-btn btn-edit-card">
                                     <i class="fas fa-edit"></i>
@@ -55,6 +69,7 @@
                         </div>
                     </div>
 
+                    {{-- Detail booking: tanggal, waktu, harga, tipe, status --}}
                     <div class="section-content">
                         <div class="detail-item">
                             <span class="detail-label">Tanggal</span>
@@ -65,6 +80,7 @@
                             <span class="detail-value">{{ \Carbon\Carbon::parse($booking->schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->schedule->end_time)->format('H:i') }}</span>
                         </div>
 
+                        {{-- Perhitungan harga untuk PlayTogether (tidak digunakan langsung, menggunakan getDisplayTotalAmount) --}}
                         @php
                             $totalHargaTampil = $booking->amount;
                             $lapangParticipant = 0;
@@ -113,6 +129,8 @@
                                 {{ ucfirst($booking->booking_payment) }}
                             </span>
                         </div>
+                        
+                        {{-- Tampilkan Ticket Code dan tombol QR jika sudah lunas --}}
                         @if($booking->booking_payment === 'full')
                             <div class="detail-item">
                                 <span class="detail-label">Ticket Code</span>
@@ -124,16 +142,18 @@
                             </div>
                         @endif
                     </div>
+
+                    {{-- ====================== LOGIKA TAMPIL TOMBOL BAYAR ====================== --}}
                     @php
                         $showBookingPayButton = false;
                         $showParticipantPayButton = false;
 
-                        // REGULAR
+                        // REGULAR: booking reguler dengan status pending
                         if ($booking->type === 'regular' && $booking->booking_payment === 'pending') {
                             $showBookingPayButton = true;
                         }
 
-                        // HOST BAYAR LAPANG
+                        // HOST BAYAR LAPANG: play_together/sparring dengan host yang bayar
                         if (
                             in_array($booking->type, ['play_together', 'sparring']) &&
                             $booking->pay_by === 'host' &&
@@ -142,16 +162,10 @@
                             $showBookingPayButton = true;
                         }
 
-                        // PARTICIPANT BAYAR
-                        if (
-                            in_array($booking->type, ['play_together', 'sparring']) &&
-                            $booking->pay_by === 'participant' &&
-                            $booking->booking_payment !== 'full'
-                        ) {
-                            $showParticipantPayButton = true;
-                        }
-                        @endphp
+                        // PARTICIPANT BAYAR: cek ulang di bawah
+                    @endphp
 
+                    {{-- Tombol bayar untuk Regular atau Host --}}
                     @if($showBookingPayButton)
                         <div class="booking-actions">
                             <button class="btn-pay" onclick="payNow({{ $booking->id }})">
@@ -161,37 +175,39 @@
                         </div>
                     @endif
 
+                    {{-- ====================== CEK PARTICIPANT UNTUK PLAY TOGETHER ====================== --}}
                     @php
-    $userParticipant = $booking->playTogether
-        ? $booking->playTogether->participants
-            ->where('user_id', auth()->id())
-            ->first()
-        : null;
+                        $userParticipant = $booking->playTogether
+                            ? $booking->playTogether->participants
+                                ->where('user_id', auth()->id())
+                                ->first()
+                            : null;
 
-    $showParticipantPayButton = false;
+                        $showParticipantPayButton = false;
 
-    if (
-        in_array($booking->type, ['play_together', 'sparring']) &&
-        $booking->pay_by === 'participant' &&
-        $userParticipant &&
-        $userParticipant->payment_status !== 'paid'
-    ) {
-        $showParticipantPayButton = true;
-    }
-@endphp
+                        if (
+                            in_array($booking->type, ['play_together', 'sparring']) &&
+                            $booking->pay_by === 'participant' &&
+                            $userParticipant &&
+                            $userParticipant->payment_status !== 'paid'
+                        ) {
+                            $showParticipantPayButton = true;
+                        }
+                    @endphp
 
-@if($showParticipantPayButton)
-    <div class="booking-actions">
-        <button class="btn-pay" onclick="payNow({{ $booking->id }})">
-            <i class="fas fa-credit-card"></i>
-            Bayar Bagian Saya
-        </button>
-    </div>
-@endif
-
+                    {{-- Tombol bayar untuk participant PlayTogether/Sparring --}}
+                    @if($showParticipantPayButton)
+                        <div class="booking-actions">
+                            <button class="btn-pay" onclick="payNow({{ $booking->id }})">
+                                <i class="fas fa-credit-card"></i>
+                                Bayar Bagian Saya
+                            </button>
+                        </div>
+                    @endif
 
                 </div>
             @empty
+                {{-- Tampilan jika tidak ada booking --}}
                 <div class="empty-state">
                     <i class="fas fa-calendar-times"></i>
                     <h3>Belum Ada Booking</h3>
@@ -204,6 +220,7 @@
             @endforelse
         </div>
 
+        {{-- ====================== MODAL QR CODE ====================== --}}
         <div class="qr-modal" id="qrModal" style="display:none">
             <div class="qr-content" id="qrContent">
                 <div id="qrContainer"></div>
@@ -216,6 +233,7 @@
     @include('layouts.bottom-nav')
 </div>
 
+{{-- ====================== STYLE TAMBAHAN ====================== --}}
 <style>
 .single-column-container {
     display: flex;
@@ -343,6 +361,7 @@
     color: var(--danger);
 }
 
+/* Modal QR Code */
 .qr-modal {
     position: fixed;
     inset: 0;
@@ -372,6 +391,7 @@
     cursor: pointer;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
     .section-header {
         flex-direction: column;
@@ -428,16 +448,20 @@
 
 @endsection
 
+{{-- ====================== JAVASCRIPT ====================== --}}
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 
 <script>
+// ====================== FUNGSI TAMPILKAN QR CODE ======================
+// Menampilkan modal dengan QR code dari ticket code
 function showQr(code) {
     document.getElementById('qrModal').style.display = 'flex';
     document.getElementById('qrContainer').innerHTML = '';
     document.getElementById('qrText').innerText = code;
 
+    // Generate QR code menggunakan library QRCode.js
     new QRCode(document.getElementById("qrContainer"), {
         text: code,
         width: 200,
@@ -445,15 +469,17 @@ function showQr(code) {
     });
 }
 
+// Tutup modal QR saat klik di luar area QR
 qrModal.addEventListener('click', function () {
     qrModal.style.display = 'none';
 });
 
+// Mencegah klik pada QR content menutup modal
 qrContent.addEventListener('click', function (e) {
     e.stopPropagation();
 });
 
-// Loading Overlay Functions
+// ====================== FUNGSI LOADING OVERLAY ======================
 function showLoading() {
     document.getElementById('loadingOverlay').style.display = 'flex';
 }
@@ -464,6 +490,7 @@ function hideLoading() {
 </script>
 
 <script>
+// ====================== FITUR PENCARIAN BOOKING ======================
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -484,6 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+{{-- ====================== KONFIGURASI MIDTRANS ====================== --}}
 @php
     $isProduction = $setting->midtrans_is_production ?? false;
     $snapUrl = $isProduction ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
@@ -492,8 +520,12 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{{ $snapUrl }}" data-client-key="{{ $clientKey }}"></script>
 
 <script>
+// ====================== FUNGSI PEMBAYARAN MIDTRANS ======================
+// Memproses pembayaran booking melalui Midtrans Snap
 function payNow(bookingId) {
-    showLoading();
+    showLoading();  // Tampilkan loading overlay
+    
+    // Request Snap Token ke server
     fetch(`/buyer/booking/${bookingId}/generate-snap-token`, {
         method: 'GET',
         headers: {
@@ -502,14 +534,15 @@ function payNow(bookingId) {
     })
     .then(res => res.json())
     .then(data => {
-        hideLoading();
+        hideLoading();  // Sembunyikan loading overlay
         if (data.success) {
             const snapToken = data.snap_token;
 
+            // Buka popup pembayaran Midtrans
             snap.pay(snapToken, {
                 onSuccess: function(result){
                     showLoading();
-                    // Kirim ke server untuk update status booking
+                    // Kirim ke server untuk update status booking setelah pembayaran sukses
                     fetch(`/buyer/booking/${bookingId}/update-payment`, {
                         method: 'POST',
                         headers: {
@@ -533,6 +566,7 @@ function payNow(bookingId) {
                     });
                 },
                 onPending: function(result){
+                    // Pembayaran pending (belum selesai)
                     Swal.fire({
                         icon: 'info',
                         title: 'Pembayaran masih pending',

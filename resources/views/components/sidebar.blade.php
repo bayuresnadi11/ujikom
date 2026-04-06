@@ -30,18 +30,6 @@
                 </a>
             </li>
             
-            <li>
-                <a href="{{ route('chat.index') }}"
-                    class="{{ request()->routeIs('chat.*') ? 'active' : '' }}"
-                    data-tooltip="Pesan">
-                    <div class="nav-icon">
-                        <i class="bi bi-chat-dots-fill"></i>
-                    </div>
-                    <span class="nav-text">Pesan</span>
-                    <div class="active-indicator"></div>
-                </a>
-            </li>
-            
             <li class="nav-section">
                 <span class="section-title">Management</span>
             </li>

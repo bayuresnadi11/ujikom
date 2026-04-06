@@ -1,6 +1,14 @@
+{{--
+=============================================================================
+VIEW: CREATE BOOKING
+Tampilan untuk membuat booking baru (Regular / Main Bareng / Sparring)
+=============================================================================
+--}}
+
 @extends('layouts.main', ['title' => 'Create Booking'])
 
 @push('styles')
+{{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
 <link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
@@ -11,12 +19,14 @@
     @include('layouts.header')
 
     <main class="main-content">
+        {{-- ====================== HEADER HALAMAN ====================== --}}
         <section class="page-header">
             <h1 class="page-title">Buat Booking Baru</h1>
             <p class="page-subtitle">Isi form untuk membuat booking lapangan</p>
         </section>
 
         <div style="padding: 0 20px;">
+            {{-- ====================== MENAMPILKAN ERROR VALIDASI ====================== --}}
             @if ($errors->any())
                 <div style="background: #fee; border: 1px solid #fcc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                     <ul style="margin: 0; padding-left: 20px;">
@@ -31,10 +41,11 @@
             <form action="{{ route('buyer.booking.store') }}" method="POST" id="bookingForm">
                 @csrf
 
+                {{-- Hidden fields untuk venue dan section (dari parameter URL) --}}
                 <input type="hidden" name="venue_id" value="{{ $venue->id ?? '' }}" id="venue_id">
                 <input type="hidden" name="section_id" value="{{ $section->id ?? '' }}" id="section_id">
 
-                <!-- Modern Information Cards -->
+                {{-- ====================== KARTU INFORMASI VENUE & SECTION ====================== --}}
                 <div class="booking-info-cards">
                     <div class="info-card-item">
                         <span class="info-card-label"><i class="fas fa-building"></i> Venue</span>
@@ -46,6 +57,7 @@
                     </div>
                 </div>
 
+                {{-- ====================== PEMILIHAN JADWAL ====================== --}}
                 <div class="form-group">
                     <label class="form-label">Pilih Jadwal <span style="color: red;">*</span></label>
                     <div class="schedule-cards-container" id="scheduleCardsContainer">
@@ -58,10 +70,12 @@
                                  data-end="{{ $schedule->end_time }}"
                                  data-duration="{{ $schedule->rental_duration }}"
                                  onclick="{{ $schedule->available ? 'selectSchedule(this)' : '' }}">
+                                {{-- Tanggal --}}
                                 <div class="schedule-date {{ $schedule->available ? '' : 'unavailable-date' }}">
                                     <div class="date-day">{{ \Carbon\Carbon::parse($schedule->date)->format('d') }}</div>
                                     <div class="date-month">{{ \Carbon\Carbon::parse($schedule->date)->format('M') }}</div>
                                 </div>
+                                {{-- Detail jadwal --}}
                                 <div class="schedule-details">
                                     <div class="schedule-time">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</div>
                                     <div class="schedule-price">Rp {{ number_format($schedule->rental_price, 0, ',', '.') }}</div>
@@ -82,6 +96,7 @@
                     @enderror
                 </div>
 
+                {{-- ====================== KARTU INFO JADWAL TERPILIH ====================== --}}
                 <div id="scheduleInfoCard" style="display: none;" class="schedule-info-card">
                     <h4><i class="fas fa-info-circle"></i> Detail Jadwal Terpilih</h4>
                     <div class="schedule-details-grid">
@@ -104,6 +119,7 @@
                     </div>
                 </div>
 
+                {{-- ====================== TIPE BOOKING ====================== --}}
                 <div class="form-group">
                     <label class="form-label">Tipe Booking <span style="color: red;">*</span></label>
                     <select class="form-control" name="type" id="bookingType" onchange="toggleBookingType()">
@@ -116,6 +132,7 @@
                     @enderror
                 </div>
 
+                {{-- ====================== PEMBAYARAN OLEH (HOST/PARTICIPANT) ====================== --}}
                 <div id="payBySection" style="display: none;">
                     <div class="form-group">
                         <label class="form-label">Lapangan Dibayar Oleh <span style="color: red;">*</span></label>
@@ -126,6 +143,7 @@
                     </div>
                 </div>
 
+                {{-- ====================== SECTION PLAY TOGETHER ====================== --}}
                 <div id="playTogetherSection" class="form-section" style="display: none;">
                     <div class="form-section-header">
                         <i class="fas fa-users"></i> Informasi Main Bareng
@@ -148,6 +166,7 @@
                         </select>
                     </div>
 
+                    {{-- Dropdown komunitas (hanya muncul jika privacy = community) --}}
                     <div class="form-group" id="pt_community_group" style="display: none;">
                         <label class="form-label">Pilih Komunitas <span style="color: red;">*</span></label>
                         <select class="form-control" name="pt_community_id" id="pt_community_id">
@@ -177,6 +196,7 @@
                         </select>
                     </div>
 
+                    {{-- Harga per person (hanya jika paid) --}}
                     <div class="form-group" id="pt_price_group" style="display: none;">
                         <label class="form-label">Biaya per Orang<span style="color: red;">*</span></label>
                         <input type="number" class="form-control" name="pt_price_per_person" id="pt_price_per_person" min="0" placeholder="Contoh: 50000" value="{{ old('pt_price_per_person') }}" onchange="updateCalculator()">
@@ -185,6 +205,7 @@
                         @enderror
                     </div>
 
+                    {{-- ====================== KALKULATOR BIAYA ====================== --}}
                     <div id="calculatorHelper" class="schedule-info-card" style="display: none;">
                         <h4><i class="fas fa-calculator"></i> Kalkulator Biaya</h4>
                         <div class="schedule-details-grid">
@@ -210,10 +231,12 @@
                             </div>
                         </div>
                     </div>
-  <div class="form-group">
+
+                    <div class="form-group">
                         <label class="form-label">Batas Pembayaran</label>
                         <input type="datetime-local" class="form-control" name="pt_payment_deadline" value="{{ old('pt_payment_deadline') }}">
                     </div>
+
                     <div class="form-group">
                         <label class="form-label">Jenis Kelamin <span style="color: red;">*</span></label>
                         <input type="text" class="form-control" name="pt_gender" id="pt_gender" placeholder="Contoh: Laki-laki / Perempuan / Campur" value="{{ old('pt_gender') }}">
@@ -223,8 +246,6 @@
                         <label class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="pt_description" rows="3" placeholder="Deskripsi play together">{{ old('pt_description') }}</textarea>
                     </div>
-
-                  
 
                     <div class="form-group">
                         <label>
@@ -241,6 +262,7 @@
                     </div>
                 </div>
 
+                {{-- ====================== SECTION SPARRING ====================== --}}
                 <div id="sparringSection" class="form-section" style="display: none;">
                     <div class="form-section-header">
                         <i class="fas fa-trophy"></i> Informasi Sparring
@@ -271,6 +293,7 @@
                         </select>
                     </div>
 
+                    {{-- Biaya per participant (hanya jika paid) --}}
                     <div class="form-group" id="sp_cost_group" style="display: none;">
                         <label class="form-label">Biaya Per Participant <span style="color: red;">*</span></label>
                         <input type="number" class="form-control" name="sp_cost_per_participant" id="sp_cost_per_participant" min="0" placeholder="Contoh: 50000" value="{{ old('sp_cost_per_participant') }}">
@@ -292,6 +315,7 @@
                     </div>
                 </div>
 
+                {{-- ====================== TOMBOL AKSI ====================== --}}
                 <div class="form-actions">
                     <button type="button" class="btn-form btn-form-secondary" onclick="window.history.back()">
                         <i class="fas fa-times"></i>
@@ -310,6 +334,7 @@
 @include('layouts.bottom-nav')
 </div>
 
+{{-- ====================== STYLE TAMBAHAN ====================== --}}
 <style>
 .booking-form-container {
     background: var(--card-bg);
@@ -591,23 +616,27 @@
 
 @endsection
 
+{{-- ====================== JAVASCRIPT ====================== --}}
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-let selectedScheduleData = null;
-let selectedSchedulePrice = 0;
+// ====================== VARIABEL GLOBAL ======================
+let selectedScheduleData = null;    // Menyimpan data jadwal yang dipilih
+let selectedSchedulePrice = 0;      // Menyimpan harga jadwal yang dipilih
 
+// ====================== FUNGSI PILIH JADWAL ======================
+// Fungsi ini dipanggil ketika user mengklik kartu jadwal
 function selectSchedule(element) {
-    // Remove selected from all cards
+    // Hapus class 'selected' dari semua kartu jadwal
     document.querySelectorAll('.schedule-card').forEach(card => {
         card.classList.remove('selected');
     });
     
-    // Add selected to clicked card
+    // Tambahkan class 'selected' pada kartu yang diklik
     element.classList.add('selected');
     
-    // Get data from element
+    // Ambil data dari atribut data-* pada elemen
     const scheduleId = element.getAttribute('data-schedule-id');
     const price = parseFloat(element.getAttribute('data-price'));
     const date = element.getAttribute('data-date');
@@ -615,11 +644,11 @@ function selectSchedule(element) {
     const endTime = element.getAttribute('data-end');
     const duration = element.getAttribute('data-duration');
     
-    // Set hidden input
+    // Simpan ke hidden input dan variabel global
     document.getElementById('schedule_id').value = scheduleId;
     selectedSchedulePrice = price;
     
-    // Update info card
+    // Update tampilan kartu info jadwal
     const dateObj = new Date(date);
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     document.getElementById('selectedDate').textContent = dateObj.toLocaleDateString('id-ID', options);
@@ -628,21 +657,26 @@ function selectSchedule(element) {
     document.getElementById('selectedPrice').textContent = 'Rp ' + price.toLocaleString('id-ID');
     document.getElementById('scheduleInfoCard').style.display = 'block';
     
+    // Update kalkulator biaya
     updateCalculator();
     
     console.log('Schedule selected:', scheduleId, price);
 }
 
+// ====================== FUNGSI TOGGLE TIPE BOOKING ======================
+// Menampilkan/menyembunyikan section berdasarkan tipe booking yang dipilih
 function toggleBookingType() {
     const type = document.getElementById('bookingType').value;
     const payBySection = document.getElementById('payBySection');
     const playTogetherSection = document.getElementById('playTogetherSection');
     const sparringSection = document.getElementById('sparringSection');
     
+    // Sembunyikan semua section terlebih dahulu
     payBySection.style.display = 'none';
     playTogetherSection.style.display = 'none';
     sparringSection.style.display = 'none';
     
+    // Tampilkan section sesuai tipe yang dipilih
     if (type === 'play_together') {
         payBySection.style.display = 'block';
         playTogetherSection.style.display = 'block';
@@ -654,6 +688,8 @@ function toggleBookingType() {
     updateCalculator();
 }
 
+// ====================== FUNGSI TOGGLE KOMUNITAS ======================
+// Menampilkan dropdown komunitas hanya jika privacy dipilih 'community'
 function toggleCommunitySelect() {
     const privacy = document.getElementById('pt_privacy').value;
     const communityGroup = document.getElementById('pt_community_group');
@@ -665,6 +701,8 @@ function toggleCommunitySelect() {
     }
 }
 
+// ====================== FUNGSI TOGGLE HARGA PER PERSON ======================
+// Menampilkan input harga per person hanya jika metode pembayaran 'paid'
 function togglePricePerPerson() {
     const type = document.getElementById('pt_type').value;
     const priceGroup = document.getElementById('pt_price_group');
@@ -678,6 +716,8 @@ function togglePricePerPerson() {
     updateCalculator();
 }
 
+// ====================== FUNGSI TOGGLE BIAYA SPARRING ======================
+// Menampilkan input biaya per participant sparring hanya jika 'paid'
 function toggleSparringCost() {
     const type = document.getElementById('sp_type').value;
     const costGroup = document.getElementById('sp_cost_group');
@@ -689,6 +729,8 @@ function toggleSparringCost() {
     }
 }
 
+// ====================== FUNGSI UPDATE KALKULATOR ======================
+// Menghitung dan menampilkan rincian biaya per participant untuk PlayTogether
 function updateCalculator() {
     const bookingType = document.getElementById('bookingType').value;
     const payBy = document.getElementById('payBy')?.value;
@@ -702,6 +744,7 @@ function updateCalculator() {
 
     const calculatorHelper = document.getElementById('calculatorHelper');
 
+    // Validasi: hanya tampilkan kalkulator untuk PlayTogether dengan data lengkap
     if (
         bookingType !== 'play_together' ||
         maxParticipants <= 0 ||
@@ -715,16 +758,19 @@ function updateCalculator() {
 
     const bookingCost = selectedSchedulePrice;
 
+    // Hitung biaya booking per person (hanya jika participant yang bayar)
     const bookingPerPerson =
         payBy === 'participant'
             ? Math.ceil(bookingCost / maxParticipants)
             : 0;
 
+    // Biaya join fee (jika metode pembayaran paid)
     const joinCost =
         ptType === 'paid' ? pricePerPerson : 0;
 
     const totalPerPerson = bookingPerPerson + joinCost;
 
+    // Update tampilan kalkulator
     document.getElementById('calc_booking_cost').textContent =
         'Rp ' + bookingCost.toLocaleString('id-ID');
 
@@ -745,17 +791,18 @@ function updateCalculator() {
         'Rp ' + totalPerPerson.toLocaleString('id-ID');
 }
 
-// Form validation before submit
+// ====================== VALIDASI FORM SEBELUM SUBMIT ======================
 document.getElementById('bookingForm').addEventListener('submit', function(e) {
     const scheduleId = document.getElementById('schedule_id').value;
     const bookingType = document.getElementById('bookingType').value;
     
-    // Clear previous custom error messages
+    // Hapus pesan error sebelumnya
     document.querySelectorAll('.js-error').forEach(el => el.remove());
     document.querySelectorAll('.form-control.error').forEach(el => el.classList.remove('error'));
     
     let isValid = true;
     
+    // Fungsi helper untuk menambahkan pesan error
     function addError(elementId, message) {
         let element = document.getElementById(elementId);
         if (!element) return;
@@ -772,14 +819,17 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
         isValid = false;
     }
 
+    // Validasi jadwal
     if (!scheduleId) {
         addError('schedule_id', 'Jadwal belum dipilih');
     }
     
+    // Validasi tipe booking
     if (!bookingType) {
         addError('bookingType', 'Tipe booking belum dipilih');
     }
 
+    // Validasi khusus untuk Play Together
     if (bookingType === 'play_together') {
         if (!document.getElementById('pt_name').value.trim()) {
             addError('pt_name', 'Nama Main Bareng belum diisi');
@@ -804,6 +854,7 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
         }
     }
     
+    // Validasi khusus untuk Sparring
     if (bookingType === 'sparring') {
         if (!document.getElementById('sp_name').value.trim()) {
             addError('sp_name', 'Nama Sparring belum diisi');
@@ -815,12 +866,13 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
         }
     }
 
+    // Jika tidak valid, hentikan submit
     if (!isValid) {
         e.preventDefault();
         return false;
     }
     
-    // Disable submit button out to prevent double submission
+    // Disable tombol submit untuk mencegah double submission
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
@@ -835,7 +887,7 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
     return true;
 });
 
-// Debug: Log when page loads
+// ====================== DEBUG: LOG SAAT LOAD ======================
 console.log('Booking create page loaded');
 console.log('Venue ID:', document.getElementById('venue_id')?.value);
 console.log('Section ID:', document.getElementById('section_id')?.value);

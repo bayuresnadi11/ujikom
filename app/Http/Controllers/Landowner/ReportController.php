@@ -57,6 +57,7 @@ class ReportController extends Controller
         return view('landowner.report.index', compact('bookings', 'allBookings', 'monthlyData', 'search'));
     }
 
+    // 
     public function exportPdf(Booking $booking)
     {
         abort_if(
