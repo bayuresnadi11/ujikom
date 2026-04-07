@@ -42,7 +42,7 @@ class ReportController extends Controller
                 });
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); 
+            ->paginate(5); 
 
         $allMonths = collect(range(1,12))
             ->mapWithKeys(fn($m) => [Carbon::create(null, $m, 1)->format('M Y') => 0]);

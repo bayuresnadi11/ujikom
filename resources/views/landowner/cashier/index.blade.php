@@ -96,6 +96,11 @@
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Pagination with premium numbering style --}}
+                <div class="mt-4">
+                    {{ $cashiers->links('vendor.pagination.premium') }}
+                </div>
             @endif
 
         </main>

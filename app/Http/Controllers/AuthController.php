@@ -9,8 +9,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
+/**
+ * Class AuthController
+ * 
+ * Mengatur proses autentikasi pengguna, termasuk login, registrasi,
+ * verifikasi OTP, dan logout.
+ */
 class AuthController extends Controller
 {
+    /**
+     * Menampilkan halaman login.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function login()
     {
         return view('auth.login', [
@@ -18,6 +29,12 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Memproses percobaan login pengguna.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function submitLogin(Request $request)
     {
         $data = $request->validate([
@@ -43,6 +60,11 @@ class AuthController extends Controller
         return redirect()->back()->withInput()->with('error', 'Nomor telepon atau password salah.');
     }
 
+    /**
+     * Menampilkan halaman registrasi.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function register()
     {
         return view('auth.register', [
@@ -50,6 +72,12 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Memproses data registrasi awal dan mengirimkan kode OTP.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function submitRegister(Request $request)
     {
         $validated = $request->validate([
@@ -72,6 +100,13 @@ class AuthController extends Controller
         return redirect()->route('otp.form')->with('success', 'Kode OTP dikirim ke WhatsApp.');
     }
 
+    /**
+     * Mengirimkan kode OTP ke nomor WhatsApp pengguna.
+     * 
+     * @param string $phone
+     * @param string $name
+     * @return void
+     */
     private function kirimOtp($phone, $name)
     {
         $otp = rand(100000, 999999);
@@ -91,6 +126,11 @@ class AuthController extends Controller
         kirimWa($phone, $pesan);
     }
 
+    /**
+     * Menampilkan form verifikasi OTP.
+     * 
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function formOtp()
     {
         if (!session()->has('pending_register')) {
@@ -102,6 +142,12 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Memproses verifikasi kode OTP dan membuat akun pengguna baru.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function submitOtp(Request $request)
     {
         $request->validate([
@@ -141,6 +187,11 @@ class AuthController extends Controller
         return redirect()->route('buyer.home')->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . ' 🎉');
     }
 
+    /**
+     * Mengirim ulang kode OTP jika pengguna belum menerimanya.
+     * 
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function resendOtp()
     {
         $data = session('pending_register');
@@ -152,6 +203,12 @@ class AuthController extends Controller
         return back()->with('success', 'Kode OTP baru sudah dikirim ke WhatsApp.');
     }
 
+    /**
+     * Proses pengakhiran sesi pengguna (logout).
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout(Request $request)
     {
         Auth::guard('web')->logout();

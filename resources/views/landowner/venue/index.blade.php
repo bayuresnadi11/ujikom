@@ -548,6 +548,11 @@
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Pagination with premium numbering style --}}
+                <div class="mt-4">
+                    {{ $venues->links('vendor.pagination.premium') }}
+                </div>
             @else
                 <!-- Empty State -->
                 <div class="empty-state">

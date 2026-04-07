@@ -78,19 +78,7 @@
         setTimeout(() => flash.remove(), 500);
     }
 
-    document.querySelectorAll('.mode-toggle button').forEach((btn, index) => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            scanMode = index === 0 ? 'venue' : 'section';
-            
-            const modeText = scanMode === 'venue' ? 'Masuk Venue' : 'Masuk Lapangan';
-            document.querySelector('.scanner-status').innerHTML = 
-                `<i class="fas fa-check-circle me-2"></i> Mode: ${modeText}`;
-            
-            showNotification('info', 'Mode Berubah', `Sekarang dalam mode ${modeText}`, 2000);
-        });
-    });
+    const modeText = 'Smart Validation';
 
     document.getElementById('camera-select').addEventListener('change', function() {
         const selectedCameraId = this.value;
@@ -98,7 +86,7 @@
             switchCamera(selectedCameraId);
         }
     });
-
+    
     document.addEventListener('DOMContentLoaded', function() {
         initScanner();
     });
@@ -263,8 +251,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
-                ticket_code: ticketCode,
-                scan_mode: scanMode
+                ticket_code: ticketCode
             })
         })
         .then(response => {
@@ -319,7 +306,7 @@
                     <div class="result-icon text-success me-3">✓</div>
                     <div class="flex-grow-1">
                         <div class="result-title text-success mb-1">TIKET VALID</div>
-                        <div class="text-muted small mb-2">${scanMode === 'venue' ? 'Masuk Venue' : 'Masuk Lapangan'}</div>
+                        <div class="text-muted small mb-2">Check-in Berhasil</div>
                         
                         <div class="row g-2">
                              <div class="col-6">

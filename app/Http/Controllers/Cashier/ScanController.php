@@ -27,7 +27,6 @@ class ScanController extends Controller
     {
         $request->validate([
             'ticket_code' => 'required|string',
-            'scan_mode' => 'required|in:venue,section'
         ]);
 
         DB::beginTransaction();
@@ -35,7 +34,7 @@ class ScanController extends Controller
         try {
             // Cari booking berdasarkan ticket_code
             $booking = Booking::where('ticket_code', $request->ticket_code)
-                ->with(['user', 'venue', 'schedule'])
+                ->with(['user', 'venue', 'schedule.section'])
                 ->first();
 
             if (!$booking) {
@@ -50,169 +49,120 @@ class ScanController extends Controller
             if (!$booking->isPaid()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Booking belum dibayar atau pembayaran belum terverifikasi',
+                    'message' => 'Booking belum dibayar atau belum lunas',
                     'error_type' => 'unpaid',
                     'ticket_code' => $booking->ticket_code,
                     'customer_name' => $booking->user->name ?? '-'
                 ]);
             }
 
-
-
-            $scanMode = $request->scan_mode;
             $now = Carbon::now();
             
-            // Parse waktu main dari schedule (jika ada relasi schedule)
+            // Ambil waktu main
             if ($booking->schedule) {
-                $scheduleDate = Carbon::parse($booking->schedule->date ?? now());
                 $dateOnly = Carbon::parse($booking->schedule->date)->format('Y-m-d');
                 $playDateTime = Carbon::parse($dateOnly . ' ' . $booking->schedule->start_time);
-                $startTime = $booking->schedule->start_time ?? '00:00:00';
-                $endTime = $booking->schedule->end_time ?? '23:59:59';
+                $startTime = $booking->schedule->start_time;
+                $endTime = $booking->schedule->end_time;
             } else {
-                // Fallback jika tidak ada schedule relation
-                $scheduleDate = now();
-                $playDateTime = now();
-                $startTime = '00:00:00';
-                $endTime = '23:59:59';
+                return response()->json(['success' => false, 'message' => 'Jadwal booking tidak ditemukan']);
             }
             
             // Waktu mulai check-in (15 menit sebelum main)
             $checkInStartTime = $playDateTime->copy()->subMinutes(15);
 
-            // VALIDASI MASUK VENUE
-            if ($scanMode === 'venue') {
-                // Cek apakah sudah pernah scan venue
-                if (in_array($booking->scan_status, ['masuk_venue', 'masuk_lapang'])) {
+            // 1. CEK TERLALU CEPAT
+            if ($now->lt($checkInStartTime)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Scan hanya bisa dilakukan 15 menit sebelum jam main dimulai',
+                    'error_type' => 'too_early',
+                    'ticket_code' => $booking->ticket_code,
+                    'customer_name' => $booking->user->name ?? '-',
+                    'allowed_time' => $checkInStartTime->format('H:i')
+                ]);
+            }
+
+            // 2. CEK TERLALU LAMA (Kadaluarsa) - misal 3 jam setelah main
+            if ($now->gt(Carbon::parse($dateOnly . ' ' . $endTime)->addHours(1))) {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Waktu booking sudah berakhir',
+                    'error_type' => 'expired',
+                    'ticket_code' => $booking->ticket_code,
+                    'customer_name' => $booking->user->name ?? '-'
+                ]);
+            }
+
+            $targetStatus = '';
+            $statusMessage = '';
+
+            // 3. TENTUKAN STATUS (VENUE vs LAPANGAN)
+            if ($now->lt($playDateTime)) {
+                // Jendela 15 menit SEBELUM main -> MASUK VENUE
+                if ($booking->scan_status === 'masuk_venue') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Tiket sudah di-scan untuk masuk venue sebelumnya!',
+                        'message' => 'User sudah masuk venue. Tunggu jam ' . $playDateTime->format('H:i') . ' untuk masuk lapangan.',
                         'error_type' => 'already_scanned',
-                        'ticket_code' => $booking->ticket_code,
-                        'customer_name' => $booking->user->name ?? '-',
-                        'scan_status_text' => $this->getScanStatusText($booking->scan_status),
-                        'last_scan_time' => $booking->scan_time ? 
-                            $booking->scan_time->format('d/m/Y H:i:s') : '-'
-                    ]);
-                }
-
-                // Cek apakah sudah waktunya check-in (15 menit sebelum main)
-                if ($now->lt($checkInStartTime)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Terlalu cepat! Silakan scan 15 menit sebelum jam main dimulai',
-                        'error_type' => 'too_early',
-                        'ticket_code' => $booking->ticket_code,
-                        'customer_name' => $booking->user->name ?? '-',
-                        'allowed_time' => $checkInStartTime->format('H:i')
-                    ]);
-                }
-
-                // Cek apakah sudah lewat waktu main
-                if ($now->gt($playDateTime->copy()->addHours(3))) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Waktu booking sudah terlewat',
-                        'error_type' => 'expired',
                         'ticket_code' => $booking->ticket_code,
                         'customer_name' => $booking->user->name ?? '-'
                     ]);
                 }
-
-                // Update booking - masuk venue
-                $booking->update([
-                    'scan_status' => 'masuk_venue',
-                    'scan_time' => $now
-                ]);
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Check-in venue berhasil',
-                    'ticket_code' => $booking->ticket_code,
-                    'customer_name' => $booking->user->name ?? '-',
-                    'venue_name' => $booking->venue->venue_name ?? '-',
-                    'section_name' => $booking->schedule->section->section_name ?? '-',
-                    'booking_type' => $booking->type,
-                    'play_date' => $scheduleDate->format('d/m/Y'),
-                    'play_time' => substr($startTime, 0, 5) . ' - ' . substr($endTime, 0, 5),
-                    'scan_status_text' => 'Masuk Venue',
-                    'scan_time' => $now->format('d/m/Y H:i:s')
-                ]);
-            }
-
-            // VALIDASI MASUK LAPANGAN
-            if ($scanMode === 'section') {
-                // Cek apakah sudah scan venue
-                if ($booking->scan_status === 'belum_scan') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Harap scan di pintu venue terlebih dahulu!',
-                        'error_type' => 'venue_not_scanned',
-                        'ticket_code' => $booking->ticket_code,
-                        'customer_name' => $booking->user->name ?? '-',
-                        'scan_status_text' => 'Belum Scan'
-                    ]);
-                }
-
-                // VALIDASI WAKTU: Tidak boleh masuk lapang sebelum jam main
-                // Gunakan 5 menit toleransi sebelum jam main jika diperlukan, atau strict on time.
-                // Request user: "kalo belum jam main ... gabisa scan MASUK LAPANG" -> Strict start time.
-                if ($now->lt($playDateTime)) {
+                
+                if ($booking->scan_status === 'masuk_lapang') {
                      return response()->json([
                         'success' => false,
-                        'message' => 'Belum waktunya masuk lapangan! Silakan tunggu hingga jam main dimulai (' . $playDateTime->format('H:i') . ').',
-                        'error_type' => 'too_early_field',
+                        'message' => 'Tiket sudah digunakan untuk masuk lapangan!',
+                        'error_type' => 'already_scanned',
                         'ticket_code' => $booking->ticket_code,
-                        'customer_name' => $booking->user->name ?? '-',
-                        'allowed_time' => $playDateTime->format('H:i')
                     ]);
                 }
 
-                // Cek apakah sudah pernah scan lapangan
+                $targetStatus = 'masuk_venue';
+                $statusMessage = 'Check-in venue berhasil';
+            } else {
+                // SUDAH JAM MAIN -> MASUK LAPANGAN
                 if ($booking->scan_status === 'masuk_lapang') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Tiket sudah di-scan untuk masuk lapangan sebelumnya!',
+                        'message' => 'Tiket sudah digunakan untuk masuk lapangan sebelumnya.',
                         'error_type' => 'already_scanned',
                         'ticket_code' => $booking->ticket_code,
-                        'customer_name' => $booking->user->name ?? '-',
-                        'scan_status_text' => 'Sudah Masuk Lapangan',
-                        'last_scan_time' => $booking->scan_time ? 
-                            $booking->scan_time->format('d/m/Y H:i:s') : '-'
                     ]);
                 }
 
-                // Update booking - masuk lapangan
-                $booking->update([
-                    'scan_status' => 'masuk_lapang',
-                    'scan_time' => $now
-                ]);
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Check-in lapangan berhasil',
-                    'ticket_code' => $booking->ticket_code,
-                    'customer_name' => $booking->user->name ?? '-',
-                    'venue_name' => $booking->venue->venue_name ?? '-',
-                    'section_name' => $booking->schedule->section->section_name ?? '-',
-                    'booking_type' => $booking->type,
-                    'play_date' => $scheduleDate->format('d/m/Y'),
-                    'play_time' => substr($startTime, 0, 5) . ' - ' . substr($endTime, 0, 5),
-                    'scan_status_text' => 'Masuk Lapangan',
-                    'scan_time' => $now->format('d/m/Y H:i:s')
-                ]);
+                $targetStatus = 'masuk_lapang';
+                $statusMessage = 'Check-in lapangan berhasil (Mulai bermain)';
             }
+
+            // Update status
+            $booking->update([
+                'scan_status' => $targetStatus,
+                'scan_time' => $now
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $statusMessage,
+                'ticket_code' => $booking->ticket_code,
+                'customer_name' => $booking->user->name ?? '-',
+                'venue_name' => $booking->venue->venue_name ?? '-',
+                'section_name' => $booking->schedule->section->section_name ?? '-',
+                'booking_type' => $booking->type,
+                'play_date' => Carbon::parse($booking->schedule->date)->format('d/m/Y'),
+                'play_time' => substr($startTime, 0, 5) . ' - ' . substr($endTime, 0, 5),
+                'scan_status_text' => $this->getScanStatusText($targetStatus),
+                'scan_time' => $now->format('H:i:s')
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
+                'message' => 'Sistem Error: ' . $e->getMessage(),
                 'error_type' => 'system_error'
             ], 500);
         }

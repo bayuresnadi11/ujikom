@@ -21,7 +21,7 @@ class VenueController extends Controller
             ->withCount(['venueSections', 'bookings'])
             ->where('created_by', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(5);
         
         $categories = Category::all();
         

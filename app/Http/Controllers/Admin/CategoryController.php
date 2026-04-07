@@ -7,10 +7,18 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Class CategoryController
+ * 
+ * Mengelola kategori lapangan (misalnya: Futsal, Badminton, Basket) yang tersedia di sistem.
+ * Mencakup operasi CRUD (Create, Read, Update, Delete) untuk kategori.
+ */
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua kategori lapangan.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -19,7 +27,10 @@ class CategoryController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan kategori baru ke dalam database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -48,7 +59,10 @@ class CategoryController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail kategori tertentu berdasarkan ID (untuk AJAX).
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
@@ -66,7 +80,11 @@ class CategoryController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data kategori tertentu di database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -101,7 +119,10 @@ class CategoryController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus kategori tertentu dari database.
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {

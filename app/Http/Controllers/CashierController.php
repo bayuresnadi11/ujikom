@@ -19,10 +19,19 @@ use Midtrans\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * Class CashierController
+ * 
+ * Mengelola fungsi utama untuk peran Kasir, termasuk pengelolaan antrean,
+ * proses pembayaran (Cash & Midtrans), pencarian venue/jadwal, serta
+ * manajemen data penyewa.
+ */
 class CashierController extends Controller
 {
     /**
-     * Display cashier dashboard
+     * Menampilkan dashboard utama kasir.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -35,7 +44,9 @@ class CashierController extends Controller
     }
 
     /**
-     * Display QR scanner page
+     * Menampilkan halaman pemindaian QR code tiket.
+     * 
+     * @return \Illuminate\View\View
      */
     public function scan()
     {
@@ -46,7 +57,9 @@ class CashierController extends Controller
     }
 
     /**
-     * Display queue/booking page
+     * Menampilkan halaman antrean/pemesanan langsung di tempat.
+     * 
+     * @return \Illuminate\View\View
      */
     public function queue()
     {
@@ -60,6 +73,12 @@ class CashierController extends Controller
         return view('cashier.queue.index', compact('categories', 'sections', 'venues', 'midtransClientKey', 'isProduction'));
     }
 
+    /**
+     * Memproses pembayaran booking, mendukung metode Tunai (Cash) dan Midtrans.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function processPayment(Request $request)
 {
     try {
@@ -245,6 +264,12 @@ class CashierController extends Controller
     }
 }
 
+    /**
+     * Memperbarui status pembayaran berdasarkan respon dari Midtrans API atau request manual.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updatePaymentStatus(Request $request)
 {
     try {
@@ -353,6 +378,12 @@ class CashierController extends Controller
     }
 }
 
+    /**
+     * Menangani callback notifikasi dari Midtrans (Web-hook).
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function midtransCallback(Request $request)
     {
         try {
@@ -421,14 +452,23 @@ class CashierController extends Controller
 
 
 
+    /**
+     * Mengarahkan kembali pengguna setelah proses pembayaran Midtrans selesai.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function paymentFinish(Request $request)
     {
         return redirect()->route('cashier.queue.index')
             ->with('success', 'Pembayaran berhasil diproses');
     }
     /**
-     * Search venues (AJAX endpoint)
-     * Kasir hanya bisa lihat venue milik owner-nya
+     * Mencari data venue yang tersedia untuk disewa (digunakan via AJAX).
+     * Kasir hanya bisa melihat venue milik owner-nya.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function search(Request $request)
     {
@@ -515,7 +555,10 @@ class CashierController extends Controller
     }
 
     /**
-     * Get sections by venue ID
+     * Mendapatkan daftar seksi/lapangan berdasarkan ID venue.
+     * 
+     * @param int $venueId
+     * @return \Illuminate\Http\JsonResponse
      */
     public function getSections($venueId)
     {
@@ -561,7 +604,10 @@ class CashierController extends Controller
     }
 
     /**
-     * Get schedules by section ID
+     * Mendapatkan daftar jadwal yang tersedia berdasarkan ID seksi.
+     * 
+     * @param int $sectionId
+     * @return \Illuminate\Http\JsonResponse
      */
     public function getSchedules($sectionId)
     {
@@ -645,7 +691,10 @@ class CashierController extends Controller
     }
 
     /**
-     * Search buyers (AJAX endpoint for autocomplete)
+     * Mencari data penyewa (buyer) berdasarkan nama atau nomor telepon (Autocomplete).
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function searchBuyers(Request $request)
     {

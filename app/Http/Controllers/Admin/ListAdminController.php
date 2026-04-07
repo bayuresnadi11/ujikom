@@ -9,10 +9,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Class ListAdminController
+ * 
+ * Mengelola daftar pengguna dengan peran Admin.
+ * Admin dapat menambah, mengedit, dan menghapus akun Admin lainnya (dengan batasan tertentu).
+ */
 class ListAdminController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua pengguna dengan role admin.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -25,7 +33,10 @@ class ListAdminController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data admin baru ke database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -57,7 +68,10 @@ class ListAdminController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan data admin tertentu dalam format JSON.
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
@@ -66,7 +80,11 @@ class ListAdminController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data admin tertentu di database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -109,7 +127,10 @@ class ListAdminController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus akun admin tertentu dari sistem.
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {
@@ -148,7 +169,9 @@ class ListAdminController extends Controller
     }
 
     /**
-     * Check current user for validation
+     * Mengecek ID pengguna yang sedang login saat ini (untuk validasi sisi klien).
+     * 
+     * @return \Illuminate\Http\JsonResponse
      */
     public function checkCurrentUser()
     {

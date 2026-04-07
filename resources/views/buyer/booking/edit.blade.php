@@ -680,21 +680,55 @@ function updateCalculator() {
     const ptType = document.getElementById('pt_type')?.value;
     const calculatorHelper = document.getElementById('calculatorHelper');
     
-    if (bookingType === 'play_together' && payBy === 'participant' && ptType === 'paid' && maxParticipants > 0) {
-        calculatorHelper.style.display = 'block';
-        
-        const bookingCost = selectedSchedulePrice;
-        const bookingPerPerson = bookingCost / maxParticipants;
-        const totalPerPerson = bookingPerPerson + pricePerPerson;
-        
-        document.getElementById('calc_booking_cost').textContent = 'Rp ' + bookingCost.toLocaleString('id-ID');
-        document.getElementById('calc_participant_count').textContent = maxParticipants;
-        document.getElementById('calc_booking_per_person').textContent = 'Rp ' + Math.ceil(bookingPerPerson).toLocaleString('id-ID');
-        document.getElementById('calc_price_per_person').textContent = 'Rp ' + pricePerPerson.toLocaleString('id-ID');
-        document.getElementById('calc_total_per_person').textContent = 'Rp ' + Math.ceil(totalPerPerson).toLocaleString('id-ID');
-    } else {
+    if (bookingType !== 'play_together' || maxParticipants <= 0 || selectedSchedulePrice <= 0) {
         calculatorHelper.style.display = 'none';
+        return;
     }
+
+    calculatorHelper.style.display = 'block';
+    
+    const bookingCost = selectedSchedulePrice;
+    const bookingShare = Math.ceil(bookingCost / maxParticipants);
+    
+    let totalPerPerson = 0;
+    let hostFee = 0;
+
+    if (ptType === 'paid') {
+        totalPerPerson = pricePerPerson;
+        if (payBy === 'participant') {
+            hostFee = totalPerPerson - bookingShare;
+        } else {
+            hostFee = totalPerPerson;
+        }
+    } else {
+        if (payBy === 'participant') {
+            totalPerPerson = bookingShare;
+            hostFee = 0;
+        } else {
+            totalPerPerson = 0;
+            hostFee = 0;
+        }
+    }
+    
+    document.getElementById('calc_booking_cost').textContent = 'Rp ' + bookingCost.toLocaleString('id-ID');
+    document.getElementById('calc_participant_count').textContent = maxParticipants;
+    document.getElementById('calc_booking_per_person').textContent = 
+        payBy === 'participant' 
+            ? 'Rp ' + bookingShare.toLocaleString('id-ID') 
+            : 'Ditanggung Host';
+            
+    document.getElementById('calc_price_per_person').textContent = 
+        hostFee > 0 
+            ? 'Rp ' + hostFee.toLocaleString('id-ID') 
+            : (hostFee < 0 ? 'Subsidi: Rp ' + Math.abs(hostFee).toLocaleString('id-ID') : 'Rp 0');
+
+    // Update label to clarify
+    const feeLabel = document.querySelector('#calc_price_per_person').previousElementSibling;
+    if (feeLabel && feeLabel.classList.contains('detail-label')) {
+        feeLabel.textContent = 'Jasa Host / Fee';
+    }
+
+    document.getElementById('calc_total_per_person').textContent = 'Rp ' + totalPerPerson.toLocaleString('id-ID');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

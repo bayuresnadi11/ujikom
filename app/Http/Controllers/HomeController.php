@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+/**
+ * Class HomeController
+ * 
+ * Pengendali halaman beranda standar setelah pengguna melakukan autentikasi.
+ */
 class HomeController extends Controller
 {
     /**
-     * Create a new controller instance.
+     * Membuat instance controller baru dan menetapkan middleware auth.
      *
      * @return void
      */
@@ -17,7 +22,7 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
+     * Menampilkan dashboard aplikasi.
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */

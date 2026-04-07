@@ -887,35 +887,43 @@
                                     </div>
                                 </div>
 
-                                @php
-                                    $lapangPerOrang = $playTogether->price_per_person ?? 0;
-                                    $joinPerOrang = 0;
+                                @if($userParticipant && $userParticipant->approval_status === 'approved')
+                                    @php
+                                        // ✅ Gunakan model methods standar
+                                        $showPayButton = $booking->shouldShowPayButtonFor(auth()->id());
+                                        $lapangFee = $booking->getLapangPerPerson(); // bagian lapang per orang
+                                        $joinFee = $booking->getJoinFee(); // join fee
+                                        $biayaPerOrang = $lapangFee + $joinFee; // total biaya per orang
+                                        $displayTotal = $booking->getDisplayTotalAmount(); // untuk tampilan di UI
 
-                                    if ($playTogether->type === 'paid') {
-                                        // fallback: join = lapang kalau join belum disimpan
-                                        $joinPerOrang = $playTogether->price_per_person_input 
-                                            ?? $playTogether->join_price 
-                                            ?? $lapangPerOrang;
-                                    }
+                                        // Label tombol berdasarkan biaya
+                                        $payLabel = 'Bayar Bagian Saya';
+                                        if($lapangFee > 0 && $joinFee > 0) {
+                                            $payLabel = 'Bayar Lapang + Join';
+                                        } elseif($lapangFee > 0) {
+                                            $payLabel = 'Bayar Lapang';
+                                        } elseif($joinFee > 0) {
+                                            $payLabel = 'Bayar Join';
+                                        }
+                                    @endphp
 
-                                    $biayaPerOrang = $lapangPerOrang + $joinPerOrang;
-                                @endphp
-
-                                <div class="card-row">
-                                    <div class="card-label">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                        Biaya
+                                    {{-- Tampilan Biaya --}}
+                                    <div class="card-row">
+                                        <div class="card-label">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                            Biaya
+                                        </div>
+                                        <div class="card-value">
+                                            @if($biayaPerOrang > 0)
+                                                <span class="badge badge-cost">
+                                                    Rp {{ number_format($displayTotal, 0, ',', '.') }} / orang
+                                                </span>
+                                            @else
+                                                <span class="badge badge-free">GRATIS</span>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <div class="card-value">
-                                        @if($biayaPerOrang > 0)
-                                            <span class="badge badge-cost">
-                                                Rp {{ number_format($biayaPerOrang, 0, ',', '.') }} / orang
-                                            </span>
-                                        @else
-                                            <span class="badge badge-free">GRATIS</span>
-                                        @endif
-                                    </div>
-                                </div>
+                                @endif
 
                                 <div class="card-row">
                                     <div class="card-label">
@@ -992,14 +1000,43 @@
                                         <i class="fas fa-eye"></i> Detail
                                     </button>
                                     
-                                    @if($showPayButton)
-                                        <button class="btn-pay" onclick="payParticipant({{ $playTogether->id }})">
-                                            <i class="fas fa-wallet"></i> Bayar
-                                            @if($remainingToPay > 0)
-                                                <small>Rp {{ number_format($remainingToPay, 0, ',', '.') }}</small>
-                                            @endif
-                                        </button>
-                                    @endif
+@php
+    $showPayButton = false;
+    $remainingToPay = 0;
+    $lapangFee = 0;
+    $joinFee = 0;
+    $payLabel = 'Bayar Bagian Saya';
+
+    if(auth()->check()) {
+        $userParticipant = $playTogether->participants
+            ->where('user_id', auth()->id())
+            ->where('approval_status', 'approved')
+            ->first();
+
+        if($userParticipant) {
+            $showPayButton = $booking->shouldShowPayButtonFor(auth()->id());
+            $remainingToPay = $booking->getParticipantPaymentAmount(auth()->id());
+            
+            $lapangFee = $booking->getLapangPerPerson();
+            $joinFee = $booking->getJoinFee();
+
+            if($lapangFee > 0 && $joinFee > 0) {
+                $payLabel = 'Bayar Lapang + Join';
+            } elseif($lapangFee > 0) {
+                $payLabel = 'Bayar Lapang';
+            } elseif($joinFee > 0) {
+                $payLabel = 'Bayar Join';
+            }
+        }
+    }
+@endphp
+
+@if($showPayButton && $remainingToPay > 0)
+    <button class="btn-pay" onclick="payParticipant({{ $playTogether->id }})">
+        <i class="fas fa-wallet"></i> {{ $payLabel }}
+        <small>Rp {{ number_format($remainingToPay, 0, ',', '.') }}</small>
+    </button>
+@endif
                                 </div>
                             </div>
                         </div>

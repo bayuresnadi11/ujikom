@@ -294,45 +294,58 @@
                                     </div>
                                 </div>
 
-                                <div class="card-row">
-    <div class="card-label">
-        <i class="fas fa-money-bill-wave"></i>
-        Biaya
-    </div>
-    <div class="card-value">
-        @php
-            $lapangPrice = 0;
-            $joinPrice = 0;
+                                @php
+                                    $lapangPerOrang = $playTogether->price_per_person ?? 0;
+                                    $joinPerOrang = 0;
 
-            // ====================== LAPANG ======================
-            if($playTogether->payment_scheme === 'participant') {
-                $lapangPrice = $booking->total_price ?? 0;
-                if($playTogether->max_participants > 0){
-                    $lapangPrice = ceil($lapangPrice / $playTogether->max_participants);
-                }
-            }
+                                    if ($playTogether->type === 'paid') {
+                                        // fallback: join = lapang kalau join belum disimpan
+                                        $joinPerOrang = $playTogether->price_per_person_input 
+                                            ?? $playTogether->join_price 
+                                            ?? $lapangPerOrang;
+                                    }
 
-            // ====================== JOIN ======================
-            if($playTogether->type === 'paid') {
-                $joinPrice = $playTogether->price_per_person ?? 0;
-            }
-        @endphp
+                                    $biayaPerOrang = $lapangPerOrang + $joinPerOrang;
+                                @endphp
 
-        @if($lapangPrice > 0 && $joinPrice > 0)
-            {{-- Gabung Lapang + Join --}}
-            <span class="badge badge-cost">
-                Lapang + Join: Rp {{ number_format($lapangPrice + $joinPrice,0,',','.') }}
-            </span>
-        @elseif($lapangPrice > 0)
-            <span class="badge badge-cost">Lapang: Rp {{ number_format($lapangPrice,0,',','.') }}/orang</span>
-        @elseif($joinPrice > 0)
-            <span class="badge badge-cost">Join: Rp {{ number_format($joinPrice,0,',','.') }}</span>
-        @else
-            <span class="badge badge-free">GRATIS</span>
-        @endif
-    </div>
-</div>
 
+                                @if($userParticipant && $userParticipant->approval_status === 'approved')
+                                    @php
+                                        // ✅ Gunakan model methods standar
+                                        $showPayButton = $booking->shouldShowPayButtonFor(auth()->id());
+                                        $lapangFee = $booking->getLapangPerPerson(); // bagian lapang per orang
+                                        $joinFee = $booking->getJoinFee(); // join fee
+                                        $biayaPerOrang = $lapangFee + $joinFee; // total biaya per orang
+                                        $displayTotal = $booking->getDisplayTotalAmount(); // untuk tampilan di UI
+
+                                        // Label tombol berdasarkan biaya
+                                        $payLabel = 'Bayar Bagian Saya';
+                                        if($lapangFee > 0 && $joinFee > 0) {
+                                            $payLabel = 'Bayar Lapang + Join';
+                                        } elseif($lapangFee > 0) {
+                                            $payLabel = 'Bayar Lapang';
+                                        } elseif($joinFee > 0) {
+                                            $payLabel = 'Bayar Join';
+                                        }
+                                    @endphp
+
+                                    {{-- Tampilan Biaya --}}
+                                    <div class="card-row">
+                                        <div class="card-label">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                            Biaya
+                                        </div>
+                                        <div class="card-value">
+                                            @if($biayaPerOrang > 0)
+                                                <span class="badge badge-cost">
+                                                    Rp {{ number_format($displayTotal, 0, ',', '.') }} / orang
+                                                </span>
+                                            @else
+                                                <span class="badge badge-free">GRATIS</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
 
                                 @if(!$isHost)
                                 <div class="card-row">
@@ -389,7 +402,7 @@
                                             <button class="btn-pay" onclick="payParticipant({{ $playTogether->id }})">
                                                 <i class="fas fa-wallet"></i> {{ $payLabel }}
                                                 <small style="display: block; font-size: 10px; margin-top: 2px;">
-                                                    Rp {{ number_format($remainingToPay, 0, ',', '.') }}
+                                                    Rp {{ number_format($booking->getDisplayTotalAmount(), 0, ',', '.') }}
                                                 </small>
                                             </button>
                                         @endif
@@ -517,7 +530,6 @@
 
         <!-- Bottom Nav -->
         @include('layouts.bottom-nav')
-
         <!-- Toast Container -->
         <div class="toast-container" id="toastContainer"></div>
 

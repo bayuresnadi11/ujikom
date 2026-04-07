@@ -7,10 +7,18 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Class SettingController
+ * 
+ * Mengelola pengaturan aplikasi (Application Settings), termasuk nama aplikasi,
+ * logo, konfigurasi API WhatsApp (Japati), dan konfigurasi Midtrans.
+ */
 class SettingController extends Controller
 {
     /**
-     * Tampilkan halaman setting
+     * Menampilkan halaman pengaturan aplikasi.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -19,7 +27,10 @@ class SettingController extends Controller
     }
 
     /**
-     * Simpan setting (HANYA SEKALI)
+     * Menyimpan pengaturan aplikasi untuk pertama kalinya ke dalam database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -47,7 +58,10 @@ class SettingController extends Controller
     }
 
     /**
-     * Update setting
+     * Memperbarui pengaturan aplikasi yang sudah ada di database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request)
     {
@@ -72,7 +86,10 @@ class SettingController extends Controller
     }
 
     /**
-     * Validasi form (TANPA logo)
+     * Memvalidasi data inputan dari formulir pengaturan (tidak termasuk file logo).
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return array
      */
     private function validateData(Request $request)
     {
@@ -90,7 +107,10 @@ class SettingController extends Controller
     }
 
     /**
-     * Upload logo
+     * Mengunggah file logo aplikasi ke direktori 'logo' di penyimpanan public.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return string Nama file logo yang berhasil diunggah.
      */
     private function uploadLogo(Request $request)
     {
@@ -107,7 +127,10 @@ class SettingController extends Controller
     }
 
     /**
-     * Hapus logo lama
+     * Menghapus file logo lama dari penyimpanan jika file tersebut ada.
+     * 
+     * @param \App\Models\Setting $setting
+     * @return void
      */
     private function deleteOldLogo(Setting $setting)
     {

@@ -8,9 +8,20 @@ use Illuminate\Support\Facades\DB;
 use App\Models\RoleRequest;
 use App\Models\User;
 
+/**
+ * Class RoleController
+ * 
+ * Mengelola permintaan perubahan peran (role) antar pengguna, terutama
+ * dari mode Penyewa (Buyer) ke mode Pemilik Lapangan (Landowner) dan sebaliknya.
+ */
 class RoleController extends Controller
 {
-    // ==================== BUYER: Submit Landowner Request ====================
+    /**
+     * Memproses pengajuan permintaan dari Buyer untuk menjadi Landowner.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function submitLandownerRequest(Request $request)
     {
         $request->validate([
@@ -42,7 +53,11 @@ class RoleController extends Controller
             ->with('success', 'Pengajuan berhasil dikirim! Tunggu review admin (1-3 hari kerja).');
     }
 
-    // ==================== BUYER: Switch to Landowner (NO LOGOUT!) ====================
+    /**
+     * Mengalihkan mode pengguna yang sedang aktif ke mode Pemilik Lapangan (Landowner).
+     * 
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function switchToLandowner()
     {
         $user = auth()->user();
@@ -64,7 +79,11 @@ class RoleController extends Controller
         }
     }
 
-    // ==================== LANDOWNER: Switch to Buyer (NO LOGOUT!) ====================
+    /**
+     * Mengalihkan kembali mode pengguna dari Pemilik Lapangan ke mode Penyewa (Buyer).
+     * 
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function switchToBuyer()
     {
         $user = auth()->user();
@@ -81,7 +100,12 @@ class RoleController extends Controller
         }
     }
 
-    // ==================== ADMIN: Approve Request ====================
+    /**
+     * Menyetujui permintaan perubahan peran menjadi Landowner oleh Admin.
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function approveRequest($id)
     {
         $roleRequest = RoleRequest::findOrFail($id);
@@ -118,7 +142,12 @@ class RoleController extends Controller
         }
     }
 
-    // ==================== ADMIN: Reject Request ====================
+    /**
+     * Menolak permintaan perubahan peran menjadi Landowner oleh Admin dengan memberikan alasan.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function rejectRequest(Request $request)
     {
         $request->validate([
