@@ -8,10 +8,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Class PencairanController
+ * 
+ * Mengelola permintaan pencairan dana (withdrawal) dari pengguna.
+ * Admin dapat menyetujui, memproses, atau menolak permintaan pencairan dana.
+ */
 class PencairanController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua permintaan pencairan dana dengan filter status.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -40,7 +49,10 @@ class PencairanController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan halaman edit untuk memproses permintaan pencairan dana tertentu.
+     * 
+     * @param int $id
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
@@ -49,7 +61,11 @@ class PencairanController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui status dan informasi permintaan pencairan dana di database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {

@@ -165,9 +165,9 @@
                         @endforeach
                     </div>
 
-                    <!-- Pagination -->
+                    {{-- Pagination with premium numbering style --}}
                     <div style="margin-top: 20px;">
-                        {{ $bookings->links('pagination::bootstrap-4') }}
+                        {{ $bookings->links('vendor.pagination.premium') }}
                     </div>
                 @endif
             </div>

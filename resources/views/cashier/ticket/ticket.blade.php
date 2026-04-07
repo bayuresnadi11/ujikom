@@ -33,6 +33,7 @@
                             <tr>
                                 <th>Kode Tiket</th>
                                 <th>Penyewa</th>
+                                <th>No. Telepon</th>
                                 <th>Lapangan</th>
                                 <th>Tanggal</th>
                                 <th>Jam</th>
@@ -55,7 +56,12 @@
                                         {{ $booking->user->name ?? '-' }}
                                     </td>
 
-                                    {{-- LAPANGAN / SECTION --}}
+                                    {{-- NO. TELEPON --}}
+                                    <td>
+                                        {{ $booking->user->phone ?? '-' }}
+                                    </td>
+
+                                    {{--    LAPANGAN / SECTION --}}
                                     <td class="fw-semibold">
                                         {{ $booking->venue->venue_name ?? '-' }}
                                         -

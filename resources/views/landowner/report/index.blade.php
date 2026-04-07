@@ -163,9 +163,9 @@
                 <p class="no-data">Laporan tidak tersedia.</p>
             @endforelse
 
-            {{-- Pagination --}}
-            <div class="pagination flex justify-center mt-4">
-                {{ $bookings->links('pagination::simple-default') }}
+            {{-- Pagination with premium numbering style --}}
+            <div class="mt-4">
+                {{ $bookings->links('vendor.pagination.premium') }}
             </div>
 
             <p class="no-data" style="display:none">Data tidak ditemukan</p>

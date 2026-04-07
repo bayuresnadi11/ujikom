@@ -8,10 +8,18 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Class RoleRequestController
+ * 
+ * Mengelola permintaan perubahan peran (role) dari pengguna (misalnya dari Buyer ke Landowner).
+ * Admin dapat menyetujui atau menolak permintaan tersebut.
+ */
 class RoleRequestController extends Controller
 {
     /**
-     * Display a listing of role requests.
+     * Menampilkan daftar semua permintaan perubahan peran.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -23,7 +31,10 @@ class RoleRequestController extends Controller
     }
 
     /**
-     * Approve a role request.
+     * Menyetujui permintaan perubahan peran tertentu.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function approve(Request $request)
     {
@@ -68,7 +79,10 @@ class RoleRequestController extends Controller
     }
 
     /**
-     * Reject a role request.
+     * Menolak permintaan perubahan peran tertentu.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function reject(Request $request)
     {

@@ -8,10 +8,18 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Community;
 
+/**
+ * Class DashboardController
+ * 
+ * Menyediakan data statistik utama untuk ditampilkan pada dashboard Admin,
+ * termasuk jumlah pengguna, kategori, komunitas, dan ringkasan role.
+ */
 class DashboardController extends Controller
 {
     /**
-     * Display the dashboard for admin
+     * Menampilkan dashboard utama admin dengan ringkasan statistik.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
 {
@@ -40,7 +48,9 @@ class DashboardController extends Controller
 }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk membuat resource baru.
+     * 
+     * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -48,7 +58,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan resource baru ke penyimpanan.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -56,7 +69,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan resource tertentu.
+     * 
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function show(string $id)
     {
@@ -64,7 +80,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form untuk mengedit resource tertentu.
+     * 
+     * @param string $id
+     * @return \Illuminate\View\View
      */
     public function edit(string $id)
     {
@@ -72,7 +91,11 @@ class DashboardController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui resource tertentu di penyimpanan.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, string $id)
     {
@@ -80,7 +103,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus resource tertentu dari penyimpanan.
+     * 
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function destroy(string $id)
     {

@@ -458,25 +458,7 @@ class Booking extends Model
         return (float) $this->amount;
     }
 
-    /**
- * Hitung jumlah yang harus dibayar participant
- */
-public function calculateParticipantAmount($playTogether, $userId): float
-{
-    if (!$playTogether) return 0;
 
-    // Contoh logika: harga lapang per orang + join fee
-    $pricePerPerson = (float) ($playTogether->price_per_person ?? 0);
-    $joinFee = (float) ($playTogether->price_per_person_input ?? 0);
-
-    // Kalau ada max participant, bagi harga lapangan
-    $lapangPerOrang = 0;
-    if ($playTogether->max_participants && $this->amount) {
-        $lapangPerOrang = (float) $this->amount / $playTogether->max_participants;
-    }
-
-    return round($lapangPerOrang + $pricePerPerson + $joinFee, 2);
-}
 
 /**
  * Mengecek apakah user masih punya sisa pembayaran
@@ -497,13 +479,12 @@ public function hasRemainingPaymentForUser(int $userId): bool
         ->sum('amount');
 
     // Hitung jumlah seharusnya dibayar user
-    $totalOwed = 0;
-    if ($this->playTogether) {
-        $totalOwed = $this->calculateParticipantAmount($this->playTogether, $userId);
-    }
+    $totalOwed = $this->getParticipantTotalCost();
 
     return $paid < $totalOwed;
 }
+
+
 
 public function getLapangPerPerson(): float
 {
@@ -530,7 +511,24 @@ public function getJoinFee(): float
 
 public function getParticipantTotalCost(): float
 {
-    return $this->getLapangPerPerson() + $this->getJoinFee();
+    if (!$this->playTogether) return 0;
+
+    // REVERT: Kembali ke logika penjumlahan (Bagi Lapang + Input User)
+    // Sesuai permintaan user agar biaya per person tidak 'dihapus/dikurangi' oleh bagi hasil lapang.
+    
+    $total = 0;
+
+    // 1. Tambah bagian lapangan jika mode split bill
+    if ($this->pay_by === 'participant') {
+        $total += $this->getLapangPerPerson();
+    }
+
+    // 2. Tambah input price jika mode berbayar
+    if ($this->playTogether->type === 'paid') {
+        $total += (float) ($this->playTogether->price_per_person ?? 0);
+    }
+
+    return (float) $total;
 }
 
 /**
@@ -543,8 +541,10 @@ public function getParticipantPaymentAmount(int $userId): float
         return 0;
     }
 
-    // Kalau host yang bayar, participant tidak perlu bayar
-    if ($this->pay_by === 'host') {
+    // FIX: Jika host yang bayar lapangan (pay_by == host), 
+    // Participant HANYA bayar jika tipe aktivitas-nya 'paid' (Join Fee).
+    // Jika 'free' maka participant 0.
+    if ($this->pay_by === 'host' && $this->playTogether->type !== 'paid') {
         return 0;
     }
 
@@ -574,11 +574,6 @@ public function shouldShowPayButtonFor(int $userId): bool
         return false;
     }
 
-    // Kalau host yang bayar, participant tidak perlu bayar
-    if ($this->pay_by === 'host') {
-        return false;
-    }
-
     // Ambil data participant
     $participant = $this->playTogether->participants()
         ->where('user_id', $userId)
@@ -594,7 +589,8 @@ public function shouldShowPayButtonFor(int $userId): bool
         return false;
     }
 
-    // Tampilkan kalau ada biaya yang harus dibayar
+    // Cek apakah ada biaya yang harus dibayar
+    // Jika biaya total 0, maka tidak butuh bayar
     return $this->getParticipantTotalCost() > 0;
 }
 

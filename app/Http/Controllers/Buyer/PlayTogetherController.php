@@ -23,7 +23,8 @@ class PlayTogetherController extends Controller
     {
         $user = Auth::user();
         $today = Carbon::today()->toDateString();
-        
+
+        // Ambil data dengan paginate
         $playTogethers = PlayTogether::with([
                 'booking.venue.category',
                 'creator',
@@ -38,28 +39,25 @@ class PlayTogetherController extends Controller
             })
             // Filter Privacy
             ->where(function($query) use ($user) {
-                // Selalu tampilkan yang public
                 $query->where('privacy', 'public')
-                      // Atau yang statusnya community TAPI user adalah member
-                      ->orWhere(function($q) use ($user) {
-                          $q->where('privacy', 'community');
-                          if ($user) {
-                              $q->whereHas('community.members', function($m) use ($user) {
-                                  $m->where('user_id', $user->id)
+                    ->orWhere(function($q) use ($user) {
+                        $q->where('privacy', 'community');
+                        if ($user) {
+                            $q->whereHas('community.members', function($m) use ($user) {
+                                $m->where('user_id', $user->id)
                                     ->where('status', 'active');
-                              });
-                          } else {
-                              // Visitor/Guest tidak bisa lihat community post
-                              $q->whereRaw('1 = 0'); 
-                          }
-                      });
+                            });
+                        } else {
+                            $q->whereRaw('1 = 0'); // guest tidak bisa lihat
+                        }
+                    });
             })
             ->when($request->has('search'), function ($query) use ($request) {
                 $search = $request->search;
                 return $query->where(function ($q) use ($search) {
                     $q->whereHas('booking.venue', function ($venueQuery) use ($search) {
                         $venueQuery->where('venue_name', 'like', "%{$search}%")
-                                   ->orWhere('location', 'like', "%{$search}%");
+                                ->orWhere('location', 'like', "%{$search}%");
                     })
                     ->orWhereHas('creator', function ($userQuery) use ($search) {
                         $userQuery->where('name', 'like', "%{$search}%");
@@ -69,7 +67,28 @@ class PlayTogetherController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('buyer.main_bareng.index', compact('playTogethers', 'today'));
+        // Hitung biaya per orang untuk tiap playTogether
+        foreach ($playTogethers->items() as $pt) { // <-- items() ambil collection murni
+            $pt->biayaPerOrang = 0;
+            $pt->displayTotal = 0;
+
+            if ($pt->booking && $pt->max_participants > 0) {
+                $totalFee = $pt->booking->total_fee ?? 0; 
+                $pt->biayaPerOrang = $totalFee / $pt->max_participants;
+                $pt->displayTotal = $totalFee;
+            }
+        }
+
+        // Ambil participant user
+        $userParticipant = null;
+        if ($user) {
+            $userId = $user->id;
+            // flatMap hanya bisa dipanggil dari Collection
+            $allParticipants = collect($playTogethers->items())->flatMap->participants;
+            $userParticipant = $allParticipants->firstWhere('user_id', $userId);
+        }
+
+        return view('buyer.main_bareng.index', compact('playTogethers', 'today', 'userParticipant'));
     }
 
     public function show($id)

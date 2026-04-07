@@ -12,7 +12,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <div class="title">Scan QR Tiket</div>
-            <div class="subtitle">Validasi masuk lapangan dengan QR code</div>
+            <div class="subtitle">Validasi otomatis masuk venue & lapangan</div>
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="badge bg-light text-success fw-semibold px-3 py-2">
@@ -30,14 +30,9 @@
     <!-- Panel Kiri - Area Scanner Kamera (75%) -->
     <div class="scanner-panel">
         <div class="scanner-controls">
-            <!-- Pilihan Mode: Masuk Venue atau Masuk Lapangan -->
-            <div class="mode-toggle btn-group" role="group">
-                <button type="button" class="btn btn-outline-success active">
-                    <i class="fas fa-door-open"></i> Masuk Venue
-                </button>
-                <button type="button" class="btn btn-outline-success">
-                    <i class="fas fa-futbol"></i> Masuk Lapangan
-                </button>
+            <!-- Mode Scan Otomatis Aktif -->
+            <div class="alert alert-success border-0 bg-transparent text-success fw-bold py-1 px-2 mb-0 d-flex align-items-center small">
+                <i class="fas fa-robot me-2"></i> Mode: Smart Validation
             </div>
             
             <!-- Pilihan Kamera Aktif -->

@@ -714,16 +714,29 @@ function updateCalculator() {
     calculatorHelper.style.display = 'block';
 
     const bookingCost = selectedSchedulePrice;
+    const bookingShare = Math.ceil(bookingCost / maxParticipants);
+    
+    let totalPerPerson = 0;
+    let hostFee = 0;
 
-    const bookingPerPerson =
-        payBy === 'participant'
-            ? Math.ceil(bookingCost / maxParticipants)
-            : 0;
-
-    const joinCost =
-        ptType === 'paid' ? pricePerPerson : 0;
-
-    const totalPerPerson = bookingPerPerson + joinCost;
+    if (ptType === 'paid') {
+        // Jika berbayar, harga yang diinput adalah TOTAL yang dibayar peserta
+        totalPerPerson = pricePerPerson;
+        if (payBy === 'participant') {
+            hostFee = totalPerPerson - bookingShare;
+        } else {
+            hostFee = totalPerPerson;
+        }
+    } else {
+        // Jika gratis
+        if (payBy === 'participant') {
+            totalPerPerson = bookingShare;
+            hostFee = 0;
+        } else {
+            totalPerPerson = 0;
+            hostFee = 0;
+        }
+    }
 
     document.getElementById('calc_booking_cost').textContent =
         'Rp ' + bookingCost.toLocaleString('id-ID');
@@ -732,14 +745,20 @@ function updateCalculator() {
         maxParticipants;
 
     document.getElementById('calc_booking_per_person').textContent =
-        bookingPerPerson > 0
-            ? 'Rp ' + bookingPerPerson.toLocaleString('id-ID')
+        payBy === 'participant'
+            ? 'Rp ' + bookingShare.toLocaleString('id-ID')
             : 'Ditanggung Host';
 
     document.getElementById('calc_price_per_person').textContent =
-        joinCost > 0
-            ? 'Rp ' + joinCost.toLocaleString('id-ID')
-            : 'Rp 0';
+        hostFee > 0
+            ? 'Rp ' + hostFee.toLocaleString('id-ID')
+            : (hostFee < 0 ? 'Subsidi: Rp ' + Math.abs(hostFee).toLocaleString('id-ID') : 'Rp 0');
+
+    // Update label to clarify
+    const feeLabel = document.querySelector('#calc_price_per_person').previousElementSibling;
+    if (feeLabel && feeLabel.classList.contains('detail-label')) {
+        feeLabel.textContent = 'Jasa Host / Fee';
+    }
 
     document.getElementById('calc_total_per_person').textContent =
         'Rp ' + totalPerPerson.toLocaleString('id-ID');

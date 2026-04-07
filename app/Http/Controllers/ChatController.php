@@ -7,9 +7,19 @@ use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Class ChatController
+ * 
+ * Mengelola sistem percakapan (chat) antar pengguna, termasuk menampilkan daftar chat,
+ * menampilkan isi percakapan tertentu, dan membuat percakapan baru.
+ */
 class ChatController extends Controller
 {
-    // Halaman chat utama
+    /**
+     * Menampilkan halaman utama chat sesuai dengan role pengguna.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         $user = Auth::user();
@@ -26,7 +36,12 @@ class ChatController extends Controller
         return view('chat.index');
     }
 
-    // Show specific conversation
+    /**
+     * Menampilkan isi percakapan tertentu antar pengguna.
+     * 
+     * @param \App\Models\Conversation $conversation
+     * @return \Illuminate\View\View
+     */
     public function show(Conversation $conversation)
     {
         // Check if user is participant
@@ -59,7 +74,12 @@ class ChatController extends Controller
         ]);
     }
 
-    // Create new chat with specific user
+    /**
+     * Membuat atau mencari percakapan baru dengan pengguna tertentu.
+     * 
+     * @param \App\Models\User $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function create(User $user)
     {
         // Don't allow chat with self
