@@ -50,6 +50,7 @@ class HomeController extends Controller
         $totalBookingHariIni = 0;
         $pendapatanBulanIni = 0;
         $totalField = 0;
+        $bookingTerbaru = collect(); // ✅ TAMBAH INI
         
         if ($venues->isNotEmpty()) {
             // Logika Relasional: Mengambil relasi bertingkat (Venue -> Section).
@@ -77,13 +78,12 @@ class HomeController extends Controller
             
             // PERBAIKAN: Mengubah 'booking' menjadi 'bookings' (plural)
             // Juga tambahkan relasi 'section' jika belum ada di model VenueSchedule
-            $bookingTerbaru = VenueSchedule::whereIn('section_id', $sectionIds)
-                ->where('available', 0)
-                ->with(['bookings.user', 'section.venue']) // PERBAIKAN DI SINI: 'bookings' bukan 'booking'
-                ->orderBy('date', 'desc')
-                ->orderBy('start_time', 'desc')
-                ->limit(5)
-                ->get();
+            $pendapatanBulanIni = Booking::whereHas('schedule.section', function ($q) use ($sectionIds) {
+                    $q->whereIn('id', $sectionIds);
+                })
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->sum('amount');
                 
             // Debug booking data
             Log::info('Booking Stats', [

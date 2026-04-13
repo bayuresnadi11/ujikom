@@ -1,9 +1,21 @@
+{{--
+=============================================================================
+VIEW: DISPLAY JADWAL (KASIR - TAMPILAN JADWAL LAPANGAN)
+Halaman untuk menampilkan jadwal lapangan (section) secara real-time
+Digunakan untuk display di kasir/monitor area venue
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Display Jadwal - ' . $section->section_name])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling section schedule dari partial --}}
     @include('cashier.schedule.partials.style-section')
 @endpush
 
+{{-- Section konten utama --}}
 @section('content')
 
 @php
@@ -18,26 +30,29 @@
         $startTime = Carbon::parse($schedule->start_time);
         $endTime   = Carbon::parse($schedule->end_time);
 
-        // 🔥 LOAD BOOKING dengan relasi user
+        // 🔥 LOAD BOOKING dengan relasi user, playTogether, dan community
         $booking = $schedule->booking()->with(['user', 'playTogether.community'])->first();
 
         $isCurrent = $currentTime->between($startTime, $endTime);
         $isPassed  = $endTime->lt($currentTime);
 
-        // Check if booking is paid
+        // Cek apakah booking sudah lunas
         $isPaid = $booking && $booking->booking_payment === 'full';
 
         // PERBAIKAN: Mengutamakan nama dari User ID
+        // Prioritas: username user -> nama user -> nama komunitas -> default
         $customerName = 
-            $booking?->user?->name 
-            ?? $booking?->playTogether?->community?->name 
-            ?? 'LAPANGAN KOSONG';
+            $booking?->user?->username 
+                ?: ($booking?->user?->name 
+                    ?? $booking?->playTogether?->community?->name 
+                    ?? 'LAPANGAN KOSONG');
 
-        // Skip jadwal yang sudah lewat
+        // Skip jadwal yang sudah lewat (tidak ditampilkan)
         if ($isPassed) {
             continue;
         }
 
+        // Simpan data jadwal ke collection
         $upcomingSchedules->push([
             'id' => $schedule->id,
             'customer_name' => $customerName,
@@ -53,20 +68,20 @@
         ]);
     }
 
-    // Urutkan jadwal berdasarkan waktu mulai
+    // Urutkan jadwal berdasarkan waktu mulai (terdekat ke terakhir)
     $upcomingSchedules = $upcomingSchedules->sortBy('start_datetime')->values();
 
-    // Filter jadwal agar hanya menampilkan jadwal hari ini
+    // Filter jadwal agar hanya menampilkan jadwal HARI INI
     $today = Carbon::today();
     $upcomingSchedules = $upcomingSchedules->filter(function($schedule) use ($today) {
         $scheduleDate = Carbon::parse($schedule['date']);
         return $scheduleDate->isSameDay($today);
     })->values();
 
-    // Batasi maksimal 9 jadwal untuk tampilan grid
+    // Batasi maksimal 9 jadwal untuk tampilan grid (agar tidak terlalu padat)
     $upcomingSchedules = $upcomingSchedules->take(9);
     
-    // Cari slot waktu yang sedang berlangsung saat ini
+    // Cari slot waktu yang sedang berlangsung saat ini (is_current = true)
     $currentSlot = $upcomingSchedules->where('is_current', true)->first();
     $currentIndex = $upcomingSchedules->search(fn($s) => ($s['id'] ?? null) === ($currentSlot['id'] ?? null));
     
@@ -81,8 +96,9 @@
     $today = Carbon::today()->format('d M Y');
 @endphp
 
-<!-- Header -->
+<!-- ====================== HEADER DISPLAY ====================== -->
 <header class="display-header">
+    {{-- Brand / Logo area dengan foto landowner --}}
     <div class="display-brand">
         <img 
             src="{{ $section->venue->owner && $section->venue->owner->avatar
@@ -96,15 +112,18 @@
             <div>{{ $displayTitle }}</div>
         </div>
     </div>
+    
+    {{-- Jam dan tanggal real-time --}}
     <div class="display-clock">
         <div class="time" id="clockTime">00:00:00</div>
         <div class="date" id="clockDate">{{ $today }}</div>
     </div>
 </header>
 
-<!-- Main Layout -->
+<!-- ====================== MAIN LAYOUT ====================== -->
 <div class="display-content">
-    <!-- Left: Current Time Slot -->
+    <!-- ====================== LEFT PANEL: CURRENT TIME SLOT ====================== -->
+    {{-- Panel kiri menampilkan jadwal yang sedang berlangsung atau jadwal terdekat --}}
     <div class="current-slot-panel">
         <div class="current-slot-card">
             <div class="card-header text-center fw-bold fs-2">
@@ -127,7 +146,7 @@
                         $isBelumScan = $scanStatus === 'belum_scan';
                         $isMasukVenue = $scanStatus === 'masuk_venue';
                         
-                        // Determine time class
+                        // Determine time class based on scan status
                         $timeClass = '';
                         if ($isBelumScan) {
                             $timeClass = 'time-belum-scan';
@@ -135,7 +154,7 @@
                             $timeClass = 'time-masuk-venue';
                         }
                         
-                        // Determine status text and class
+                        // Determine status text and class based on booking and scan status
                         if ($currentSlot['is_booked'] && $scanStatus) {
                             $scanStatusMap = [
                                 'belum_scan' => ['text' => 'BELUM SCAN', 'class' => 'slot-status-belum-scan'],
@@ -155,7 +174,7 @@
                     @endphp
                     
                     @if($isMasukLapang)
-                        {{-- Display countdown timer for masuk_lapang --}}
+                        {{-- Tampilkan countdown timer jika status = masuk_lapang --}}
                         <div class="countdown-container">
                             <div class="countdown-label">SISA WAKTU MAIN</div>
                             <div class="countdown-timer" 
@@ -168,7 +187,7 @@
                             </div>
                         </div>
                     @else
-                        {{-- Normal display for other statuses --}}
+                        {{-- Tampilan normal untuk status lainnya --}}
                         <div class="current-slot-time {{ $timeClass }}">{{ $currentSlot['start_time'] }} - {{ $currentSlot['end_time'] }}</div>
                         <div class="current-slot-label">WAKTU MAIN</div>
                         <div class="current-slot-name">
@@ -179,6 +198,7 @@
                         </div>
                     @endif
                 @else
+                    {{-- Tidak ada jadwal untuk hari ini --}}
                     <div class="empty-state">
                         <div class="empty-icon">
                             <i class="fas fa-clock"></i>
@@ -191,7 +211,8 @@
         </div>
     </div>
 
-    <!-- Right: All Schedules Grid -->
+    <!-- ====================== RIGHT PANEL: ALL SCHEDULES GRID ====================== -->
+    {{-- Panel kanan menampilkan grid semua jadwal mendatang --}}
     <div class="schedule-grid-panel">
         <div class="schedule-header">
             <i class="fas fa-list-alt"></i>
@@ -200,6 +221,7 @@
         <div class="schedule-container">
             @if($upcomingSchedules->count() > 0)
                 <div class="schedule-grid" id="scheduleGrid">
+                    {{-- Looping semua jadwal (kecuali current slot yang sudah ditampilkan di kiri) --}}
                     @foreach($upcomingSchedules as $index => $schedule)
                         @php
                             // Skip current slot dari grid (jangan ditampilkan duplikat)
@@ -207,7 +229,7 @@
                             
                             $customerName = $schedule['customer_name'] ?? 'KOSONG';
                             
-                            // Determine status text and class
+                            // Determine status text and class based on scan status
                             $scanStatus = $schedule['scan_status'] ?? null;
 
                             if (($schedule['is_booked'] ?? false) && $scanStatus) {
@@ -227,6 +249,7 @@
                                 $statusClass = 'status-available';
                             }
                         @endphp
+                        {{-- Kartu jadwal dengan warna berbeda berdasarkan index (color-0 s/d color-5) --}}
                         <div class="schedule-card color-{{ $index % 6 }}" 
                              data-start="{{ $schedule['start_time'] }}"
                              data-end="{{ $schedule['end_time'] }}"
@@ -240,6 +263,7 @@
                     @endforeach
                 </div>
             @else
+                {{-- Tidak ada jadwal mendatang --}}
                 <div class="empty-state">
                     <i class="fas fa-calendar-times fa-4x mb-3" style="color: var(--text-light); opacity: 0.5;"></i>
                     <div class="empty-title">TIDAK ADA JADWAL</div>
@@ -251,6 +275,8 @@
 </div>
 @endsection
 
+{{-- Section untuk menambahkan JavaScript khusus halaman ini --}}
 @push('scripts')
+    {{-- Memasukkan file JavaScript untuk fungsi schedule display dari partial --}}
     @include('cashier.schedule.partials.script-section')
 @endpush

@@ -212,7 +212,6 @@
 
     .page-header {
         padding: 30px 20px;
-        background: var(--gradient-light);
         position: relative;
         overflow: hidden;
         border-bottom: 1px solid var(--light-gray);

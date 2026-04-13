@@ -73,20 +73,53 @@
         transform: translateY(0);
     }
     /* Page Fade In */
-.fade-page {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-    transition-delay: 0.2s;
-}
+    .fade-page {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        transition-delay: 0.2s;
+    }
 
-.fade-page.show {
-    opacity: 1;
-    transform: translateY(0);
-}
+    .fade-page.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
 
+    .page-header-box {
+        background: white;
+        padding: 28px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
+        margin-bottom: 30px;
+        border: 1px solid #e5f5ec;
+        animation: fadeInDown 0.6s ease;
+    }
 
+    /* ================= HEADER ================= */
+    .page-header-box {
+        background: white;
+        padding: 28px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
+        margin-bottom: 30px;
+        border: 1px solid #e5f5ec;
+        animation: fadeInDown 0.6s ease;
+    }
 
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a5c37;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        color: #22c55e;
+        font-size: 32px;
+    }
 
     /* Settings Panel */
     .settings-panel {

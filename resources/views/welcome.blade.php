@@ -50,11 +50,6 @@
                     <div class="stat-number">{{ number_format($stats['bookings_count']) }}</div>
                     <div class="stat-label">Booking</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-star"></i></div>
-                    <div class="stat-number">{{ number_format($stats['total_rating'], 1) }}</div>
-                    <div class="stat-label">Rating</div>
-                </div>
             </div>
 
             <!-- Features -->

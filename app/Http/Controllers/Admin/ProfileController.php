@@ -11,10 +11,19 @@ use App\Models\User;
 use App\Models\Otp;
 use Carbon\Carbon;
 
+/**
+ * Class ProfileController
+ * 
+ * Mengelola profil pengguna dengan peran Admin.
+ * Ini mencakup pembaruan informasi profil, penggantian foto profil (avatar),
+ * perubahan nomor telepon dengan verifikasi OTP, dan pembaruan kata sandi.
+ */
 class ProfileController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan halaman profil Admin.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -28,7 +37,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Show the form for editing the profile.
+     * Menampilkan formulir pengeditan profil.
+     * 
+     * @return \Illuminate\View\View
      */
     public function edit()
     {
@@ -42,7 +53,10 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the profile information.
+     * Memperbarui informasi profil Admin (Nama dan Avatar).
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request)
     {
@@ -74,7 +88,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Show phone change form.
+     * Menampilkan formulir perubahan nomor telepon.
+     * 
+     * @return \Illuminate\View\View
      */
     public function phone()
     {
@@ -88,7 +104,10 @@ class ProfileController extends Controller
     }
 
     /**
-     * Send OTP for phone change.
+     * Mengirimkan kode OTP ke nomor telepon baru untuk proses verifikasi perubahan nomor.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function sendPhoneOtp(Request $request)
     {
@@ -135,7 +154,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Show OTP verification form for phone change.
+     * Menampilkan formulir verifikasi kode OTP untuk perubahan nomor telepon.
+     * 
+     * @return \Illuminate\View\View
      */
     public function showVerifyPhoneOtp()
     {
@@ -147,7 +168,10 @@ class ProfileController extends Controller
     }
 
     /**
-     * Verify OTP for phone change.
+     * Memverifikasi kode OTP dan memperbarui nomor telepon pengguna di database.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function verifyPhoneOtp(Request $request)
     {
@@ -194,7 +218,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Resend OTP for phone change.
+     * Mengirim ulang kode OTP jika pengguna belum menerimanya di nomor baru.
+     * 
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function resendPhoneOtp()
     {
@@ -233,7 +259,10 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update password.
+     * Memperbarui kata sandi pengguna setelah memverifikasi kata sandi lama.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updatePassword(Request $request)
     {

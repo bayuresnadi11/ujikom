@@ -546,16 +546,19 @@
         line-height: 1.2;
     }
 
-    /* Quick Stats */
     .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        padding: 0 16px;
+        display: flex;
+        justify-content: center; /* bikin semua box di tengah */
+        gap: 12px; /* jarak antar box */
         margin-top: 20px;
+        padding: 0 16px;
+        flex-wrap: wrap; /* kalau layar kecil, box turun ke baris baru */
     }
 
     .stat-card {
+        flex: 1 1 calc(33.333% - 8px); /* bagi 3 secara fleksibel, kurangi gap */
+        max-width: 200px; /* optional: supaya nggak kebesaran */
+        min-width: 120px; /* optional: supaya tetap readable */
         background: var(--gradient-primary);
         color: white;
         border-radius: 12px;
@@ -605,7 +608,7 @@
         display: flex;
         overflow-x: auto;
         gap: 12px;
-        padding: 0 16px 16px;
+        padding: 10px 16px 16px;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
@@ -1206,7 +1209,7 @@
     .category-filter {
         display: flex;
         gap: 8px;
-        padding: 0 16px 16px;
+        padding: 3px 16px 16px;
         overflow-x: auto;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;

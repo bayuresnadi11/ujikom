@@ -209,30 +209,29 @@
         min-height: 100vh;
     }
 
+    /* ================= PAGE HEADER ================= */
     .page-header {
-        padding: 40px 16px;
-        background: #ffffff; /* Ubah jadi putih polos agar lebih bersih */
-        position: relative;
-        overflow: hidden;
-        border-bottom: 1px solid var(--light-gray);
+        padding: 20px 16px 0;
+        margin-bottom: 20px;
     }
 
     .page-title {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 900;
-        color: var(--text);
-        margin-bottom: 6px;
-        position: relative;
-        z-index: 1;
+        color: #0A5C36;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .page-subtitle {
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-light);
         line-height: 1.4;
+        margin: 0;
         font-weight: 500;
-        position: relative;
-        z-index: 1;
     }
 
     /* CATEGORY FILTER */

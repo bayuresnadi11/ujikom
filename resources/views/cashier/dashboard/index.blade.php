@@ -1,35 +1,52 @@
+{{--
+=============================================================================
+VIEW: CASHIER DASHBOARD (HALAMAN KASIR - DAFTAR PENYEWA)
+Halaman untuk kasir mengelola data penyewa (customers)
+Menampilkan daftar penyewa, form tambah penyewa, dan pencarian
+=============================================================================
+--}}
+
+{{-- Extend layout utama --}}
 @extends('layouts.main')
 
+{{-- Set judul halaman --}}
 @section('title', 'Cashier')
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling dari partial --}}
     @include('cashier.dashboard.partials.style')
 @endpush
 
+{{-- Section konten utama --}}
 @section('content')
-    <!-- Fixed Header -->
+    <!-- ====================== FIXED HEADER ====================== -->
+    {{-- Header tetap di atas halaman dengan judul dan info jumlah penyewa --}}
     <div class="fixed-header">
         <div>
             <div class="title">Daftar Penyewa</div>
             <div class="subtitle">Kelola data penyewa dengan cepat dan rapi.</div>
         </div>
         <div class="d-flex align-items-center gap-2">
+            {{-- Badge jumlah total penyewa --}}
             <span class="row-count-badge">
                 <i class="fa-solid fa-users me-1"></i>
                 {{ $totalCustomers ?? 0 }} Penyewa
             </span>
+            {{-- Tombol logout --}}
             <button type="button" class="btn btn-outline-light btn-sm px-3" data-bs-toggle="modal" data-bs-target="#logoutModal">
                 <i class="fa-solid fa-right-from-bracket me-1"></i>Logout
             </button>
         </div>
     </div>
 
-    <!-- Main Container -->
+    <!-- ====================== MAIN CONTAINER ====================== -->
     <div class="dashboard-container">
         <div class="container-fluid p-0">
             <div class="row g-3">
 
-                <!-- Form Tambah Penyewa -->
+                <!-- ====================== FORM TAMBAH PENYEWA ====================== -->
+                {{-- Form untuk menambahkan penyewa baru (kolom kiri) --}}
                 <div class="col-lg-4">
                     <form action="{{ route('cashier.customers.store') }}" method="POST" id="addCustomerForm">
                         @csrf
@@ -42,25 +59,37 @@
                             </div>
 
                             <div class="card-body d-grid gap-3">
+                                {{-- Field Username --}}
+                                <div>
+                                    <label class="form-label fw-semibold">Username</label>
+                                    <input type="text" name="username"
+                                        class="form-control"
+                                        placeholder="Masukkan Username"
+                                        maxlength="50">
+                                </div>
+
+                                {{-- Field Nama Lengkap (required) --}}
                                 <div>
                                     <label class="form-label fw-semibold">Nama Lengkap</label>
                                     <input type="text" name="name"
                                         class="form-control"
                                         required
-                                        placeholder="Masukkan Nama Penyewa..."
+                                        placeholder="Masukkan Nama Penyewa"
                                         maxlength="100">
                                 </div>
 
+                                {{-- Field No. Telepon/WhatsApp (required, pattern 10-13 digit) --}}
                                 <div>
                                     <label class="form-label fw-semibold">No. Telepon/WhatsApp</label>
                                     <input type="tel" name="phone"
                                         class="form-control"
                                         required
-                                        placeholder="Masukkan Nomor Telepon..."
+                                        placeholder="Masukkan Nomor Telepon"
                                         pattern="[0-9]{10,13}"
                                         title="Masukkan 10-13 digit nomor telepon">
                                 </div>
 
+                                {{-- Tombol submit tambah penyewa --}}
                                 <button type="submit" class="btn btn-success fw-semibold mt-1" id="submitBtn">
                                     <i class="fa-solid fa-user-plus me-2"></i>Tambah Penyewa
                                 </button>
@@ -69,7 +98,8 @@
                     </form>
                 </div>
 
-                <!-- Table Penyewa -->
+                <!-- ====================== TABLE PENYEWA ====================== -->
+                {{-- Tabel daftar penyewa (kolom kanan) --}}
                 <div class="col-lg-8">
                     <div class="card section-card card-fixed-height">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -77,7 +107,8 @@
                                 <i class="fa-solid fa-list me-2"></i>Daftar Penyewa
                             </div>
                             
-                            <!-- Search Form -->
+                            <!-- ====================== SEARCH FORM ====================== -->
+                            {{-- Form pencarian penyewa berdasarkan nama atau telepon --}}
                             <form action="{{ route('cashier.dashboard.index') }}" method="GET" class="search-form-wrapper">
                                 <div class="search-container">
                                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -87,12 +118,14 @@
                                            placeholder="Cari nama atau telepon..."
                                            value="{{ request('search') }}"
                                            autocomplete="off">
+                                    {{-- Tombol clear search (muncul jika ada search query) --}}
                                     @if(request('search'))
                                         <button type="button" class="search-clear" id="clearSearch">
                                             <i class="fa-solid fa-times"></i>
                                         </button>
                                     @endif
                                 </div>
+                                {{-- Tombol reset (muncul jika ada search query) --}}
                                 @if(request('search'))
                                     <a href="{{ route('cashier.dashboard.index') }}" class="btn btn-outline-secondary btn-sm btn-reset">
                                         <i class="fa-solid fa-rotate-left me-1"></i>Reset
@@ -103,7 +136,7 @@
 
                         <div class="card-body-scrollable">
                             @if($customers->count() > 0)
-                                <!-- Scrollable Table -->
+                                <!-- ====================== SCROLLABLE TABLE ====================== -->
                                 <div class="scrollable-table-container">
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
@@ -115,11 +148,14 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            {{-- Looping data customers --}}
                                             @foreach ($customers as $index => $customer)
                                             <tr>
+                                                {{-- Nomor urut (mempertimbangkan pagination) --}}
                                                 <td class="fw-semibold ps-4">
                                                     {{ $customers->firstItem() + $index }}
                                                 </td>
+                                                {{-- Nama penyewa dengan avatar icon --}}
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-sm me-3">
@@ -135,12 +171,14 @@
                                                         </div>
                                                     </div>
                                                 </td>
+                                                {{-- Nomor telepon --}}
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <i class="fa-solid fa-phone text-success me-2"></i>
                                                         <span class="text-monospace">{{ $customer->phone }}</span>
                                                     </div>
                                                 </td>
+                                                {{-- Tombol aksi hapus --}}
                                                 <td class="text-center">
                                                     <form action="{{ route('cashier.customers.destroy', $customer->id) }}"
                                                         method="POST"
@@ -159,8 +197,9 @@
                                     </table>
                                 </div>
 
-                                <!-- Pagination -->
+                                <!-- ====================== PAGINATION ====================== -->
                                 <div class="pagination-container d-flex justify-content-between align-items-center">
+                                    {{-- Info jumlah data yang ditampilkan --}}
                                     <div class="pagination-info">
                                         Menampilkan {{ $customers->count() }} dari {{ $customers->total() }} hasil
                                         @if(request('search'))
@@ -168,6 +207,7 @@
                                         @endif
                                     </div>
                                     
+                                    {{-- Link pagination --}}
                                     @if($customers->hasPages())
                                     <nav aria-label="Page navigation">
                                         <ul class="pagination custom-pagination mb-0">
@@ -186,7 +226,7 @@
                                                 </li>
                                             @endif
 
-                                            {{-- Pagination Elements --}}
+                                            {{-- Pagination Elements (nomor halaman) --}}
                                             @foreach ($customers->getUrlRange(1, $customers->lastPage()) as $page => $url)
                                                 @if ($page == $customers->currentPage())
                                                     <li class="page-item active" aria-current="page">
@@ -218,7 +258,8 @@
                                     @endif
                                 </div>
                             @else
-                                <!-- Empty State -->
+                                <!-- ====================== EMPTY STATE ====================== -->
+                                {{-- Tampilan ketika tidak ada data --}}
                                 <div class="empty-state">
                                     <div class="empty-state-icon">
                                         <i class="fa-solid fa-users-slash"></i>
@@ -252,16 +293,17 @@
         </div>
     </div>
 
-    <!-- Bottom Navbar -->
+    <!-- ====================== BOTTOM NAVBAR ====================== -->
+    {{-- Navigasi bawah untuk kasir --}}
     <div class="bottom-navbar">
         <div class="nav-buttons">
-            <!-- Tombol Dashboard -->
+            {{-- Tombol Dashboard --}}
             <a href="/cashier/dashboard" class="btn btn-info btn-nav">
                 <i class="fa-solid fa-chart-line"></i>
                 <span>Dashboard</span>
             </a>
 
-            <!-- Dropdown Display -->
+            {{-- Dropdown Display (untuk menampilkan venue/lapangan) --}}
             <div class="dropdown display-dropdown">
                 <button class="btn btn-outline-danger btn-nav dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fa-solid fa-display"></i>
@@ -285,15 +327,19 @@
                 </ul>
             </div>
 
-            <!-- Tombol lainnya -->
+            {{-- Tombol Riwayat Tiket --}}
             <a href="/cashier/ticket" class="btn btn-outline-primary btn-nav">
                 <i class="fa-solid fa-ticket"></i>
                 <span>Riwayat Tiket</span>
             </a>
+            
+            {{-- Tombol Scan QR --}}
             <a href="/cashier/scan" class="btn btn-outline-success btn-nav">
                 <i class="fa-solid fa-qrcode"></i>
                 <span>Scan QR</span>
             </a>
+            
+            {{-- Tombol Kasir --}}
             <a href="/cashier/queue" class="btn btn-outline-warning btn-nav">
                 <i class="fa-solid fa-cash-register"></i>
                 <span>Kasir</span>
@@ -301,9 +347,10 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- ====================== MODALS ====================== -->
     
     <!-- Logout Modal -->
+    {{-- Modal konfirmasi logout --}}
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -325,6 +372,7 @@
     </div>
 
     <!-- Modal Pilih Section -->
+    {{-- Modal untuk memilih lapangan (section) yang akan ditampilkan --}}
     <div class="modal fade" id="modalSelectSection" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
@@ -336,6 +384,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
+                        {{-- Looping semua section (lapangan) --}}
                         @foreach ($sections as $section)
                             <div class="col-md-4">
                                 <a href="{{ route('cashier.display.sections.show', $section->id) }}" target="_blank"
@@ -355,6 +404,7 @@
     </div>
 
     <!-- Modal Semua Venue -->
+    {{-- Modal untuk menampilkan semua venue --}}
     <div class="modal fade" id="modalAllVenues" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
@@ -366,6 +416,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
+                        {{-- Looping semua venue --}}
                         @foreach ($venues as $venue)
                             <div class="col-md-4">
                                 <a href="{{ route('cashier.display.venues.sections', $venue->id) }}" target="_blank"
@@ -385,6 +436,8 @@
     </div>
 @endsection
 
+{{-- Section untuk menambahkan JavaScript khusus halaman ini --}}
 @push('scripts')
+    {{-- Memasukkan file JavaScript untuk fungsi dari partial --}}
     @include('cashier.dashboard.partials.script')
 @endpush

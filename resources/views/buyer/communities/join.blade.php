@@ -1239,16 +1239,19 @@
             </div>
         </div>
 
-        <!-- ================= COMMUNITY LIST ================= -->
         <div id="joinCommunityList" class="community-cards-container" style="padding: 12px 16px;">
             @foreach ($communities as $community)
+
+                @if($community->is_banned)
+                    @continue
+                @endif
+
                 @php
-                    // Untuk guest, hanya tampilkan komunitas public
                     if (!auth()->check() && $community->type !== 'public') {
                         continue;
                     }
                 @endphp
-                
+
                 <div class="community-card">
                     {{-- Banner Background --}}
                     <div class="card-banner" 

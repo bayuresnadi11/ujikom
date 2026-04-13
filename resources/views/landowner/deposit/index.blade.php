@@ -129,15 +129,6 @@
             gap: 8px;
         }
 
-        .withdrawable-info {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-top: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
         /* ====================
            NO VENUE MESSAGE
         ==================== */
@@ -381,85 +372,9 @@
             color: #C0392B;
         }
 
-        /* ====================
-           WITHDRAWAL CARD STYLES
-        ==================== */
-        .transaction-type {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
         .type-deposit {
             background: rgba(139, 21, 56, 0.1);
             color: #8B1538;
-        }
-
-        .type-withdrawal {
-            background: rgba(239, 68, 68, 0.1);
-            color: #E74C3C;
-        }
-
-        .withdrawal-details {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #f1f3f5;
-        }
-
-        .withdrawal-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-
-        .withdrawal-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .withdrawal-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #7b8a8b;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .withdrawal-label i {
-            color: #8B1538;
-            font-size: 12px;
-        }
-
-        .withdrawal-value {
-            font-weight: 600;
-            font-size: 13px;
-            text-align: right;
-            color: #2c3e50;
-        }
-
-        .withdrawal-bank {
-            color: #2c3e50;
-            font-size: 13px;
-        }
-
-        .withdrawal-account {
-            color: #4a5568;
-            font-size: 12px;
-            line-height: 1.3;
-        }
-
-        /* REJECTION REASON STYLE */
-        .rejection-reason {
-            margin-top: 12px;
-            padding: 12px;
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border-radius: 8px;
-            border: 1px solid #fecaca;
         }
 
         .rejection-label {
@@ -478,15 +393,6 @@
             line-height: 1.4;
             margin: 0;
             color: #991b1b;
-        }
-
-        /* PROCESSED INFO STYLE */
-        .processed-info {
-            margin-top: 12px;
-            padding: 12px;
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            border-radius: 8px;
-            border: 1px solid #93c5fd;
         }
 
         .processed-label {
@@ -664,14 +570,6 @@
                     <div id="balanceAmount" class="balance-amount">
                         <span class="loading-spinner"></span> 
                         <span class="pulse">Memuat saldo...</span>
-                    </div>
-                    
-                    <div id="withdrawableInfo" class="balance-info" style="display: none;">
-                        <div class="withdrawable-info">
-                            <i class="fas fa-hand-holding-usd" style="font-size: 16px;"></i>
-                            <span style="font-weight: 500;">Saldo yang dapat ditarik:</span>
-                            <span id="withdrawableAmount" style="font-weight: 700; margin-left: 8px;">Rp 0</span>
-                        </div>
                     </div>
                     
                     <div class="balance-actions">
@@ -919,9 +817,6 @@
             const container = document.getElementById('transactionContainer');
             const errorMessage = document.getElementById('errorMessage');
             const balanceAmount = document.getElementById('balanceAmount');
-            const withdrawableInfo = document.getElementById('withdrawableInfo');
-            const withdrawableAmount = document.getElementById('withdrawableAmount');
-            const withdrawBtn = document.getElementById('withdrawBtn');
             const noVenueMessage = document.getElementById('noVenueMessage');
             const refreshBtn = document.querySelector('.balance-btn[onclick="refreshBalance()"]');
 
@@ -955,32 +850,11 @@
                             '<span class="balance-positive">' + formatCurrency(balance) + '</span>'
                         }
                     `;
-                    
-                    // Update withdrawable amount
-                    const withdrawable = data.withdrawable_amount || 0;
-                    if (withdrawable > 0) {
-                        withdrawableInfo.style.display = 'flex';
-                        withdrawableAmount.textContent = formatCurrency(withdrawable);
-                        
-                        // Enable withdraw button with animation
-                        withdrawBtn.style.opacity = '1';
-                        withdrawBtn.style.pointerEvents = 'auto';
-                        withdrawBtn.classList.remove('disabled');
-                    } else {
-                        withdrawableInfo.style.display = 'none';
-                        
-                        // Disable withdraw button
-                        withdrawBtn.style.opacity = '0.5';
-                        withdrawBtn.style.pointerEvents = 'none';
-                        withdrawBtn.classList.add('disabled');
-                    }
 
-                    // Combine deposits and withdrawals into one array
                     let allTransactions = [];
                     let counts = {
                         all: 0,
-                        deposit: 0,
-                        withdrawal: 0
+                        deposit: 0
                     };
 
                     // Add deposits
@@ -992,22 +866,6 @@
                                 date: new Date(deposit.created_at)
                             });
                             counts.deposit++;
-                        });
-                    }
-
-                    // Add withdrawals
-                    if (data.withdrawals && data.withdrawals.length > 0) {
-                        data.withdrawals.forEach(withdrawal => {
-                            allTransactions.push({
-                                ...withdrawal,
-                                type: 'withdrawal',
-                                source_type_name: 'Penarikan Saldo',
-                                source_type_icon: 'fas fa-hand-holding-usd',
-                                is_positive: false,
-                                is_negative: true,
-                                date: new Date(withdrawal.created_at)
-                            });
-                            counts.withdrawal++;
                         });
                     }
 
@@ -1095,88 +953,6 @@
                                         </div>
                                     </div>
                                 `;
-                            } else {
-                                // WITHDRAWAL CARD
-                                html += `
-                                    <div class="card fade-in transaction-card" style="animation-delay: ${delay}ms;" data-type="withdrawal">
-                                        <div class="card-body">
-                                            <span class="transaction-type type-withdrawal">Penarikan</span>
-                                            <div class="card-row" style="margin-bottom: 12px;">
-                                                <div class="card-label" style="display: flex; align-items: center; gap: 12px;">
-                                                    <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, rgba(139, 21, 56, 0.1) 0%, rgba(160, 27, 66, 0.1) 100%); display: flex; align-items: center; justify-content: center;">
-                                                        <i class="fas fa-hand-holding-usd" style="color: var(--primary); font-size: 16px;"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div style="font-weight: 700; color: #2c3e50; font-size: 15px;">Penarikan Saldo</div>
-                                                        <div style="font-size: 12px; color: #95a5a6; margin-top: 2px;">Penarikan ke ${transaction.bank_name}</div>
-                                                    </div>
-                                                </div>
-                                                <div class="card-value card-value-negative" style="font-size: 18px; font-weight: 800;">
-                                                    -${formatCurrency(transaction.amount)}
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="withdrawal-details">
-                                                <div class="withdrawal-row">
-                                                    <div class="withdrawal-label">
-                                                        <i class="fas fa-university"></i>
-                                                        <span>Bank</span>
-                                                    </div>
-                                                    <div class="withdrawal-value withdrawal-bank">
-                                                        ${transaction.bank_name}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="withdrawal-row">
-                                                    <div class="withdrawal-label">
-                                                        <i class="fas fa-credit-card"></i>
-                                                        <span>Rekening</span>
-                                                    </div>
-                                                    <div class="withdrawal-value withdrawal-account">
-                                                        ${transaction.account_number}<br>
-                                                        <small>${transaction.account_holder_name}</small>
-                                                    </div>
-                                                </div>
-                                                
-                                                ${transaction.rejection_reason ? `
-                                                    <div class="rejection-reason">
-                                                        <div class="rejection-label">
-                                                            <i class="fas fa-exclamation-triangle"></i>
-                                                            <span>Alasan Penolakan</span>
-                                                        </div>
-                                                        <p class="rejection-text">${transaction.rejection_reason}</p>
-                                                    </div>
-                                                ` : ''}
-                                                
-                                                ${transaction.processed_at ? `
-                                                    <div class="processed-info">
-                                                        <div class="processed-label">
-                                                            <i class="fas fa-info-circle"></i>
-                                                            <span>Informasi Proses</span>
-                                                        </div>
-                                                        <div class="processed-detail">
-                                                            <strong>${formatDate(transaction.processed_at)}</strong>
-                                                        </div>
-                                                    </div>
-                                                ` : ''}
-                                            </div>
-                                            
-                                            <div class="card-row" style="margin-top: 16px;">
-                                                <div class="card-label" style="color: #7b8a8b; font-size: 13px;">
-                                                    <i class="far fa-clock"></i>
-                                                    <span>${formatDate(transaction.created_at)}</span>
-                                                </div>
-                                                <div class="card-value">
-                                                    <span class="transaction-status ${transaction.status_class || 'status-pending'}">
-                                                        <i class="fas ${transaction.status === 'pending' ? 'fa-clock' : transaction.status === 'processed' ? 'fa-check-double' : transaction.status === 'approved' ? 'fa-check-circle' : 'fa-times-circle'}" 
-                                                           style="margin-right: 4px; font-size: 10px;"></i>
-                                                        ${transaction.status_label || 'Pending'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
                             }
                         });
                         container.innerHTML = html;
@@ -1185,13 +961,12 @@
                         // Update badge counts
                         document.getElementById('badge-all').textContent = counts.all;
                         document.getElementById('badge-deposit').textContent = counts.deposit;
-                        document.getElementById('badge-withdrawal').textContent = counts.withdrawal;
                         
                         // Set active filter to "all"
                         filterTransactions('all');
                     } else {
                         // Check if no data due to no venues
-                        if (balance === 0 && withdrawable === 0) {
+                        if (balance === 0) {
                             fetch('/api/landowner/has-venues')
                                 .then(res => res.json())
                                 .then(venueData => {

@@ -1142,13 +1142,6 @@
                     <div class="detail-grid">
                         <div class="detail-item">
                             <div class="detail-label">
-                                <i class="fas fa-ticket-alt"></i> Kode Tiket
-                            </div>
-                            <div class="detail-value">{{ $booking->ticket_code }}</div>
-                        </div>
-                        
-                        <div class="detail-item">
-                            <div class="detail-label">
                                 <i class="fas fa-map-marker-alt"></i> Lokasi
                             </div>
                             <div class="detail-value">{{ $venue->location }}</div>
@@ -1253,19 +1246,6 @@
                                     <i class="fas fa-venus-mars"></i> Campur
                                 @endif
                             </span>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <div class="detail-label">
-                            <i class="fas fa-money-bill-wave"></i> Biaya per Orang
-                        </div>
-                        <div class="detail-value">
-                            @if($playTogether->type === 'paid')
-                                <strong>Rp {{ number_format($playTogether->price_per_person, 0, ',', '.') }}</strong>
-                            @else
-                                <span class="badge badge-free">GRATIS</span>
-                            @endif
                         </div>
                     </div>
                     

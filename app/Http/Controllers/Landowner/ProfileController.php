@@ -62,6 +62,7 @@ class ProfileController extends Controller
         // =====================
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255|unique:users,username,' . $user->id, // ✅ TAMBAH INI
             'business_name' => 'nullable|string|max:255',
             'phone' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',

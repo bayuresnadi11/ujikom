@@ -15,9 +15,10 @@ use Illuminate\Support\Facades\Log;
 
 class CommunityMemberController extends Controller
 {
-    /**
-     * ✅ UPDATED: Join community dengan auto-create conversation
-     */
+    // =========================================================================
+    // JOIN - BERGABUNG DENGAN KOMUNITAS
+    // User bergabung ke komunitas (auto-create conversation untuk chat grup)
+    // =========================================================================
     public function join(Request $request, $communityId)
     {
         try {
@@ -31,7 +32,7 @@ class CommunityMemberController extends Controller
 
             DB::beginTransaction();
 
-            // Create member record
+            // Buat record member
             CommunityMember::create([
                 'community_id' => $community->id,
                 'user_id' => $userId,
@@ -41,6 +42,7 @@ class CommunityMemberController extends Controller
             ]);
 
             // ✅ AUTO-CREATE conversation untuk community ini (jika belum ada)
+            // Ini penting untuk fitur chat grup komunitas
             $conversation = Conversation::firstOrCreate(
                 [
                     'community_id' => $community->id,
@@ -53,7 +55,7 @@ class CommunityMemberController extends Controller
 
             DB::commit();
 
-            // ✅ Chat grup akan OTOMATIS MUNCUL di chat list
+            // ✅ Chat grup akan OTOMATIS MUNCUL di chat list user
             // karena query whereHas('community.members') akan menemukan user ini
 
             return back()->with('success', 'Berhasil bergabung dengan komunitas');
@@ -65,9 +67,10 @@ class CommunityMemberController extends Controller
         }
     }
 
-    /**
-     * ✅ UPDATED: Leave community
-     */
+    // =========================================================================
+    // LEAVE - KELUAR DARI KOMUNITAS
+    // User keluar dari komunitas (status diubah menjadi removed)
+    // =========================================================================
     public function leave(Request $request, $communityId)
     {
         try {
@@ -86,7 +89,8 @@ class CommunityMemberController extends Controller
 
             DB::beginTransaction();
 
-            // ✅ Update status jadi inactive/removed
+            // ✅ Update status jadi removed (bukan dihapus permanen)
+            // Ini berguna untuk histori dan kemungkinan rejoin
             $member->update(['status' => 'removed']);
 
             // Hapus juga request jika ada
@@ -96,11 +100,11 @@ class CommunityMemberController extends Controller
 
             DB::commit();
 
-            // ✅ Chat grup akan OTOMATIS HILANG dari chat list
+            // ✅ Chat grup akan OTOMATIS HILANG dari chat list user
             // karena query whereHas('community.members') tidak akan menemukan user ini
             // (relasi members() sudah filter wherePivot('status', 'active'))
 
-            // Clear cache
+            // Clear cache untuk unread messages
             cache()->forget("user.{$userId}.unread_messages");
 
             return redirect()->route('buyer.communities.index')
@@ -113,9 +117,10 @@ class CommunityMemberController extends Controller
         }
     }
 
-    /**
-     * ✅ UPDATED: Remove member (by admin)
-     */
+    // =========================================================================
+    // REMOVE MEMBER - KELUARKAN MEMBER (OLEH ADMIN)
+    // Admin mengeluarkan member dari komunitas (status diubah menjadi removed)
+    // =========================================================================
     public function removeMember(Request $request, $community, $memberId)
     {
         try {
@@ -192,9 +197,10 @@ class CommunityMemberController extends Controller
         }
     }
 
-    /**
-     * Aksi jadikan manager
-     */
+    // =========================================================================
+    // MAKE ADMIN - JADIKAN MEMBER SEBAGAI ADMIN
+    // Admin menjadikan member biasa menjadi admin komunitas
+    // =========================================================================
     public function makeAdmin(Request $request, $community, $memberId)
     {
         try {
@@ -229,7 +235,7 @@ class CommunityMemberController extends Controller
                 ], 400);
             }
 
-            // Update role menjadi admin - TIDAK gunakan updated_at karena kolom tidak ada
+            // Update role menjadi admin
             $member->role = 'admin';
             $member->save();
 
@@ -255,9 +261,10 @@ class CommunityMemberController extends Controller
         }
     }
 
-    /**
-     * Aksi ubah admin menjadi anggota
-     */
+    // =========================================================================
+    // REMOVE ADMIN - UBAH ADMIN MENJADI ANGGOTA BIASA
+    // Admin mengubah admin lain menjadi member biasa
+    // =========================================================================
     public function removeAdmin(Request $request, $community, $memberId)
     {
         try {
@@ -292,7 +299,7 @@ class CommunityMemberController extends Controller
                 ], 400);
             }
 
-            // Update role menjadi anggota - TIDAK gunakan updated_at karena kolom tidak ada
+            // Update role menjadi anggota
             $member->role = 'anggota';
             $member->save();
 
@@ -318,9 +325,10 @@ class CommunityMemberController extends Controller
         }
     }
 
-    /**
-     * Helper function untuk mendapatkan achievements member
-     */
+    // =========================================================================
+    // GET MEMBER ACHIEVEMENTS (HELPER)
+    // Mendapatkan data pencapaian/prestasi member (dummy/data sementara)
+    // =========================================================================
     private function getMemberAchievements($userId)
     {
         // Data dummy achievements (bisa diganti dengan data dari database)
@@ -344,9 +352,10 @@ class CommunityMemberController extends Controller
         return $achievements;
     }
 
-    /**
-     * Search members
-     */
+    // =========================================================================
+    // SEARCH MEMBERS - PENCARIAN MEMBER DALAM KOMUNITAS
+    // Mencari member berdasarkan nama, username, atau email
+    // =========================================================================
     public function search(Request $request, $community)
     {
         $keyword = $request->q ?? '';
@@ -361,6 +370,7 @@ class CommunityMemberController extends Controller
             })
             ->get()
             ->map(function ($member) {
+                // Generate inisial untuk avatar jika tidak ada foto
                 $nameParts = explode(' ', $member->user->name);
                 $initials = '';
                 
@@ -370,6 +380,7 @@ class CommunityMemberController extends Controller
                     $initials = strtoupper(substr($member->user->name, 0, 2));
                 }
                 
+                // Warna background avatar berdasarkan nama (konsisten)
                 $colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
                 $colorIndex = crc32($member->user->name) % count($colors);
                 
@@ -391,20 +402,28 @@ class CommunityMemberController extends Controller
         return response()->json($members);
     }
 
+    // =========================================================================
+    // SEARCH USERS - PENCARIAN USER UNTUK DIUNDANG (AJAX)
+    // Mencari user yang belum bergabung ke komunitas untuk diundang
+    // =========================================================================
     public function searchUsers(Request $request, $communityId)
     {
         $q = trim($request->q);
     
-        // ambil user yang sudah join komunitas
+        // Ambil user yang sudah join komunitas (tidak perlu diundang lagi)
         $joinedUserIds = \DB::table('community_members')
             ->where('community_id', $communityId)
             ->pluck('user_id')
             ->toArray();
     
+        // Cari user yang:
+        // 1. Bukan diri sendiri
+        // 2. Belum bergabung ke komunitas
+        // 3. Nama mengandung keyword pencarian
         $users = \App\Models\User::query()
             ->where('id', '!=', auth()->id()) // ⬅️ JANGAN munculin diri sendiri
             ->whereNotIn('id', $joinedUserIds) // ⬅️ BELUM JOIN
-            ->where('name', 'like', "%{$q}%") // ⬅️ SEARCH
+            ->where('name', 'like', "%{$q}%") // ⬅️ SEARCH berdasarkan nama
             ->get(['id', 'name', 'avatar']);
     
         return response()->json($users);

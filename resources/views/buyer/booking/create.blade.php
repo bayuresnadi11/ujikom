@@ -5,615 +5,760 @@ Tampilan untuk membuat booking baru (Regular / Main Bareng / Sparring)
 =============================================================================
 --}}
 
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Create Booking'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
-{{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
-<link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    {{-- Memasukkan file CSS untuk styling booking dari partial --}}
+    @include('buyer.booking.partials.booking-style')
+    <style>
+        /* ===== MAIN CONTENT ===== */
+        /* Area konten utama dengan padding untuk menghindari fixed header dan bottom nav */
+        .main-content {
+            padding-top: 70px;           /* tinggi header fixed */
+            padding-bottom: 90px;        /* tinggi bottom nav */
+            min-height: calc(100vh - 70px - 90px);
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            padding: 20px 16px 0;
+            margin-bottom: 20px;
+        }
+
+        /* Judul halaman dengan gradien teks */
+        .page-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #0A5C36;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0A5C36, #2ECC71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6C757D; /* text-light */
+            line-height: 1.4;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* ===================== BOOKING INFO CARDS ===================== */
+        /* Container untuk kartu informasi venue dan lapangan */
+        .booking-info-cards {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 15px; /* jarak bawah */
+            flex-wrap: wrap;
+        }
+
+        /* ===================== CARD ITEM ===================== */
+        /* Kartu informasi individual */
+        .info-card-item {
+            flex: 1;
+            min-width: 160px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        /* Efek hover pada kartu informasi */
+        .info-card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+            border-color: #d1d5db;
+        }
+
+        /* ===================== LABEL ===================== */
+        .info-card-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        /* Icon di label */
+        .info-card-label i {
+            color: #3b82f6;
+            font-size: 14px;
+        }
+
+        /* ===================== VALUE ===================== */
+        .info-card-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #111827;
+            word-break: break-word;
+        }
+    </style>
+    
+    {{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
+    <link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
+    <div class="mobile-container">
+        {{-- Header - include dari layout terpisah --}}
+        @include('layouts.header')
 
-<div class="mobile-container">
-    @include('layouts.header')
+        <!-- Main Content -->
+        <main class="main-content">
+            {{-- ====================== HEADER HALAMAN ====================== --}}
+            <section class="page-header">
+                <h1 class="page-title">Buat Booking Baru</h1>
+                <p class="page-subtitle">Isi form untuk membuat booking lapangan</p>
+            </section>
 
-    <main class="main-content">
-        {{-- ====================== HEADER HALAMAN ====================== --}}
-        <section class="page-header">
-            <h1 class="page-title">Buat Booking Baru</h1>
-            <p class="page-subtitle">Isi form untuk membuat booking lapangan</p>
-        </section>
-
-        <div style="padding: 0 20px;">
-            {{-- ====================== MENAMPILKAN ERROR VALIDASI ====================== --}}
-            @if ($errors->any())
-                <div style="background: #fee; border: 1px solid #fcc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <ul style="margin: 0; padding-left: 20px;">
-                        @foreach ($errors->all() as $error)
-                            <li style="color: #c00;">{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-        <div class="booking-form-container">
-            <form action="{{ route('buyer.booking.store') }}" method="POST" id="bookingForm">
-                @csrf
-
-                {{-- Hidden fields untuk venue dan section (dari parameter URL) --}}
-                <input type="hidden" name="venue_id" value="{{ $venue->id ?? '' }}" id="venue_id">
-                <input type="hidden" name="section_id" value="{{ $section->id ?? '' }}" id="section_id">
-
-                {{-- ====================== KARTU INFORMASI VENUE & SECTION ====================== --}}
-                <div class="booking-info-cards">
-                    <div class="info-card-item">
-                        <span class="info-card-label"><i class="fas fa-building"></i> Venue</span>
-                        <span class="info-card-value">{{ $venue->venue_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-card-item">
-                        <span class="info-card-label"><i class="fas fa-running"></i> Lapangan</span>
-                        <span class="info-card-value">{{ $section->section_name ?? 'N/A' }}</span>
-                    </div>
-                </div>
-
-                {{-- ====================== PEMILIHAN JADWAL ====================== --}}
-                <div class="form-group">
-                    <label class="form-label">Pilih Jadwal <span style="color: red;">*</span></label>
-                    <div class="schedule-cards-container" id="scheduleCardsContainer">
-                        @forelse($schedules as $schedule)
-                            <div class="schedule-card {{ $schedule->available ? '' : 'unavailable' }}" 
-                                 data-schedule-id="{{ $schedule->id }}" 
-                                 data-price="{{ $schedule->rental_price }}"
-                                 data-date="{{ $schedule->date }}"
-                                 data-start="{{ $schedule->start_time }}"
-                                 data-end="{{ $schedule->end_time }}"
-                                 data-duration="{{ $schedule->rental_duration }}"
-                                 onclick="{{ $schedule->available ? 'selectSchedule(this)' : '' }}">
-                                {{-- Tanggal --}}
-                                <div class="schedule-date {{ $schedule->available ? '' : 'unavailable-date' }}">
-                                    <div class="date-day">{{ \Carbon\Carbon::parse($schedule->date)->format('d') }}</div>
-                                    <div class="date-month">{{ \Carbon\Carbon::parse($schedule->date)->format('M') }}</div>
-                                </div>
-                                {{-- Detail jadwal --}}
-                                <div class="schedule-details">
-                                    <div class="schedule-time">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</div>
-                                    <div class="schedule-price">Rp {{ number_format($schedule->rental_price, 0, ',', '.') }}</div>
-                                    @if($schedule->available)
-                                        <span class="schedule-status available">Tersedia</span>
-                                    @else
-                                        <span class="schedule-status unavailable">Sudah di pesen</span>
-                                    @endif
-                                </div>
-                            </div>
-                        @empty
-                            <p style="text-align: center; color: var(--text-light);">Tidak ada jadwal tersedia</p>
-                        @endforelse
-                    </div>
-                    <input type="hidden" name="schedule_id" id="schedule_id">
-                    @error('schedule_id')
-                        <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                {{-- ====================== KARTU INFO JADWAL TERPILIH ====================== --}}
-                <div id="scheduleInfoCard" style="display: none;" class="schedule-info-card">
-                    <h4><i class="fas fa-info-circle"></i> Detail Jadwal Terpilih</h4>
-                    <div class="schedule-details-grid">
-                        <div class="detail-item">
-                            <div class="detail-label">Tanggal</div>
-                            <div class="detail-value" id="selectedDate">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Waktu</div>
-                            <div class="detail-value" id="selectedTime">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Durasi</div>
-                            <div class="detail-value" id="selectedDuration">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Harga</div>
-                            <div class="detail-value" id="selectedPrice">-</div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ====================== TIPE BOOKING ====================== --}}
-                <div class="form-group">
-                    <label class="form-label">Tipe Booking <span style="color: red;">*</span></label>
-                    <select class="form-control" name="type" id="bookingType" onchange="toggleBookingType()">
-                        <option value="">Pilih Tipe</option>
-                        <option value="regular">Regular</option>
-                        <option value="play_together">Main Bareng</option>
-                    </select>
-                    @error('type')
-                        <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                {{-- ====================== PEMBAYARAN OLEH (HOST/PARTICIPANT) ====================== --}}
-                <div id="payBySection" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">Lapangan Dibayar Oleh <span style="color: red;">*</span></label>
-                        <select class="form-control" name="pay_by" id="payBy" onchange="updateCalculator()">
-                            <option value="host">Host (Saya bayar semua)</option>
-                            <option value="participant">Participant (Dibagi participant)</option>
-                        </select>
-                    </div>
-                </div>
-
-                {{-- ====================== SECTION PLAY TOGETHER ====================== --}}
-                <div id="playTogetherSection" class="form-section" style="display: none;">
-                    <div class="form-section-header">
-                        <i class="fas fa-users"></i> Informasi Main Bareng
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Nama Main Bareng <span style="color: red;">*</span></label>
-                        <input type="text" class="form-control" name="pt_name" id="pt_name" placeholder="Masukkan nama play together" value="{{ old('pt_name') }}">
-                        @error('pt_name')
-                            <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Privasi <span style="color: red;">*</span></label>
-                        <select class="form-control" name="pt_privacy" id="pt_privacy" onchange="toggleCommunitySelect()">
-                            <option value="public">Public</option>
-                            <option value="private">Private</option>
-                            <option value="community">Community</option>
-                        </select>
-                    </div>
-
-                    {{-- Dropdown komunitas (hanya muncul jika privacy = community) --}}
-                    <div class="form-group" id="pt_community_group" style="display: none;">
-                        <label class="form-label">Pilih Komunitas <span style="color: red;">*</span></label>
-                        <select class="form-control" name="pt_community_id" id="pt_community_id">
-                            <option value="">Pilih Komunitas</option>
-                            @foreach($myCommunities as $community)
-                                <option value="{{ $community->id }}">{{ $community->name }}</option>
+            <div style="padding: 0 20px;">
+                {{-- ====================== MENAMPILKAN ERROR VALIDASI ====================== --}}
+                {{-- Jika ada error validasi dari Laravel, tampilkan di sini --}}
+                @if ($errors->any())
+                    <div style="background: #fee; border: 1px solid #fcc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            @foreach ($errors->all() as $error)
+                                <li style="color: #c00;">{{ $error }}</li>
                             @endforeach
-                        </select>
-                        @error('pt_community_id')
-                            <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                        @enderror
+                        </ul>
                     </div>
+                @endif
 
-                    <div class="form-group">
-                        <label class="form-label">Maksimal Participant <span style="color: red;">*</span></label>
-                        <input type="number" class="form-control" name="pt_max_participants" id="pt_max_participants" min="2" placeholder="Contoh: 10" value="{{ old('pt_max_participants') }}" onchange="updateCalculator()">
-                        @error('pt_max_participants')
-                            <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                        @enderror
-                    </div>
+                <div class="booking-form-container">
+                    <!-- ====================== FORM FILTER TANGGAL ====================== -->
+                    {{-- Form untuk memfilter jadwal berdasarkan tanggal --}}
+                    <form method="GET" action="{{ route('buyer.booking.create') }}" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                        <input type="hidden" name="venue_id" value="{{ $venue->id }}">
+                        <input type="hidden" name="section_id" value="{{ $section->id }}">
+                        <input type="date" name="booking_date" value="{{ request('booking_date', date('Y-m-d')) }}" class="form-control" style="max-width: 200px;">
+                        <button type="submit" class="btn-form btn-form-primary" style="padding: 8px 16px;">Filter</button>
+                    </form>
 
-                    <div class="form-group">
-                        <label class="form-label">Metode Pembayaran Main Bareng <span style="color: red;">*</span></label>
-                        <select class="form-control" name="pt_type" id="pt_type" onchange="togglePricePerPerson()">
-                            <option value="free">Gratis</option>
-                            <option value="paid">Berbayar</option>
-                        </select>
-                    </div>
+                    {{-- ====================== FORM UTAMA BOOKING ====================== --}}
+                    <form action="{{ route('buyer.booking.store') }}" method="POST" id="bookingForm">
+                        @csrf
 
-                    {{-- Harga per person (hanya jika paid) --}}
-                    <div class="form-group" id="pt_price_group" style="display: none;">
-                        <label class="form-label">Biaya per Orang<span style="color: red;">*</span></label>
-                        <input type="number" class="form-control" name="pt_price_per_person" id="pt_price_per_person" min="0" placeholder="Contoh: 50000" value="{{ old('pt_price_per_person') }}" onchange="updateCalculator()">
-                        @error('pt_price_per_person')
-                            <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                        @enderror
-                    </div>
+                        {{-- Hidden fields untuk venue dan section (dari parameter URL) --}}
+                        <input type="hidden" name="venue_id" value="{{ $venue->id ?? '' }}" id="venue_id">
+                        <input type="hidden" name="section_id" value="{{ $section->id ?? '' }}" id="section_id">
 
-                    {{-- ====================== KALKULATOR BIAYA ====================== --}}
-                    <div id="calculatorHelper" class="schedule-info-card" style="display: none;">
-                        <h4><i class="fas fa-calculator"></i> Kalkulator Biaya</h4>
-                        <div class="schedule-details-grid">
-                            <div class="detail-item">
-                                <div class="detail-label">Biaya Booking</div>
-                                <div class="detail-value" id="calc_booking_cost">Rp 0</div>
+                        {{-- ====================== KARTU INFORMASI VENUE & SECTION ====================== --}}
+                        <div class="booking-info-cards">
+                            <div class="info-card-item">
+                                <span class="info-card-label"><i class="fas fa-building"></i> Venue</span>
+                                <span class="info-card-value">{{ $venue->venue_name ?? 'N/A' }}</span>
                             </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Jumlah Participant</div>
-                                <div class="detail-value" id="calc_participant_count">0</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Booking per Person</div>
-                                <div class="detail-value" id="calc_booking_per_person">Rp 0</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Harga per Person</div>
-                                <div class="detail-value" id="calc_price_per_person">Rp 0</div>
-                            </div>
-                            <div class="detail-item" style="grid-column: 1 / -1; background: rgba(39, 174, 96, 0.1); border: 2px solid var(--primary);">
-                                <div class="detail-label">Total per Person</div>
-                                <div class="detail-value" style="color: var(--primary); font-size: 18px;" id="calc_total_per_person">Rp 0</div>
+                            <div class="info-card-item">
+                                <span class="info-card-label"><i class="fas fa-running"></i> Lapangan</span>
+                                <span class="info-card-value">{{ $section->section_name ?? 'N/A' }}</span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Batas Pembayaran</label>
-                        <input type="datetime-local" class="form-control" name="pt_payment_deadline" value="{{ old('pt_payment_deadline') }}">
-                    </div>
+                        {{-- ====================== PEMILIHAN JADWAL ====================== --}}
+                        <div class="form-group">
+                            <label class="form-label">Pilih Jadwal <span style="color: red;">*</span></label>
+                            
+                            <div class="schedule-cards-container" id="scheduleCardsContainer">
+                                {{-- Looping menampilkan semua jadwal yang tersedia --}}
+                                @forelse($schedules as $schedule)
+                                    <div class="schedule-card" 
+                                        data-schedule-id="{{ $schedule->id }}" 
+                                        data-price="{{ $schedule->rental_price }}"
+                                        data-date="{{ $schedule->date }}"
+                                        data-start="{{ $schedule->start_time }}"
+                                        data-end="{{ $schedule->end_time }}"
+                                        data-duration="{{ $schedule->rental_duration }}"
+                                        onclick="selectSchedule(this)">
+                                        <div class="schedule-date">
+                                            <div class="date-day">{{ \Carbon\Carbon::parse($schedule->date)->format('d') }}</div>
+                                            <div class="date-month">{{ \Carbon\Carbon::parse($schedule->date)->format('M') }}</div>
+                                        </div>
+                                        <div class="schedule-details">
+                                            <div class="schedule-time">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</div>
+                                            <div class="schedule-price">Rp {{ number_format($schedule->rental_price, 0, ',', '.') }}</div>
+                                            <span class="schedule-status available">Tersedia</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p style="text-align: center; color: var(--text-light);">Tidak ada jadwal tersedia</p>
+                                @endforelse
+                            </div>
+                            {{-- Hidden input untuk menyimpan ID jadwal yang dipilih --}}
+                            <input type="hidden" name="schedule_id" id="schedule_id">
+                            @error('schedule_id')
+                                <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                            @enderror
+                        </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Jenis Kelamin <span style="color: red;">*</span></label>
-                        <input type="text" class="form-control" name="pt_gender" id="pt_gender" placeholder="Contoh: Laki-laki / Perempuan / Campur" value="{{ old('pt_gender') }}">
-                    </div>
+                        {{-- ====================== KARTU INFO JADWAL TERPILIH ====================== --}}
+                        {{-- Kartu yang muncul setelah user memilih jadwal --}}
+                        <div id="scheduleInfoCard" style="display: none;" class="schedule-info-card">
+                            <h4><i class="fas fa-info-circle"></i> Detail Jadwal Terpilih</h4>
+                            <div class="schedule-details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Tanggal</div>
+                                    <div class="detail-value" id="selectedDate">-</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Waktu</div>
+                                    <div class="detail-value" id="selectedTime">-</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Durasi</div>
+                                    <div class="detail-value" id="selectedDuration">-</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Harga</div>
+                                    <div class="detail-value" id="selectedPrice">-</div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Deskripsi</label>
-                        <textarea class="form-control" name="pt_description" rows="3" placeholder="Deskripsi play together">{{ old('pt_description') }}</textarea>
-                    </div>
+                        {{-- ====================== TIPE BOOKING ====================== --}}
+                        <div class="form-group">
+                            <label class="form-label">Tipe Booking <span style="color: red;">*</span></label>
+                            <select class="form-control" name="type" id="bookingType" onchange="toggleBookingType()">
+                                <option value="">Pilih Tipe</option>
+                                <option value="regular">Regular</option>
+                                <option value="play_together">Main Bareng</option>
+                            </select>
+                            @error('type')
+                                <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                            @enderror
+                        </div>
 
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="pt_host_approval" value="1" {{ old('pt_host_approval') ? 'checked' : '' }}>
-                            Memerlukan persetujuan host untuk bergabung
-                        </label>
-                    </div>
+                        {{-- ====================== PEMBAYARAN OLEH (HOST/PARTICIPANT) ====================== --}}
+                        {{-- Section ini muncul untuk tipe play_together atau sparring --}}
+                        <div id="payBySection" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">Lapangan Dibayar Oleh <span style="color: red;">*</span></label>
+                                <select class="form-control" name="pay_by" id="payBy" onchange="updateCalculator()">
+                                    <option value="host">Host (Saya bayar semua)</option>
+                                    <option value="participant">Participant (Dibagi participant)</option>
+                                </select>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="pt_include_host" value="1" id="pt_include_host" {{ old('pt_include_host') ? 'checked' : '' }}>
-                            Sertakan saya sebagai participant
-                        </label>
-                    </div>
+                        {{-- ====================== SECTION PLAY TOGETHER ====================== --}}
+                        {{-- Form khusus untuk tipe Main Bareng --}}
+                        <div id="playTogetherSection" class="form-section" style="display: none;">
+                            <div class="form-section-header">
+                                <i class="fas fa-users"></i> Informasi Main Bareng
+                            </div>
+
+                            {{-- Nama Main Bareng --}}
+                            <div class="form-group">
+                                <label class="form-label">Nama Main Bareng <span style="color: red;">*</span></label>
+                                <input type="text" class="form-control" name="pt_name" id="pt_name" placeholder="Masukkan nama play together" value="{{ old('pt_name') }}">
+                                @error('pt_name')
+                                    <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Privasi (Public/Private/Community) --}}
+                            <div class="form-group">
+                                <label class="form-label">Privasi <span style="color: red;">*</span></label>
+                                <select class="form-control" name="pt_privacy" id="pt_privacy" onchange="toggleCommunitySelect()">
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                    <option value="community">Community</option>
+                                </select>
+                            </div>
+
+                            {{-- Dropdown komunitas (hanya muncul jika privacy = community) --}}
+                            <div class="form-group" id="pt_community_group" style="display: none;">
+                                <label class="form-label">Pilih Komunitas <span style="color: red;">*</span></label>
+                                <select class="form-control" name="pt_community_id" id="pt_community_id">
+                                    <option value="">Pilih Komunitas</option>
+                                    @foreach($myCommunities as $community)
+                                        <option value="{{ $community->id }}">{{ $community->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('pt_community_id')
+                                    <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Maksimal Participant --}}
+                            <div class="form-group">
+                                <label class="form-label">Maksimal Participant <span style="color: red;">*</span></label>
+                                <input type="number" class="form-control" name="pt_max_participants" id="pt_max_participants" min="2" placeholder="Contoh: 10" value="{{ old('pt_max_participants') }}" onchange="updateCalculator()">
+                                @error('pt_max_participants')
+                                    <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Metode Pembayaran Main Bareng (Free/Paid) --}}
+                            <div class="form-group">
+                                <label class="form-label">Metode Pembayaran Main Bareng <span style="color: red;">*</span></label>
+                                <select class="form-control" name="pt_type" id="pt_type" onchange="togglePricePerPerson()">
+                                    <option value="free">Gratis</option>
+                                    <option value="paid">Berbayar</option>
+                                </select>
+                            </div>
+
+                            {{-- Harga per person (hanya jika paid) --}}
+                            <div class="form-group" id="pt_price_group" style="display: none;">
+                                <label class="form-label">Biaya per Orang<span style="color: red;">*</span></label>
+                                <input type="number" class="form-control" name="pt_price_per_person" id="pt_price_per_person" min="0" placeholder="Contoh: 50000" value="{{ old('pt_price_per_person') }}" onchange="updateCalculator()">
+                                @error('pt_price_per_person')
+                                    <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- ====================== KALKULATOR BIAYA ====================== --}}
+                            {{-- Kalkulator untuk menghitung biaya per participant --}}
+                            <div id="calculatorHelper" class="schedule-info-card" style="display: none;">
+                                <h4><i class="fas fa-calculator"></i> Kalkulator Biaya</h4>
+                                <div class="schedule-details-grid">
+                                    <div class="detail-item">
+                                        <div class="detail-label">Biaya Booking</div>
+                                        <div class="detail-value" id="calc_booking_cost">Rp 0</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Jumlah Participant</div>
+                                        <div class="detail-value" id="calc_participant_count">0</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Lapang per Person</div>
+                                        <div class="detail-value" id="calc_booking_per_person">Rp 0</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Join per Person</div>
+                                        <div class="detail-value" id="calc_price_per_person">Rp 0</div>
+                                    </div>
+                                    <div class="detail-item" style="grid-column: 1 / -1; background: rgba(39, 174, 96, 0.1); border: 2px solid var(--primary);">
+                                        <div class="detail-label">Total per Person</div>
+                                        <div class="detail-value" style="color: var(--primary); font-size: 18px;" id="calc_total_per_person">Rp 0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Batas Pembayaran --}}
+                            <div class="form-group">
+                                <label class="form-label">Batas Pembayaran</label>
+                                <input type="datetime-local" class="form-control" name="pt_payment_deadline" value="{{ old('pt_payment_deadline') }}">
+                            </div>
+
+                            {{-- Jenis Kelamin yang diizinkan --}}
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Jenis Kelamin <span style="color: red;">*</span>
+                                </label>
+                                <select class="form-control" name="pt_gender" id="pt_gender" required>
+                                    <option value="Campur" {{ old('pt_gender') == 'Campur' ? 'selected' : '' }}>Campur</option>
+                                    <option value="Laki-laki" {{ old('pt_gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                    <option value="Perempuan" {{ old('pt_gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                </select>
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            <div class="form-group">
+                                <label class="form-label">Deskripsi</label>
+                                <textarea class="form-control" name="pt_description" rows="3" placeholder="Deskripsi play together">{{ old('pt_description') }}</textarea>
+                            </div>
+
+                            {{-- Perlu persetujuan host --}}
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="pt_host_approval" value="1" {{ old('pt_host_approval') ? 'checked' : '' }}>
+                                    Memerlukan persetujuan host untuk bergabung
+                                </label>
+                            </div>
+
+                            {{-- Sertakan host sebagai participant --}}
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="pt_include_host" value="1" id="pt_include_host" {{ old('pt_include_host') ? 'checked' : '' }}>
+                                    Sertakan saya sebagai participant
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- ====================== SECTION SPARRING ====================== --}}
+                        {{-- Form khusus untuk tipe Sparring (dinonaktifkan/di-comment pada tampilan ini) --}}
+                        <div id="sparringSection" class="form-section" style="display: none;">
+                            <div class="form-section-header">
+                                <i class="fas fa-trophy"></i> Informasi Sparring
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Nama Sparring <span style="color: red;">*</span></label>
+                                <input type="text" class="form-control" name="sp_name" id="sp_name" placeholder="Masukkan nama sparring" value="{{ old('sp_name') }}">
+                                @error('sp_name')
+                                    <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Privasi <span style="color: red;">*</span></label>
+                                <select class="form-control" name="sp_privacy" id="sp_privacy">
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                    <option value="community">Community</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Metode Pembayaran Main Bareng <span style="color: red;">*</span></label>
+                                <select class="form-control" name="sp_type" id="sp_type" onchange="toggleSparringCost()">
+                                    <option value="free">Gratis</option>
+                                    <option value="paid">Berbayar</option>
+                                </select>
+                            </div>
+
+                            {{-- Biaya per participant (hanya jika paid) --}}
+                            <div class="form-group" id="sp_cost_group" style="display: none;">
+                                <label class="form-label">Biaya Per Participant <span style="color: red;">*</span></label>
+                                <input type="number" class="form-control" name="sp_cost_per_participant" id="sp_cost_per_participant" min="0" placeholder="Contoh: 50000" value="{{ old('sp_cost_per_participant') }}">
+                                @error('sp_cost_per_participant')
+                                    <span style="color: red; font-size: 12px;">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Deskripsi</label>
+                                <textarea class="form-control" name="sp_description" rows="3" placeholder="Deskripsi sparring">{{ old('sp_description') }}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="sp_host_approval" value="1" {{ old('sp_host_approval') ? 'checked' : '' }}>
+                                    Memerlukan persetujuan host untuk bergabung
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- ====================== TOMBOL AKSI ====================== --}}
+                        <div class="form-actions">
+                            <button type="button" class="btn-form btn-form-secondary" onclick="window.history.back()">
+                                <i class="fas fa-times"></i>
+                                Batal
+                            </button>
+                            <button type="submit" class="btn-form btn-form-primary" id="submitBtn">
+                                <i class="fas fa-check"></i>
+                                Buat Booking
+                            </button>
+                        </div>
+                    </form>
                 </div>
+            </div>
+        </main>
 
-                {{-- ====================== SECTION SPARRING ====================== --}}
-                <div id="sparringSection" class="form-section" style="display: none;">
-                    <div class="form-section-header">
-                        <i class="fas fa-trophy"></i> Informasi Sparring
-                    </div>
+        {{-- Bottom Navigation Bar --}}
+        @include('layouts.bottom-nav')
+    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Nama Sparring <span style="color: red;">*</span></label>
-                        <input type="text" class="form-control" name="sp_name" id="sp_name" placeholder="Masukkan nama sparring" value="{{ old('sp_name') }}">
-                        @error('sp_name')
-                            <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                        @enderror
-                    </div>
+    {{-- ====================== STYLE TAMBAHAN ====================== --}}
+    <style>
+        /* Container form booking utama */
+        .booking-form-container {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 100px;
+            border: 1px solid var(--border);
+        }
 
-                    <div class="form-group">
-                        <label class="form-label">Privasi <span style="color: red;">*</span></label>
-                        <select class="form-control" name="sp_privacy" id="sp_privacy">
-                            <option value="public">Public</option>
-                            <option value="private">Private</option>
-                            <option value="community">Community</option>
-                        </select>
-                    </div>
+        /* Group form field */
+        .form-group {
+            margin-bottom: 25px;
+        }
 
-                    <div class="form-group">
-                        <label class="form-label">Metode Pembayaran Main Bareng <span style="color: red;">*</span></label>
-                        <select class="form-control" name="sp_type" id="sp_type" onchange="toggleSparringCost()">
-                            <option value="free">Gratis</option>
-                            <option value="paid">Berbayar</option>
-                        </select>
-                    </div>
+        /* Label form */
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
 
-                    {{-- Biaya per participant (hanya jika paid) --}}
-                    <div class="form-group" id="sp_cost_group" style="display: none;">
-                        <label class="form-label">Biaya Per Participant <span style="color: red;">*</span></label>
-                        <input type="number" class="form-control" name="sp_cost_per_participant" id="sp_cost_per_participant" min="0" placeholder="Contoh: 50000" value="{{ old('sp_cost_per_participant') }}">
-                        @error('sp_cost_per_participant')
-                            <span style="color: red; font-size: 12px;">{{ $message }}</span>
-                        @enderror
-                    </div>
+        /* Input form control */
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            color: var(--text);
+            background: var(--card-bg);
+            transition: all 0.3s ease;
+        }
 
-                    <div class="form-group">
-                        <label class="form-label">Deskripsi</label>
-                        <textarea class="form-control" name="sp_description" rows="3" placeholder="Deskripsi sparring">{{ old('sp_description') }}</textarea>
-                    </div>
+        /* Focus state untuk input */
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+        }
 
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="sp_host_approval" value="1" {{ old('sp_host_approval') ? 'checked' : '' }}>
-                            Memerlukan persetujuan host untuk bergabung
-                        </label>
-                    </div>
-                </div>
+        /* State error untuk input */
+        .form-control.error {
+            border-color: #E74C3C;
+        }
 
-                {{-- ====================== TOMBOL AKSI ====================== --}}
-                <div class="form-actions">
-                    <button type="button" class="btn-form btn-form-secondary" onclick="window.history.back()">
-                        <i class="fas fa-times"></i>
-                        Batal
-                    </button>
-                    <button type="submit" class="btn-form btn-form-primary" id="submitBtn">
-                        <i class="fas fa-check"></i>
-                        Buat Booking
-                    </button>
-                </div>
-            </form>
-        </div>
-        </div>
-    </main>
+        /* Pesan error */
+        .error-message {
+            color: #E74C3C;
+            font-size: 12px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
 
-@include('layouts.bottom-nav')
-</div>
+        /* Container kartu jadwal */
+        .schedule-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
 
-{{-- ====================== STYLE TAMBAHAN ====================== --}}
-<style>
-.booking-form-container {
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    padding: 25px;
-    box-shadow: var(--shadow);
-    margin-bottom: 100px;
-    border: 1px solid var(--border);
-}
+        /* Kartu jadwal individual */
+        .schedule-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-.form-group {
-    margin-bottom: 25px;
-}
+        /* Hover effect kartu jadwal */
+        .schedule-card:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
 
-.form-label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 600;
-    color: var(--text);
-    font-size: 14px;
-}
+        /* State selected untuk kartu jadwal */
+        .schedule-card.selected {
+            border-color: var(--primary);
+            background: rgba(39, 174, 96, 0.05);
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+        }
 
-.form-control {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    color: var(--text);
-    background: var(--card-bg);
-    transition: all 0.3s ease;
-}
+        /* Bagian tanggal pada kartu jadwal */
+        .schedule-date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
 
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
-}
+        .date-day {
+            font-size: 20px;
+            font-weight: 700;
+        }
 
-.form-control.error {
-    border-color: #E74C3C;
-}
+        .date-month {
+            font-size: 12px;
+            text-transform: uppercase;
+        }
 
-.error-message {
-    color: #E74C3C;
-    font-size: 12px;
-    margin-top: 5px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
+        /* Detail jadwal */
+        .schedule-details {
+            flex: 1;
+        }
 
-.schedule-cards-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 10px;
-}
+        .schedule-time {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
 
-.schedule-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+        .schedule-price {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
 
-.schedule-card:hover {
-    transform: translateX(5px);
-    border-color: var(--primary);
-}
+        /* Status ketersediaan */
+        .schedule-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
 
-.schedule-card.selected {
-    border-color: var(--primary);
-    background: rgba(39, 174, 96, 0.05);
-    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
-}
+        .schedule-status.available {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success);
+        }
 
-.schedule-date {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: var(--primary);
-    color: white;
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
+        .schedule-status.unavailable {
+            background: rgba(231, 76, 60, 0.1);
+            color: #E74C3C;
+        }
 
-.date-day {
-    font-size: 20px;
-    font-weight: 700;
-}
+        /* Kartu jadwal tidak tersedia */
+        .schedule-card.unavailable {
+            opacity: 0.7;
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
 
-.date-month {
-    font-size: 12px;
-    text-transform: uppercase;
-}
+        .schedule-date.unavailable-date {
+            background: #95a5a6;
+        }
 
-.schedule-details {
-    flex: 1;
-}
+        /* Kartu informasi jadwal terpilih */
+        .schedule-info-card {
+            background: rgba(39, 174, 96, 0.05);
+            border: 1px solid rgba(39, 174, 96, 0.2);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 20px 0;
+        }
 
-.schedule-time {
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 5px;
-}
+        .schedule-info-card h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.schedule-price {
-    color: var(--primary);
-    font-weight: 600;
-    margin-bottom: 5px;
-}
+        /* Grid detail jadwal */
+        .schedule-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
 
-.schedule-status {
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    display: inline-block;
-}
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
 
-.schedule-status.available {
-    background: rgba(39, 174, 96, 0.1);
-    color: var(--success);
-}
+        .detail-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
 
-.schedule-status.unavailable {
-    background: rgba(231, 76, 60, 0.1);
-    color: #E74C3C;
-}
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
 
-.schedule-card.unavailable {
-    opacity: 0.7;
-    background: #f8f9fa;
-    border-color: #dee2e6;
-    cursor: not-allowed !important;
-    pointer-events: none;
-}
+        /* Section form untuk Play Together / Sparring */
+        .form-section {
+            background: rgba(39, 174, 96, 0.03);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(39, 174, 96, 0.1);
+        }
 
-.schedule-date.unavailable-date {
-    background: #95a5a6;
-}
+        .form-section-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.schedule-info-card {
-    background: rgba(39, 174, 96, 0.05);
-    border: 1px solid rgba(39, 174, 96, 0.2);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin: 20px 0;
-}
+        /* Tombol aksi form */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
 
-.schedule-info-card h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: var(--primary);
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .btn-form {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
 
-.schedule-details-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-}
+        .btn-form-secondary {
+            background: var(--background);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
 
-.detail-item {
-    background: white;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
+        .btn-form-secondary:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
 
-.detail-label {
-    font-size: 11px;
-    color: var(--text-light);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-}
+        .btn-form-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
 
-.detail-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-}
+        .btn-form-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
 
-.form-section {
-    background: rgba(39, 174, 96, 0.03);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin: 20px 0;
-    border: 1px solid rgba(39, 174, 96, 0.1);
-}
+        /* Checkbox styling */
+        .form-group label input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
 
-.form-section-header {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.form-actions {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-}
-
-.btn-form {
-    flex: 1;
-    padding: 16px;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-form-secondary {
-    background: var(--background);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-.btn-form-secondary:hover {
-    background: #f0f0f0;
-    transform: translateY(-2px);
-}
-
-.btn-form-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-}
-
-.btn-form-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-}
-
-.form-group label input[type="checkbox"] {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-    accent-color: var(--primary);
-}
-
-@media (max-width: 768px) {
-    .schedule-details-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .btn-form {
-        width: 100%;
-    }
-}
-</style>
-
+        /* Responsive untuk mobile */
+        @media (max-width: 768px) {
+            .schedule-details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn-form {
+                width: 100%;
+            }
+        }
+    </style>
 @endsection
 
 {{-- ====================== JAVASCRIPT ====================== --}}
@@ -891,5 +1036,53 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
 console.log('Booking create page loaded');
 console.log('Venue ID:', document.getElementById('venue_id')?.value);
 console.log('Section ID:', document.getElementById('section_id')?.value);
+</script>
+
+<script>
+/**
+ * FUNGSI LOAD SCHEDULES
+ * Memuat ulang jadwal berdasarkan tanggal yang dipilih (AJAX)
+ * Catatan: Fungsi ini tidak digunakan langsung pada halaman ini,
+ * tetapi disediakan untuk keperluan filter dinamis jika diperlukan.
+ */
+function loadSchedules() {
+    const date = document.getElementById('dateFilter').value;
+    const sectionId = document.getElementById('section_id').value;
+
+    fetch(`/buyer/schedules?section_id=${sectionId}&date=${date}`)
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('scheduleCardsContainer');
+            container.innerHTML = ''; // Kosongkan jadwal lama
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;">Tidak ada jadwal tersedia</p>';
+                return;
+            }
+            data.forEach(schedule => {
+                const card = document.createElement('div');
+                card.className = 'schedule-card';
+                card.setAttribute('data-schedule-id', schedule.id);
+                card.setAttribute('data-price', schedule.rental_price);
+                card.setAttribute('data-date', schedule.date);
+                card.setAttribute('data-start', schedule.start_time);
+                card.setAttribute('data-end', schedule.end_time);
+                card.setAttribute('data-duration', schedule.rental_duration);
+                card.onclick = () => selectSchedule(card);
+
+                card.innerHTML = `
+                    <div class="schedule-date">
+                        <div class="date-day">${new Date(schedule.date).getDate()}</div>
+                        <div class="date-month">${new Date(schedule.date).toLocaleString('id-ID',{month:'short'})}</div>
+                    </div>
+                    <div class="schedule-details">
+                        <div class="schedule-time">${schedule.start_time} - ${schedule.end_time}</div>
+                        <div class="schedule-price">Rp ${schedule.rental_price.toLocaleString('id-ID')}</div>
+                        <span class="schedule-status available">Tersedia</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+}
 </script>
 @endpush

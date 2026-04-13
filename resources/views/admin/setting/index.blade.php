@@ -7,13 +7,10 @@
 @section('content')
     <div class="admin-container fade-page">
         <!-- Header -->
-        <div class="admin-header fade-down">
-            <h1 class="admin-title">
+        <div class="page-header-box">
+            <h2 class="page-title">
                 <i class="fas fa-cog me-3"></i>Pengaturan
-            </h1>
-            <p class="admin-subtitle">
-                Kelola konfigurasi aplikasi, gateway WhatsApp, dan pengaturan pembayaran.
-            </p>
+            </h2>
         </div>
 
         <!-- Settings Form -->

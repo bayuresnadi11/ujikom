@@ -1,9 +1,22 @@
+{{--
+=============================================================================
+VIEW: DETAIL MAIN BARENG (HALAMAN SHOW)
+Halaman untuk melihat detail lengkap main bareng yang dibuat (sebagai host)
+atau yang diikuti (sebagai participant)
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Detail Main Bareng - SewaLap'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling dari partial --}}
     @include('buyer.main_bareng_saya.partials.style')
     <style>
         /* Additional styles for show page */
+        
+        /* Hero section dengan gambar venue */
         .detail-hero {
             position: relative;
             height: 200px;
@@ -17,6 +30,7 @@
             object-fit: cover;
         }
 
+        /* Overlay gradien pada hero untuk teks */
         .detail-hero-overlay {
             position: absolute;
             bottom: 0;
@@ -27,6 +41,7 @@
             color: white;
         }
 
+        /* Kartu peserta */
         .participant-card {
             background: white;
             border: 1px solid var(--border);
@@ -44,6 +59,7 @@
             box-shadow: var(--shadow-sm);
         }
 
+        /* Avatar peserta (lingkaran) */
         .participant-avatar {
             width: 48px;
             height: 48px;
@@ -87,6 +103,7 @@
             color: var(--text-light);
         }
 
+        /* Tombol aksi untuk host */
         .participant-actions {
             display: flex;
             gap: 6px;
@@ -126,6 +143,7 @@
             color: white;
         }
 
+        /* Kartu undangan */
         .invitation-card {
             background: white;
             border: 1px solid var(--border);
@@ -134,6 +152,7 @@
             margin-bottom: 8px;
         }
 
+        /* Empty state section */
         .section-empty {
             text-align: center;
             padding: 30px 16px;
@@ -167,6 +186,7 @@
             font-size: 10px;
             font-weight: 700;
         }
+        
         /* ================= LOADING OVERLAY ================= */
         .loading-overlay {
             position: fixed;
@@ -218,9 +238,10 @@
 
 @section('content')
     <div class="mobile-container" id="mobileContainer">
-        <!-- Header -->
+        <!-- ====================== HEADER ====================== -->
         <header class="mobile-header">
             <div class="header-top">
+                {{-- Tombol kembali --}}
                 <button class="header-icon" onclick="window.history.back()">
                     <i class="fas fa-arrow-left"></i>
                 </button>
@@ -229,6 +250,7 @@
                     Detail Main Bareng
                 </div>
                 <div class="header-actions">
+                    {{-- Tombol edit (hanya untuk host) --}}
                     @if($isHost)
                         <button class="header-icon" onclick="window.location.href='{{ route('buyer.main_bareng_saya.edit', $playTogether->id) }}'">
                             <i class="fas fa-edit"></i>
@@ -240,7 +262,7 @@
 
         <!-- Main Content -->
         <main class="main-content" style="padding-top: 60px;">
-            <!-- Hero Image -->
+            <!-- ====================== HERO IMAGE ====================== -->
             <div class="detail-hero">
                 @if($playTogether->booking->venue->photo)
                     <img src="{{ asset('storage/' . $playTogether->booking->venue->photo) }}" alt="Venue">
@@ -254,13 +276,14 @@
                 </div>
             </div>
 
-            <!-- Info Section -->
+            <!-- ====================== INFORMASI UTAMA ====================== -->
             <div class="detail-section">
                 <h3 class="section-title">
                     <i class="fas fa-info-circle"></i>
                     Informasi Utama
                 </h3>
                 <div class="detail-grid">
+                    {{-- Tanggal main --}}
                     <div class="detail-item">
                         <div class="detail-label">
                             <i class="fas fa-calendar-alt"></i>
@@ -270,6 +293,7 @@
                             {{ \Carbon\Carbon::parse($playTogether->date)->translatedFormat('d M Y') }}
                         </div>
                     </div>
+                    {{-- Lokasi venue --}}
                     <div class="detail-item">
                         <div class="detail-label">
                             <i class="fas fa-map-marker-alt"></i>
@@ -277,6 +301,7 @@
                         </div>
                         <div class="detail-value">{{ $playTogether->location }}</div>
                     </div>
+                    {{-- Jumlah peserta --}}
                     <div class="detail-item">
                         <div class="detail-label">
                             <i class="fas fa-users"></i>
@@ -286,6 +311,7 @@
                             {{ $approvedParticipants->count() }} / {{ $playTogether->max_participants }} orang
                         </div>
                     </div>
+                    {{-- Biaya per orang --}}
                     <div class="detail-item">
                         <div class="detail-label">
                             <i class="fas fa-money-bill-wave"></i>
@@ -301,6 +327,7 @@
                             @endif
                         </div>
                     </div>
+                    {{-- Deskripsi (jika ada) --}}
                     @if($playTogether->description)
                     <div class="detail-item" style="flex-direction: column; align-items: flex-start;">
                         <div class="detail-label" style="margin-bottom: 8px;">
@@ -315,7 +342,7 @@
                 </div>
             </div>
 
-            <!-- Participants Section -->
+            <!-- ====================== PESERTA DISETUJUI ====================== -->
             <div class="detail-section">
                 <h3 class="section-title">
                     <i class="fas fa-users"></i>
@@ -334,6 +361,7 @@
                             <div class="participant-info">
                                 <div class="participant-name">
                                     {{ $participant->user->name }}
+                                    {{-- Badge HOST --}}
                                     @if($participant->user_id == $playTogether->created_by)
                                         <span class="badge badge-host-yes" style="font-size: 9px; padding: 2px 6px;">
                                             <i class="fas fa-crown"></i> HOST
@@ -361,9 +389,9 @@
                 @endif
             </div>
 
-            <!-- Host Features -->
+            <!-- ====================== FITUR KHUSUS HOST ====================== -->
             @if($isHost)
-                <!-- Pending Approval Section -->
+                <!-- Menunggu Persetujuan -->
                 @if($pendingParticipants->count() > 0)
                 <div class="detail-section">
                     <h3 class="section-title">
@@ -396,7 +424,7 @@
                 </div>
                 @endif
 
-                <!-- Add Participant Section -->
+                <!-- Tambah Peserta (Cari User) -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-user-plus"></i>
@@ -412,7 +440,7 @@
                     <div id="userSearchResults"></div>
                 </div>
 
-                <!-- Invitations Section -->
+                <!-- Undangan Terkirim -->
                 @if($invitations->count() > 0)
                 <div class="detail-section">
                     <h3 class="section-title">
@@ -441,7 +469,7 @@
                 @endif
             @endif
 
-            <!-- User Status (Non-Host) -->
+            <!-- ====================== STATUS PARTICIPANT (NON-HOST) ====================== -->
             @if(!$isHost && $userParticipant)
                 <div class="detail-section">
                     <h3 class="section-title">
@@ -484,7 +512,7 @@
             @endif
         </main>
 
-        <!-- Bottom Nav -->
+        <!-- ====================== BOTTOM NAVIGATION ====================== -->
         <nav class="bottom-nav">
             <a href="{{ route('buyer.home') }}" class="nav-item">
                 <i class="fas fa-home nav-icon"></i>
@@ -521,15 +549,22 @@
 @endsection
 
 @push('scripts')
+    {{-- Midtrans Snap JS untuk pembayaran --}}
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $setting->midtrans_client_key ?? '' }}"></script>
     <script>
-        // Pay Button Handler
+        /**
+         * HANDLER TOMBOL BAYAR UNTUK PARTICIPANT
+         */
         if(document.getElementById('payButton')) {
             document.getElementById('payButton').addEventListener('click', function() {
                 payNow();
             });
         }
 
+        /**
+         * FUNGSI PEMBAYARAN (payNow)
+         * Memproses pembayaran participant menggunakan Midtrans Snap
+         */
         async function payNow() {
             showLoading('Mendapatkan data pembayaran...');
 
@@ -601,6 +636,10 @@
             }
         }
 
+        /**
+         * FUNGSI MENAMPILKAN LOADING OVERLAY
+         * @param {string} message - Pesan yang ditampilkan
+         */
         function showLoading(message = 'Memproses...') {
             const overlay = document.getElementById('loadingOverlay');
             const text = document.getElementById('loadingText');
@@ -610,6 +649,9 @@
             }
         }
 
+        /**
+         * FUNGSI MENYEMBUNYIKAN LOADING OVERLAY
+         */
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
@@ -619,7 +661,10 @@
 
         let searchTimeout;
 
-        // Search users for invitation
+        /**
+         * FUNGSI SEARCH USERS (UNTUK HOST)
+         * Mencari user untuk diundang bergabung ke main bareng
+         */
         function searchUsers() {
             const input = document.getElementById('userSearchInput');
             const search = input.value.trim();
@@ -672,7 +717,12 @@
             }, 500);
         }
 
-        // Invite user
+        /**
+         * FUNGSI INVITE USER (UNTUK HOST)
+         * Mengirim undangan ke user yang dipilih
+         * @param {number} userId - ID user yang diundang
+         * @param {string} userName - Nama user yang diundang
+         */
         async function inviteUser(userId, userName) {
             if (!confirm(`Kirim undangan ke ${userName}?`)) return;
 
@@ -707,7 +757,11 @@
             }
         }
 
-        // Approve participant
+        /**
+         * FUNGSI APPROVE PARTICIPANT (UNTUK HOST)
+         * Menyetujui peserta yang mengajukan bergabung
+         * @param {number} participantId - ID participant
+         */
         async function approveParticipant(participantId) {
             if (!confirm('Setujui peserta ini?')) return;
 
@@ -739,7 +793,11 @@
             }
         }
 
-        // Reject participant
+        /**
+         * FUNGSI REJECT PARTICIPANT (UNTUK HOST)
+         * Menolak peserta yang mengajukan bergabung
+         * @param {number} participantId - ID participant
+         */
         async function rejectParticipant(participantId) {
             if (!confirm('Tolak peserta ini?')) return;
 
@@ -771,7 +829,12 @@
             }
         }
 
-        // Show Toast
+        /**
+         * FUNGSI SHOW TOAST
+         * Menampilkan notifikasi toast sementara
+         * @param {string} message - Pesan notifikasi
+         * @param {string} type - Tipe notifikasi (success/error/info/warning)
+         */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');

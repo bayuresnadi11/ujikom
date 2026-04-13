@@ -6,12 +6,11 @@
 
 @section('content')
     <div class="dashboard-page">
-        <div class="page-header">
+        <div class="page-header-box">
             <h1 class="page-title">
                 <i class="fas fa-chart-line"></i>
                 Dashboard Sewa Lapangan
             </h1>
-            <p class="page-subtitle">Selamat datang kembali! Kelola lapangan dan pemesanan Anda dengan mudah</p>
         </div>
 
         <div class="welcome-banner">

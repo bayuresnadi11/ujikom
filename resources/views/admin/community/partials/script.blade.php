@@ -64,7 +64,7 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const card = $(this).closest('.komunitas-card');
         const title = card.find('.komunitas-title').text();
-        const description = card.find('.komunitas-description').text();
+        const description = card.data('description');
         const type = card.data('type');
         const typeText = type === 'public' ? 'Public' : 'Private';
         const typeIcon = type === 'public' ? 'bi-globe' : 'bi-shield-lock';
@@ -74,68 +74,106 @@ $(document).ready(function() {
         const logo = card.find('.komunitas-avatar').attr('src');
 
         Swal.fire({
-            title: `<div style="text-align: left;">
-                       <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                           ${logo ? `<img src="${logo}" style="width: 64px; height: 64px; border-radius: 14px; object-fit: cover; margin-right: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);">` : 
-                             `<div style="width: 64px; height: 64px; border-radius: 14px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); display: flex; align-items: center; justify-content: center; margin-right: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);">
-                                 <i class="bi bi-people-fill" style="font-size: 28px; color: white;"></i>
-                             </div>`}
-                           <div>
-                               <h4 style="margin: 0 0 8px 0; color: #1a5c37;">${title}</h4>
-                               <span style="background: ${typeColor}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                                   <i class="bi ${typeIcon}"></i> ${typeText}
-                               </span>
-                           </div>
-                       </div>
-                    </div>`,
-            html: `
-                <div style="text-align: left;">
-                    <h6 style="color: #1a5c37; font-weight: 600; margin-bottom: 12px;">Deskripsi:</h6>
-                    <p style="color: #6b7280; line-height: 1.6; background: #f0fdf4; padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-                        ${description}
-                    </p>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                        <div style="border: 1px solid #e5f5ec; border-radius: 12px; padding: 16px; background: white;">
-                            <div style="display: flex; align-items: center;">
-                                <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                                    <i class="bi bi-person-circle" style="color: white; font-size: 20px;"></i>
-                                </div>
-                                <div>
-                                    <small style="color: #9ca3af; display: block; margin-bottom: 4px;">Admin</small>
-                                    <strong style="color: #1a5c37;">${admin}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="border: 1px solid #e5f5ec; border-radius: 12px; padding: 16px; background: white;">
-                            <div style="display: flex; align-items: center;">
-                                <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                                    <i class="bi bi-calendar-event" style="color: white; font-size: 20px;"></i>
-                                </div>
-                                <div>
-                                    <small style="color: #9ca3af; display: block; margin-bottom: 4px;">Dibuat</small>
-                                    <strong style="color: #1a5c37;">${createdAt}</strong>
-                                </div>
-                            </div>
-                        </div>
+            title: `
+                <div class="modal-header-custom">
+                    ${logo 
+                        ? `<img src="${logo}" class="modal-avatar">`
+                        : `<div class="modal-avatar placeholder">
+                                <i class="bi bi-people-fill"></i>
+                        </div>`
+                    }
+                    <div class="modal-title-row">
+                        <h4 class="modal-title">${title}</h4>
+                        <span class="modal-badge ${type}">
+                            <i class="bi ${typeIcon}"></i> ${typeText}
+                        </span>
                     </div>
-                    
-                    <div style="border-top: 1px solid #e5f5ec; padding-top: 16px; margin-top: 16px;">
-                        <small style="color: #9ca3af;">
-                            <i class="bi bi-hash"></i> ID: #${String(id).padStart(4, '0')}
-                        </small>
+                </div>
+            `,
+            html: `
+                <div class="modal-body-custom">
+                    <h6>Deskripsi:</h6>
+                    <p class="komunitas-description">{{ $item->description }}</p><br>
+
+                    <div class="modal-grid">
+                        <div class="modal-box">
+                            <i class="bi bi-person-circle"></i>
+                            <div>
+                                <small>Admin</small>
+                                <strong>${admin}</strong>
+                            </div>
+                        </div>
+
+                        <div class="modal-box">
+                            <i class="bi bi-calendar-event"></i>
+                            <div>
+                                <small>Dibuat</small>
+                                <strong>${createdAt}</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `,
             showCloseButton: true,
             showConfirmButton: false,
-            width: '550px',
-            padding: '24px',
-            confirmButtonColor: '#22c55e',
+            width: 480,
+            padding: 0,
+            background: '#ffffff',
             customClass: {
-                popup: 'rounded-4 border-0 shadow-lg'
+                popup: 'modal-clean'
             }
         });
+    });
+});
+
+$(document).on('click', '.btn-ban', function () {
+
+    if ($(this).is(':disabled')) return;
+
+    let id = $(this).data('id');
+
+    Swal.fire({
+        title: 'Yakin mau ban komunitas ini?',
+        text: "Komunitas yang dibanned tidak bisa diakses lagi!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+        fetch(`/admin/community/${id}/ban`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'Accept': 'application/json'
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Request gagal');
+                return res.json();
+            })
+            .then(data => {
+                Swal.fire(
+                    'Berhasil!',
+                    'Komunitas sudah dibanned.',
+                    'success'
+                ).then(() => {
+                    location.reload();
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire(
+                    'Error!',
+                    'Terjadi kesalahan.',
+                    'error'
+                );
+            });
+
+        }
     });
 });
 </script>

@@ -23,11 +23,15 @@ use App\Models\Setting;
 
 class CommunitiesController extends Controller
 {
+    // =========================================================================
+    // INDEX - DAFTAR KOMUNITAS SAYA
+    // Menampilkan komunitas dimana user menjadi member (anggota atau admin)
+    // =========================================================================
     public function index()
     {
         $userId = auth()->id();
 
-        // Communities where user is a regular member
+        // Komunitas dimana user adalah member biasa (anggota)
         $memberCommunities = Community::withCount('members')
             ->whereHas('members', function ($q) use ($userId) {
                 $q->where('community_members.user_id', $userId)
@@ -41,7 +45,7 @@ class CommunitiesController extends Controller
                 return $c;
             });
         
-        // Communities where user is an admin/manager
+        // Komunitas dimana user adalah admin/manager
         $managerCommunities = Community::withCount([
                 'members',
                 'pendingRequests as pending_count'
@@ -58,9 +62,10 @@ class CommunitiesController extends Controller
                 return $c;
             });        
 
-        // Merge and sort by name
+        // Gabungkan dan urutkan berdasarkan nama
         $allCommunities = $memberCommunities->merge($managerCommunities)->sortBy('name');
 
+        // Undangan komunitas yang pending (belum diterima/ditolak)
         $invitedCommunities = CommunityInvitation::with('community.category')
             ->where('invited_user_id', $userId)
             ->where('status', 'pending')
@@ -72,10 +77,15 @@ class CommunitiesController extends Controller
         ));
     }
 
+    // =========================================================================
+    // JOIN - HALAMAN BERGABUNG KOMUNITAS
+    // Menampilkan daftar komunitas yang tersedia untuk bergabung
+    // =========================================================================
     public function join()
     {
         $userId = auth()->id(); // Bisa null untuk guest
 
+        // Ambil semua komunitas dengan informasi status keanggotaan user
         $communities = Community::withCount('members')
             ->with([
                 'memberRecords' => fn($q) => $q->where('user_id', $userId),
@@ -84,7 +94,7 @@ class CommunitiesController extends Controller
             ->get()
             ->map(function ($community) use ($userId) {
                 if ($userId) {
-                    // USER LOGIN
+                    // USER LOGIN - tentukan status keanggotaan
                     $member = $community->memberRecords->first();
                     $community->role = $member ? $member->role : null;
                     
@@ -109,11 +119,15 @@ class CommunitiesController extends Controller
         return view('buyer.communities.join', compact('communities'));
     }
 
+    // =========================================================================
+    // STORE JOIN - PROSES BERGABUNG KOMUNITAS
+    // Menangani request bergabung (auto join untuk public atau request untuk private)
+    // =========================================================================
     public function storeJoin(Community $community)
     {
         $userId = auth()->id();
 
-        // 1. PUBLIC + NO APPROVAL REQUIRED => Auto Join
+        // 1. PUBLIC + NO APPROVAL REQUIRED => Auto Join (langsung jadi member)
         if ($community->type === 'public' && !$community->requires_approval) {
 
             CommunityMember::updateOrCreate(
@@ -139,7 +153,7 @@ class CommunitiesController extends Controller
             ]);
         }
 
-        // 2. PRIVATE OR (PUBLIC + REQUIRE APPROVAL) => Request Join
+        // 2. PRIVATE OR (PUBLIC + REQUIRE APPROVAL) => Request Join (butuh persetujuan admin)
         CommunityRequest::updateOrCreate(
             [
                 'community_id' => $community->id,
@@ -154,6 +168,7 @@ class CommunitiesController extends Controller
             ->where('user_id', $userId)
             ->delete();
 
+        // Kirim notifikasi ke admin/manager komunitas
         try {
             $applicant = User::find($userId);
 
@@ -184,6 +199,10 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // REQUEST REJOIN - MEMINTA BERGABUNG KEMBALI
+    // Untuk member yang pernah dikeluarkan (removed) bisa request join ulang
+    // =========================================================================
     public function requestRejoin(Community $community)
     {
         $userId = auth()->id();
@@ -240,13 +259,14 @@ class CommunitiesController extends Controller
 
         return response()->json([
             'success' => true,
-            'status' => 'pending', // Add status pending for frontend handler
+            'status' => 'pending',
             'message' => 'Permintaan bergabung kembali berhasil dikirim.'
         ]);
     }
 
-
-
+    // =========================================================================
+    // SEARCH - PENCARIAN KOMUNITAS (HALAMAN JOIN)
+    // =========================================================================
     public function search(Request $request)
     {
         $keyword = $request->q;
@@ -284,6 +304,9 @@ class CommunitiesController extends Controller
         return view('buyer.communities.join', compact('communities'));
     }
 
+    // =========================================================================
+    // SEARCH JOINED - PENCARIAN KOMUNITAS YANG SUDAH DIIKUTI (AJAX)
+    // =========================================================================
     public function searchJoined(Request $request)
     {
         $keyword = $request->q;
@@ -313,12 +336,18 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // CREATE - FORM BUAT KOMUNITAS BARU
+    // =========================================================================
     public function create()
     {
         $categories = Category::all();
         return view('buyer.communities.create', compact('categories'));
     }
 
+    // =========================================================================
+    // STORE - PROSES SIMPAN KOMUNITAS BARU
+    // =========================================================================
     public function store(Request $request)
     {
         $request->validate([
@@ -345,6 +374,7 @@ class CommunitiesController extends Controller
             'category_id' => $request->category_id, 
         ]);
 
+        // Pembuat komunitas otomatis menjadi admin
         \App\Models\CommunityMember::create([
             'community_id' => $community->id,
             'user_id' => auth()->id(),
@@ -352,26 +382,31 @@ class CommunitiesController extends Controller
             'joined_at' => now(),
         ]);
 
-        // Create Community Conversation
+        // Buat percakapan komunitas (untuk fitur chat)
         \App\Models\Conversation::findOrCreateCommunityConversation($community->id);
 
         return redirect()->route('buyer.communities.index')
             ->with('success', 'Komunitas berhasil dibuat!');
     }
 
+    // =========================================================================
+    // SHOW - DETAIL KOMUNITAS
+    // Menampilkan detail komunitas, daftar member, dan aktivitas main bareng
+    // =========================================================================
     public function show(Community $community)
     {
-        // ✅ FIX: Query langsung dari CommunityMember, bukan lewat relasi members
+        // Ambil member aktif (status active)
         $members = CommunityMember::where('community_id', $community->id)
             ->where('status', 'active')
             ->with('user')
             ->get();
 
-        // 🔥 INI NIH TEMPATNYA
+        // Ambil ID member untuk filter aktivitas
         $memberIds = CommunityMember::where('community_id', $community->id)
             ->where('status', 'active')
             ->pluck('user_id');
 
+        // Ambil aktivitas main bareng yang terkait dengan komunitas
         $activities = \App\Models\PlayTogether::with([
                 'booking.schedule', 
                 'booking.venue', 
@@ -395,6 +430,7 @@ class CommunitiesController extends Controller
             ->orderBy('date', 'asc')
             ->get();
 
+        // Daftar user yang bisa diundang (belum menjadi member)
         $inviteUsers = User::whereDoesntHave('communityMembers', function ($q) use ($community) {
             $q->where('community_id', $community->id);
         })
@@ -422,9 +458,9 @@ class CommunitiesController extends Controller
         ));
     }
 
-    /**
-     * Tampilkan halaman aktivitas komunitas
-     */
+    // =========================================================================
+    // AKTIVITAS - HALAMAN AKTIVITAS KOMUNITAS
+    // =========================================================================
     public function aktivitas(Community $community)
     {
         // Cek apakah user adalah member dari komunitas
@@ -480,9 +516,9 @@ class CommunitiesController extends Controller
         ));
     }
 
-    /**
-     * Tampilkan halaman galeri komunitas
-     */
+    // =========================================================================
+    // GALERI - HALAMAN GALERI KOMUNITAS
+    // =========================================================================
     public function galeri(Community $community)
     {
         // Cek apakah user adalah member dari komunitas
@@ -509,11 +545,12 @@ class CommunitiesController extends Controller
         ));
     }
 
-    /**
-     * Simpan gambar ke galeri komunitas
-     */
+    // =========================================================================
+    // STORE GALLERY - SIMPAN GAMBAR KE GALERI KOMUNITAS
+    // =========================================================================
     public function storeGallery(Request $request, Community $community)
     {
+        // Hanya admin yang bisa menambah galeri
         abort_unless($community->isManager(auth()->id()), 403);
 
         $request->validate([
@@ -537,9 +574,9 @@ class CommunitiesController extends Controller
         return response()->json(['success' => false], 400);
     }
 
-    /**
-     * Hapus gambar dari galeri komunitas
-     */
+    // =========================================================================
+    // DESTROY GALLERY - HAPUS GAMBAR DARI GALERI KOMUNITAS
+    // =========================================================================
     public function destroyGallery(Community $community, CommunityGallery $gallery)
     {
         abort_unless($community->isManager(auth()->id()), 403);
@@ -548,7 +585,7 @@ class CommunitiesController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        // Hapus file fisik
+        // Hapus file fisik dari storage
         if (Storage::disk('public')->exists($gallery->image_path)) {
             Storage::disk('public')->delete($gallery->image_path);
         }
@@ -558,6 +595,9 @@ class CommunitiesController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // =========================================================================
+    // EDIT - FORM EDIT KOMUNITAS
+    // =========================================================================
     public function edit(Community $community)
     {
         abort_unless(
@@ -571,12 +611,12 @@ class CommunitiesController extends Controller
         return view('buyer.communities.edit', compact('community', 'categories'));
     }
 
-    /**
-     * Tampilkan halaman undang anggota (halaman baru)
-     */
+    // =========================================================================
+    // INVITE ANGGOTA - HALAMAN UNDANG ANGGOTA (MANAJEMEN PERMINTAAN JOIN)
+    // =========================================================================
     public function inviteAnggota(Community $community)
     {
-        // ✅ FIX 1: Pakai helper method isManager() yang lebih clean
+        // Hanya manager/admin yang dapat mengundang member
         abort_unless(
             $community->isManager(auth()->id()),
             403,
@@ -589,7 +629,7 @@ class CommunitiesController extends Controller
             ->with('user')
             ->get();
 
-        // ✅ FIX 2: Ambil removed members menggunakan memberRecords()
+        // Ambil removed members (member yang dikeluarkan)
         $removedMembers = $community->memberRecords()
             ->where('status', 'removed')
             ->with(['user', 'user.communityInvitations' => function($query) use ($community) {
@@ -621,9 +661,11 @@ class CommunitiesController extends Controller
         ));
     }
 
+    // =========================================================================
+    // REINVITE MEMBER - KIRIM ULANG UNDANGAN KE MEMBER YANG DIKELUARKAN
+    // =========================================================================
     public function reinviteMember(Community $community, $memberId)
     {
-        // ✅ FIX: Pakai isManager()
         abort_unless(
             $community->isManager(auth()->id()),
             403,
@@ -686,9 +728,11 @@ class CommunitiesController extends Controller
         }
     }
 
+    // =========================================================================
+    // CANCEL INVITE - BATALKAN UNDANGAN KE MEMBER YANG DIKELUARKAN
+    // =========================================================================
     public function cancelInvite(Community $community, $memberId)
     {
-        // ✅ FIX: Pakai isManager()
         abort_unless(
             $community->isManager(auth()->id()),
             403,
@@ -735,12 +779,11 @@ class CommunitiesController extends Controller
         }
     }
 
-    /**
-     * Handle request dari halaman invite-anggota
-     */
+    // =========================================================================
+    // HANDLE INVITE REQUEST - PROSES PERSETUJUAN/PENOLAKAN PERMINTAAN JOIN
+    // =========================================================================
     public function handleInviteRequest(Request $request, Community $community)
     {
-        // ✅ FIX: Pakai isManager()
         abort_unless(
             $community->isManager(auth()->id()),
             403,
@@ -767,7 +810,7 @@ class CommunitiesController extends Controller
 
             $joinRequest->update(['status' => 'approved']);
 
-            // ✅ Auto-create conversation jika belum ada
+            // Auto-create conversation jika belum ada
             \App\Models\Conversation::firstOrCreate(
                 [
                     'community_id' => $community->id,
@@ -819,9 +862,9 @@ class CommunitiesController extends Controller
         }
     }
 
-    /**
-     * Kirim undangan via email dari halaman invite-anggota
-     */
+    // =========================================================================
+    // SEND EMAIL INVITATION - KIRIM UNDANGAN VIA EMAIL
+    // =========================================================================
     public function sendEmailInvitation(Request $request, Community $community)
     {
         abort_unless(
@@ -884,9 +927,9 @@ class CommunitiesController extends Controller
         ]);
     }
 
-    /**
-     * Generate invite link baru
-     */
+    // =========================================================================
+    // GENERATE INVITE LINK - BUAT LINK UNDANGAN BARU
+    // =========================================================================
     public function generateInviteLink(Community $community)
     {
         abort_unless(
@@ -907,9 +950,11 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // INVITE (LEGACY) - HALAMAN UNDANG ANGGOTA
+    // =========================================================================
     public function invite(Community $community)
     {
-        // ✅ Cara 1: Pakai helper method isManager() (RECOMMENDED)
         abort_unless(
             $community->isManager(auth()->id()),
             403,
@@ -921,6 +966,9 @@ class CommunitiesController extends Controller
         return view('buyer.communities.invite', compact('community', 'inviteUsers'));
     }
 
+    // =========================================================================
+    // ADD TO DRAFT - TAMBAHKAN USER KE DRAFT UNDANGAN (SESSION)
+    // =========================================================================
     public function addToDraft(Request $request, Community $community)
     {
         $userIds = $request->input('users', []);
@@ -940,6 +988,9 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // SHOW DRAFT - TAMPILKAN DRAFT UNDANGAN
+    // =========================================================================
     public function showDraft(Community $community)
     {
         $sessionKey = 'invite_draft_' . $community->id;
@@ -950,6 +1001,9 @@ class CommunitiesController extends Controller
         return view('buyer.communities.invite-draft', compact('community', 'users'));
     }
 
+    // =========================================================================
+    // REMOVE FROM DRAFT - HAPUS USER DARI DRAFT UNDANGAN
+    // =========================================================================
     public function removeFromDraft(Community $community, $userId)
     {
         $sessionKey = 'invite_draft_' . $community->id;
@@ -966,6 +1020,9 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // SEND BULK INVITE - KIRIM UNDANGAN MASSAL DARI DRAFT
+    // =========================================================================
     public function sendBulkInvite(Request $request, Community $community)
     {
         $sessionKey = 'invite_draft_' . $community->id;
@@ -1017,6 +1074,9 @@ class CommunitiesController extends Controller
             ->with('success', $count . ' undangan berhasil dikirim!');
     }
 
+    // =========================================================================
+    // REQUESTS - HALAMAN PERMINTAAN JOIN (LEGACY)
+    // =========================================================================
     public function requests(Community $community)
     {
         abort_unless(
@@ -1031,7 +1091,10 @@ class CommunitiesController extends Controller
     
         return view('buyer.communities.requests', compact('community', 'requests'));
     }
-        
+    
+    // =========================================================================
+    // APPROVE REQUEST - SETUJUI PERMINTAAN JOIN
+    // =========================================================================    
     public function approveRequest(CommunityRequest $request)
     {
         // Cek izin (manager atau admin)
@@ -1072,6 +1135,9 @@ class CommunitiesController extends Controller
         return back()->with('success', 'Permintaan join disetujui');
     }    
 
+    // =========================================================================
+    // REJECT REQUEST - TOLAK PERMINTAAN JOIN
+    // =========================================================================
     public function rejectRequest(CommunityRequest $request)
     {
         // Cek izin (manager atau admin)
@@ -1108,6 +1174,9 @@ class CommunitiesController extends Controller
         return back()->with('success', 'Permintaan ditolak');
     }    
 
+    // =========================================================================
+    // APPROVE MEMBERSHIP AJAX - SETUJUI PERMINTAAN JOIN (AJAX)
+    // =========================================================================
     public function approveMembershipAjax(Request $request)
     {
         $data = $request->validate([
@@ -1159,6 +1228,9 @@ class CommunitiesController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // =========================================================================
+    // REJECT MEMBERSHIP AJAX - TOLAK PERMINTAAN JOIN (AJAX)
+    // =========================================================================
     public function rejectMembershipAjax(Request $request)
     {
         $data = $request->validate([
@@ -1206,6 +1278,9 @@ class CommunitiesController extends Controller
         return response()->json(['success' => true]);
     }
     
+    // =========================================================================
+    // UPDATE - UPDATE DATA KOMUNITAS
+    // =========================================================================
     public function update(Request $request, Community $community)
     {
         abort_unless(
@@ -1237,9 +1312,9 @@ class CommunitiesController extends Controller
             ->with('success', 'Komunitas berhasil diperbarui!');
     }
 
-    /**
-     * Hapus komunitas (Hanya pembuat)
-     */
+    // =========================================================================
+    // DESTROY - HAPUS KOMUNITAS (HANYA PEMBUAT)
+    // =========================================================================
     public function destroy(Community $community)
     {
         // Hanya pembuat komunitas yang bisa menghapus
@@ -1281,12 +1356,10 @@ class CommunitiesController extends Controller
             // Hapus permintaan gabung
             \App\Models\CommunityRequest::where('community_id', $community->id)->delete();
             
-            // Hapus data main bareng (dan pesertanya jika ada logic cascade atau hapus manual)
+            // Hapus data main bareng (dan pesertanya)
             $playTogethers = \App\Models\PlayTogether::where('community_id', $community->id)->get();
             foreach ($playTogethers as $pt) {
-                // Hapus peserta main bareng
                 \App\Models\PlayTogetherParticipant::where('play_together_id', $pt->id)->delete();
-                // Hapus undangan main bareng
                 \App\Models\PlayTogetherInvitation::where('play_together_id', $pt->id)->delete();
                 $pt->delete();
             }
@@ -1297,7 +1370,6 @@ class CommunitiesController extends Controller
                 ->first();
             
             if ($conversation) {
-                // Hapus pesan-pesan dalam percakapan
                 \App\Models\Message::where('conversation_id', $conversation->id)->delete();
                 $conversation->delete();
             }
@@ -1305,8 +1377,8 @@ class CommunitiesController extends Controller
             // Hapus Galeri Komunitas
             $galleries = \App\Models\CommunityGallery::where('community_id', $community->id)->get();
             foreach ($galleries as $gallery) {
-                if ($gallery->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($gallery->image_path)) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($gallery->image_path);
+                if ($gallery->image_path && Storage::disk('public')->exists($gallery->image_path)) {
+                    Storage::disk('public')->delete($gallery->image_path);
                 }
                 $gallery->delete();
             }
@@ -1314,12 +1386,12 @@ class CommunitiesController extends Controller
             // Hapus member
             \App\Models\CommunityMember::where('community_id', $community->id)->delete();
 
-            // 4. Hapus Logo & Background (opsional: jika bukan default)
+            // 4. Hapus Logo & Background
             if ($community->logo && $community->logo !== 'default.png') {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($community->logo);
+                Storage::disk('public')->delete($community->logo);
             }
             if ($community->background_image) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($community->background_image);
+                Storage::disk('public')->delete($community->background_image);
             }
 
             // 5. Hapus Komunitas
@@ -1342,9 +1414,9 @@ class CommunitiesController extends Controller
         }
     }
 
-    /**
-     * Keluar dari komunitas
-     */
+    // =========================================================================
+    // LEAVE - KELUAR DARI KOMUNITAS
+    // =========================================================================
     public function leave(Community $community)
     {
         // Prevent creator from leaving
@@ -1409,6 +1481,9 @@ class CommunitiesController extends Controller
         }
     }
 
+    // =========================================================================
+    // SEARCH USERS - PENCARIAN USER UNTUK DIUNDANG (AJAX)
+    // =========================================================================
     public function searchUsers(Request $request, Community $community)
     {
         $query = $request->q ?? '';
@@ -1444,6 +1519,9 @@ class CommunitiesController extends Controller
         return response()->json($users);
     }    
 
+    // =========================================================================
+    // INVITE USER - KIRIM UNDANGAN KE USER TERTENTU
+    // =========================================================================
     public function inviteUser(Request $request, Community $community)
     {
         $isManager = $community->isManager(auth()->id());
@@ -1488,6 +1566,9 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // JOIN INVITE - TERIMA UNDANGAN KOMUNITAS
+    // =========================================================================
     public function joinInvite(Request $request, Community $community)
     {
         $userId = auth()->id();
@@ -1508,7 +1589,7 @@ class CommunitiesController extends Controller
         }
 
         DB::transaction(function () use ($community, $userId, $invitation) {
-            // Hapus undangan karena sudah diterima (sesuai request user)
+            // Hapus undangan karena sudah diterima
             $invitation->delete();
 
             // Update status CommunityMember menjadi active jika sudah ada
@@ -1529,9 +1610,9 @@ class CommunitiesController extends Controller
                         $user = \App\Models\User::find($userId);
                         $inviter->notify(new \App\Notifications\CommunityMemberStatusNotification(
                             $community,
-                            $user, // Actor is the user who accepted
-                            $inviter, // Target is the inviter
-                            'invitation_accepted' // Status specifically for invitation
+                            $user,
+                            $inviter,
+                            'invitation_accepted'
                         ));
                     }
                 }
@@ -1574,6 +1655,9 @@ class CommunitiesController extends Controller
         return back()->with('success', 'Berhasil bergabung ke komunitas');
     }
 
+    // =========================================================================
+    // REJECT INVITE - TOLAK UNDANGAN KOMUNITAS
+    // =========================================================================
     public function rejectInvite(Request $request, Community $community)
     {
         $userId = auth()->id();
@@ -1593,7 +1677,7 @@ class CommunitiesController extends Controller
         }
 
         DB::transaction(function() use ($invitation, $community, $userId) {
-            // Hapus undangan karena ditolak (sesuai request user)
+            // Hapus undangan karena ditolak
             $invitation->delete();
             
             // Jika dia adalah member yang dikeluarkan (status=removed), 
@@ -1635,8 +1719,8 @@ class CommunitiesController extends Controller
                         $user = \App\Models\User::find($userId);
                         $inviter->notify(new \App\Notifications\CommunityMemberStatusNotification(
                             $community,
-                            $user, // Actor
-                            $inviter, // Target
+                            $user,
+                            $inviter,
                             'invitation_rejected' 
                         ));
                     }
@@ -1655,9 +1739,12 @@ class CommunitiesController extends Controller
         return back()->with('success', 'Undangan ditolak');
     }
 
+    // =========================================================================
+    // CHAT - ARAHKAN KE HALAMAN CHAT KOMUNITAS
+    // =========================================================================
     public function chat(Community $community)
     {
-        // Ensure user is member
+        // Pastikan user adalah member
         abort_unless(
             $community->isMember(auth()->id()),
             403,
@@ -1668,27 +1755,27 @@ class CommunitiesController extends Controller
         
         return redirect()->route('chat.show', $conversation->id);
     }
-    // ================= NEW: MEMBERS MANAGEMENT =================
-    /**
-     * Tampilkan halaman daftar member komunitas
-     */
+
+    // =========================================================================
+    // MEMBERS MANAGEMENT - DAFTAR MEMBER KOMUNITAS
+    // =========================================================================
     public function members(Community $community)
     {
-        // ✅ FIX 1: Cek current member menggunakan isMember()
+        // Cek current member menggunakan isMember()
         if (!$community->isMember(auth()->id())) {
             abort(403, 'Anda bukan member dari komunitas ini');
         }
 
-        // ✅ FIX 2: Ambil current member record untuk cek role
+        // Ambil current member record untuk cek role
         $currentMember = $community->memberRecords()
             ->where('user_id', auth()->id())
             ->where('status', 'active')
             ->first();
 
-        // ✅ FIX 3: Ambil semua members menggunakan memberRecords() bukan members()
+        // Ambil semua members menggunakan memberRecords() (bukan members())
         $members = $community->memberRecords()
             ->where('status', 'active')
-            ->with('user') // ⬅️ Sekarang bisa with('user') karena CommunityMember punya relasi user
+            ->with('user') // Sekarang bisa with('user') karena CommunityMember punya relasi user
             ->orderByRaw("CASE WHEN role = 'admin' THEN 1 ELSE 2 END")
             ->orderBy('joined_at', 'asc')
             ->get()
@@ -1709,7 +1796,7 @@ class CommunitiesController extends Controller
                 ];
             });
 
-        // Siapkan data community
+        // Siapkan data community untuk view
         $communityData = [
             'id' => $community->id,
             'name' => $community->name,
@@ -1735,9 +1822,9 @@ class CommunitiesController extends Controller
         ]);
     }
 
-    /**
-     * Jadikan member sebagai admin
-     */
+    // =========================================================================
+    // MAKE ADMIN - JADIKAN MEMBER SEBAGAI ADMIN
+    // =========================================================================
     public function makeAdmin(Community $community, $memberId)
     {
         // Cek apakah user adalah admin
@@ -1775,7 +1862,7 @@ class CommunitiesController extends Controller
                 // Update role menjadi admin
                 $member->update(['role' => 'admin']);
 
-                // Kirim notifikasi (jika ada sistem notifikasi)
+                // Kirim notifikasi
                 if (class_exists('\App\Models\Notification')) {
                     try {
                         \App\Models\Notification::sendRoleChangedNotification(
@@ -1807,9 +1894,9 @@ class CommunitiesController extends Controller
         }
     }
 
-    /**
-     * Ubah admin menjadi member biasa
-     */
+    // =========================================================================
+    // REMOVE ADMIN - UBAH ADMIN MENJADI MEMBER BIASA
+    // =========================================================================
     public function removeAdmin(Community $community, $memberId)
     {
         // Cek apakah user adalah admin
@@ -1847,7 +1934,7 @@ class CommunitiesController extends Controller
                 // Update role menjadi anggota
                 $member->update(['role' => 'anggota']);
 
-                // Kirim notifikasi (jika ada sistem notifikasi)
+                // Kirim notifikasi
                 if (class_exists('\App\Models\Notification')) {
                     try {
                         \App\Models\Notification::sendRoleChangedNotification(
@@ -1879,6 +1966,9 @@ class CommunitiesController extends Controller
         }
     }
 
+    // =========================================================================
+    // REMOVE MEMBER - KELUARKAN MEMBER DARI KOMUNITAS
+    // =========================================================================
     public function removeMember(Request $request, Community $community, $memberId)
     {
         Log::info('Attempting to remove member', [
@@ -1921,9 +2011,7 @@ class CommunitiesController extends Controller
             ], 400);
         }
 
-        // Cek apakah anggota yang akan dikeluarkan adalah admin yang lain? 
-        // Sebaiknya admin bisa mengeluarkan admin lain jika dia pembuat komunitas?
-        // Tapi untuk simplifikasi sesuai request user, kita biarkan logicnya.
+        // Cek apakah anggota yang akan dikeluarkan adalah admin yang lain
         if ($member->role === 'admin' && $community->created_by !== auth()->id()) {
             return response()->json([
                 'success' => false,
@@ -1939,12 +2027,12 @@ class CommunitiesController extends Controller
                 // Update status member jadi removed daripada dihapus
                 $member->update(['status' => 'removed']);
 
-                // Bersihkan data di community_requests agar status di UI join juga reset
+                // Bersihkan data di community_requests
                 CommunityRequest::where('community_id', $community->id)
                     ->where('user_id', $removedUserId)
                     ->delete();
 
-                // Kirim notifikasi ke user yang dikeluarkan (jika ada sistem notifikasi)
+                // Kirim notifikasi ke user yang dikeluarkan
                 if (class_exists('\App\Models\Notification')) {
                     try {
                         \App\Models\Notification::sendMemberRemovedNotification(
@@ -1979,10 +2067,9 @@ class CommunitiesController extends Controller
         }
     }
 
-
-    /**
-     * Kirim pesan broadcast ke semua member komunitas
-     */
+    // =========================================================================
+    // SEND COMMUNITY MESSAGE - KIRIM PESAN KE SEMUA MEMBER KOMUNITAS
+    // =========================================================================
     public function sendCommunityMessage(Request $request, Community $community)
     {
         // Validasi input
@@ -2006,7 +2093,7 @@ class CommunitiesController extends Controller
                 ->where('user_id', '!=', auth()->id())
                 ->pluck('user_id');
 
-            // Kirim notifikasi ke semua member (jika ada sistem notifikasi)
+            // Kirim notifikasi ke semua member
             if (class_exists('\App\Models\Notification')) {
                 foreach ($memberUserIds as $userId) {
                     try {
@@ -2038,6 +2125,10 @@ class CommunitiesController extends Controller
             ], 500);
         }
     }
+
+    // =========================================================================
+    // UPDATE BACKGROUND - UPDATE BACKGROUND KOMUNITAS
+    // =========================================================================
     public function updateBackground(Request $request, Community $community)
     {
         \Illuminate\Support\Facades\Log::info('Background Update Request:', [
@@ -2071,7 +2162,7 @@ class CommunitiesController extends Controller
             if ($request->hasFile('image')) {
                 // Delete old image if exists
                 if ($community->background_image) {
-                     \Illuminate\Support\Facades\Storage::disk('public')->delete($community->background_image);
+                     Storage::disk('public')->delete($community->background_image);
                 }
 
                 $path = $request->file('image')->store('community-backgrounds', 'public');
@@ -2112,9 +2203,9 @@ class CommunitiesController extends Controller
         }
     }
 
-    /**
-     * SHOW MAIN BARENG - Community specific detail page
-     */
+    // =========================================================================
+    // SHOW MAIN BARENG - DETAIL MAIN BARENG DALAM KOMUNITAS
+    // =========================================================================
     public function showMainBareng($communityId, $id)
     {
         $community = Community::findOrFail($communityId);

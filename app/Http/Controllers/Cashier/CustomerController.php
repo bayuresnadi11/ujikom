@@ -54,6 +54,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'name'  => 'required|string|max:255',
+            'username' => 'nullable|string|max:50|unique:users,username',
             'phone' => 'required|string|unique:users,phone',
         ]);
 
@@ -64,6 +65,7 @@ class CustomerController extends Controller
 
         $user = User::create([
             'name'       => $request->name,
+            'username'   => $request->username ?: null, // 🔥 INI DIA
             'phone'      => $phone,
             'password'   => Hash::make($password),
             'role'       => 'buyer',

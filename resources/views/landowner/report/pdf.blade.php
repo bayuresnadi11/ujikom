@@ -125,6 +125,12 @@
             </tr>
 
             <tr class="row-divider">
+                <td class="label">No Telepon</td>
+                <td class="colon">:</td>
+                <td class="value">{{ $booking->user->phone ?? '-' }}</td>
+            </tr>
+            
+            <tr class="row-divider">
                 <td class="label">Lapangan</td>
                 <td class="colon">:</td>
                 <td class="value">
@@ -157,16 +163,6 @@
                 <td class="colon">:</td>
                 <td class="value">
                     Rp {{ number_format($booking->schedule->rental_price,0,',','.') }}
-                </td>
-            </tr>
-
-            <tr class="row-divider">
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">
-                    <span class="status {{ strtolower($booking->status) }}">
-                        {{ $booking->status }}
-                    </span>
                 </td>
             </tr>
 

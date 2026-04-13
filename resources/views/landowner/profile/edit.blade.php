@@ -80,6 +80,23 @@
                         @enderror
                     </div>
 
+                    <!-- Username -->
+                    <div class="form-group">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-at"></i>
+                            Username
+                        </label>
+                        <input type="text" 
+                            id="username" 
+                            name="username" 
+                            class="form-control @error('username') is-invalid @enderror" 
+                            value="{{ old('username', $user->username) }}" 
+                            placeholder="Masukkan username (opsional)">
+                        @error('username')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <!-- Business Name -->    
                      <div class="form-group">
                         <label for="business_name" class="form-label">

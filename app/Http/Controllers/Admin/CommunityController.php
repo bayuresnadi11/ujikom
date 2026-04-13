@@ -6,10 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Community;
 use Illuminate\Http\Request;
 
+/**
+ * Class CommunityController
+ * 
+ * Mengelola data komunitas yang terdaftar di dalam sistem (Hanya Baca untuk Admin).
+ * Admin dapat melihat daftar komunitas dan detailnya.
+ */
 class CommunityController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua komunitas beserta pembuatnya.
+     * 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -18,7 +26,10 @@ class CommunityController extends Controller
     }
 
     /**
-     * Show the specified resource.
+     * Menampilkan detail informasi komunitas tertentu.
+     * 
+     * @param int $id
+     * @return \Illuminate\View\View
      */
     public function show($id)
     {
@@ -28,4 +39,22 @@ class CommunityController extends Controller
 
     // Hapus semua method lainnya (store, update, destroy)
     // Karena hanya read-only
+
+    public function ban($id)
+    {
+        $community = Community::findOrFail($id);
+
+        // kalau pakai is_banned
+        $community->is_banned = 1;
+
+        // kalau pakai status (kalau tadi pilih ini)
+        // $community->status = 'banned';
+
+        $community->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Community berhasil dibanned'
+        ]);
+    }
 }

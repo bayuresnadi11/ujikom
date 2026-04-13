@@ -1,8 +1,20 @@
+{{-- 
+    =========================================================================
+    KOMENTAR UNTUK FILE: resources/views/buyer/main_bareng/index.blade.php
+    =========================================================================
+    Halaman ini adalah daftar utama untuk fitur "Main Bareng". 
+    Menampilkan semua sesi main bareng yang akan datang (dari hari ini ke depan).
+    User (buyer) bisa melihat daftar, mencari, dan bergabung ke sesi.
+--}}
+
+{{-- Extend layout utama aplikasi dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Main Bareng - SewaLap'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
     <style>
         /* ================= VARIABLES ================= */
+        /* Definisi variabel warna utama untuk konsistensi tema */
         :root {
             --primary: #0A5C36;
             --primary-dark: #08482B;
@@ -40,7 +52,7 @@
             color: var(--text);
         }
 
-        /* ================= HEADER ================= */
+        /* Container utama dengan gaya seperti aplikasi mobile (card/chat style) */
         .mobile-container {
             width: 100%;
             min-height: 100vh;
@@ -48,18 +60,37 @@
             background: #ffffff;
             position: relative;
             overflow-x: hidden;
+            box-shadow: 0 0 20px rgba(10, 92, 54, 0.08);
+            max-width: 500px;
         }
 
-        .mobile-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: var(--gradient-dark);
-            z-index: 1100;
-            box-shadow: var(--shadow-md);
+        /* ================= PAGE HEADER ================= */
+        .page-header {
+            padding: 20px 16px 0;
+            margin-bottom: 20px;
         }
 
+        /* Judul halaman dengan gradien teks */
+        .page-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #0A5C36;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.4;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Header top untuk logo dan aksi (notifikasi, dll) */
         .header-top {
             display: flex;
             justify-content: space-between;
@@ -117,6 +148,7 @@
             position: relative;
         }
 
+        /* Badge notifikasi untuk memberi tahu user ada notifikasi baru */
         .notification-badge {
             position: absolute;
             top: 2px;
@@ -153,6 +185,7 @@
             transition: all 0.3s ease;
         }
 
+        /* Efek fokus pada search bar */
         .search-container:focus-within {
             border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.2);
@@ -193,33 +226,14 @@
         }
 
         /* ================= MAIN ================= */
+        /* Area konten utama, ada padding atas untuk menghindari navbar fixed */
         .main-content {
-            padding: 120px 0 80px;
+            padding: 65px 0 80px;
             min-height: 100vh;
         }
 
-
-        /* ================ MAIN CONTENT STYLING FOR MAIN BARENG ================ */
-        .page-header {
-            margin-bottom: 24px;
-            text-align: center;
-            padding: 0 16px;
-        }
-
-        .page-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .page-subtitle {
-            font-size: 14px;
-            color: var(--text-light);
-            line-height: 1.5;
-        }
-
         /* ================ CARD CONTAINER ================ */
+        /* Grid untuk daftar kartu main bareng */
         .card-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -228,6 +242,7 @@
             padding: 0 16px;
         }
 
+        /* Desain kartu individual untuk setiap sesi main bareng */
         .card {
             background: white;
             border-radius: 12px;
@@ -237,6 +252,7 @@
             transition: all 0.3s ease;
         }
 
+        /* Efek hover pada kartu */
         .card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-md);
@@ -255,6 +271,7 @@
             object-fit: cover;
         }
 
+        /* Kode booking yang ditempel di gambar */
         .card-booking-code {
             position: absolute;
             top: 12px;
@@ -282,12 +299,14 @@
             gap: 8px;
         }
 
+        /* Container untuk berbagai badge status */
         .card-badges {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
         }
 
+        /* Styling dasar untuk semua badge */
         .badge {
             padding: 4px 10px;
             border-radius: 20px;
@@ -298,6 +317,7 @@
             gap: 4px;
         }
 
+        /* Variasi warna badge berdasarkan tipe */
         .badge-public {
             background: #E8F5E9;
             color: #0A5C36;
@@ -367,6 +387,7 @@
             padding: 16px;
         }
 
+        /* Baris informasi dalam kartu (label - value) */
         .card-row {
             display: flex;
             justify-content: space-between;
@@ -400,6 +421,7 @@
             border-top: 1px solid var(--light-gray);
         }
 
+        /* Container untuk tombol aksi (Detail, Join, Bayar) */
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -445,6 +467,7 @@
         }
 
         /* ================ NO DATA STATE ================ */
+        /* Tampilan ketika tidak ada data main bareng */
         .no-data {
             text-align: center;
             padding: 40px 20px;
@@ -470,6 +493,7 @@
         }
 
         /* ================ PAGINATION ================ */
+        /* Styling untuk navigasi halaman */
         .pagination {
             display: flex;
             justify-content: center;
@@ -510,9 +534,7 @@
         .actions-bar {
             margin-bottom: 20px;
             padding: 12px 16px;
-            background: var(--light);
-            border-top: 1px solid var(--light-gray);
-            border-bottom: 1px solid var(--light-gray);
+            border-radius: 30px;
         }
 
         .search-box {
@@ -564,6 +586,7 @@
         }
 
         /* ================ FILTER BADGE ================ */
+        /* Menampilkan info filter yang sedang aktif (hanya menampilkan sesi dari hari ini ke depan) */
         .filter-info {
             padding: 0 16px 16px;
             display: flex;
@@ -583,6 +606,7 @@
         }
 
         /* ================= RESPONSIVE ================= */
+        /* Penyesuaian untuk layar lebih lebar (tablet atau desktop kecil) */
         @media (min-width: 480px) {
             .mobile-container {
                 max-width: 480px;
@@ -624,6 +648,7 @@
         }
 
         /* ================ SWEETALERT2 CUSTOM STYLE ================ */
+        /* Kustomisasi tampilan SweetAlert2 agar sesuai tema */
         .swal2-popup {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             border-radius: 12px !important;
@@ -647,6 +672,7 @@
         }
 
         /* ================ PAYMENT BUTTON ================ */
+        /* Tombol khusus untuk pembayaran peserta */
         .btn-pay {
             background: #2E7D32;
             color: white;
@@ -674,6 +700,7 @@
         }
 
         /* ================= LOADING OVERLAY ================= */
+        /* Overlay loading untuk proses async (pembayaran, dll) */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -718,12 +745,36 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Tombol untuk membuat main bareng baru (ADD) */
+        .btn-add {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
+            border-radius: 12px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
     </style>
 @endpush
 
 @section('content')
     <!-- Main App Container -->
     <div class="mobile-container" id="mobileContainer">
+        {{-- Memasukkan header dari layout terpisah (berisi logo, notifikasi, dll) --}}
         @include('layouts.header')
 
         <!-- Main Content -->
@@ -740,10 +791,12 @@
             <div class="filter-info">
                 <i class="fas fa-filter"></i>
                 Menampilkan Main Bareng dari:
+                {{-- Menampilkan filter tanggal mulai dari hari ini --}}
                 <span class="filter-badge">{{ \Carbon\Carbon::today()->translatedFormat('d M Y') }} - seterusnya</span>
             </div>
 
             <!-- Create Main Bareng Button -->
+            {{-- Tombol untuk melihat "Main Bareng Saya" --}}
             @auth
                 @if(auth()->user()->role === 'buyer')
                     <div class="create-button-container">
@@ -753,6 +806,7 @@
                     </div>
                 @endif
             @else
+                {{-- Jika belum login, arahkan ke halaman login --}}
                 <div class="create-button-container">
                     <button class="btn-create" onclick="window.location.href='{{ route('login') }}'">
                         <i class="fas fa-circle"></i>Login untuk Main Bareng Saya
@@ -760,32 +814,44 @@
                 </div>
             @endauth
 
-            <!-- Search Bar -->
-            <div class="actions-bar">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <form method="GET" action="{{ auth()->check() && auth()->user()->role === 'buyer' ? route('buyer.main_bareng.index') : route('guest.main_bareng.index') }}" id="searchForm">
+            <!-- Search + Button Container -->
+            <div class="actions-bar" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <!-- Search Box -->
+                <div class="search-box" style="flex: 1; display: flex; align-items: center; position: relative;">
+                    <i class="fas fa-search search-icon" style="position: absolute; left: 10px; color: #999;"></i>
+                    <form method="GET" 
+                        action="{{ auth()->check() && auth()->user()->role === 'buyer' ? route('buyer.main_bareng.index') : route('guest.main_bareng.index') }}" 
+                        id="searchForm" style="width: 100%;">
                         <input type="text" class="search-input" name="search" placeholder="Cari main bareng..."
-                            id="searchMainBareng" value="{{ request('search') }}">
+                            id="searchMainBareng" value="{{ request('search') }}"
+                            style="padding-left: 30px; width: 100%; height: 40px; border-radius: 8px; border: 1px solid #ccc;">
                     </form>
                 </div>
+
+                <!-- Tombol Buat Baru -->
+                <button class="btn-add" onclick="window.location.href='{{ route('buyer.venue.index') }}'" 
+                        style="height: 40px; padding: 0 16px;">
+                    <i class="fas fa-plus"></i> Buat Baru
+                </button>
             </div>
 
             <!-- Card Container -->
             <div class="card-container">
+                {{-- Loop data $playTogethers yang dikirim dari controller --}}
                 @forelse($playTogethers as $playTogether)
                     @php
+                        // Ambil data terkait: booking, venue, kategori, dan pembuat sesi
                         $booking = $playTogether->booking;
                         $venue = $booking->venue ?? null;
                         $category = $venue->category ?? null;
                         $creator = $playTogether->creator;
 
-                        // Hitung peserta yang sudah approved
+                        // Hitung peserta yang sudah disetujui (approved)
                         $approvedParticipants = $playTogether->participants()
                             ->where('approval_status', 'approved')
                             ->count();
 
-                        // Cek apakah tanggal hari ini atau besok
+                        // Cek apakah tanggal sesi adalah hari ini atau besok untuk menampilkan badge khusus
                         $eventDate = \Carbon\Carbon::parse($playTogether->date);
                         $today = \Carbon\Carbon::today();
                         $tomorrow = \Carbon\Carbon::tomorrow();
@@ -794,10 +860,12 @@
                         $isTomorrow = $eventDate->isTomorrow();
                     @endphp
 
+                    {{-- Pastikan venue dan kategori tersedia sebelum menampilkan kartu --}}
                     @if($venue && $category)
                         <div class="card">
                             <!-- Card Image -->
                             <div class="card-image">
+                                {{-- Tampilkan foto venue, jika tidak ada pakai gambar placeholder dari Unsplash --}}
                                 <img src="{{ $venue->photo ? asset('storage/' . $venue->photo) : 'https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' }}"
                                     alt="{{ $venue->venue_name }}" class="venue-image" />
                             </div>
@@ -808,17 +876,21 @@
                                     {{ $venue->venue_name }}
                                 </div>
                                 <div class="card-badges">
+                                    {{-- Badge Privacy: Public / Private --}}
                                     <span class="badge badge-{{ $playTogether->privacy === 'public' ? 'public' : 'private' }}">
                                         <i class="fas fa-{{ $playTogether->privacy === 'public' ? 'globe' : 'lock' }}"></i>
                                         {{ strtoupper($playTogether->privacy) }}
                                     </span>
+                                    {{-- Badge Tipe: Paid / Free --}}
                                     <span class="badge badge-{{ $playTogether->type === 'paid' ? 'paid' : 'free' }}">
                                         <i class="fas fa-{{ $playTogether->type === 'paid' ? 'money-bill-wave' : 'gift' }}"></i>
                                         {{ strtoupper($playTogether->type) }}
                                     </span>
+                                    {{-- Badge Status sesi (active, pending, canceled) --}}
                                     <span class="badge badge-{{ $playTogether->status }}">
                                         {{ strtoupper($playTogether->status) }}
                                     </span>
+                                    {{-- Badge khusus jika sesi hari ini atau besok --}}
                                     @if($isToday)
                                         <span class="badge badge-today">
                                             <i class="fas fa-calendar-day"></i> HARI INI
@@ -829,6 +901,7 @@
                                         </span>
                                     @endif
 
+                                    {{-- Jika user login, cek status partisipasi dan pembayaran untuk menampilkan badge status pembayaran --}}
                                     @auth
                                         @php
                                             $currentUserParticipant = $playTogether->participants
@@ -852,6 +925,7 @@
                             </div>
 
                             <div class="card-body">
+                                {{-- Informasi Tanggal --}}
                                 <div class="card-row">
                                     <div class="card-label">
                                         <i class="fas fa-calendar-alt"></i>
@@ -867,6 +941,7 @@
                                     </div>
                                 </div>
 
+                                {{-- Informasi Kategori Lapangan --}}
                                 <div class="card-row">
                                     <div class="card-label">
                                         <i class="fas fa-tag"></i>
@@ -877,6 +952,7 @@
                                     </div>
                                 </div>
 
+                                {{-- Informasi Jumlah Peserta --}}
                                 <div class="card-row">
                                     <div class="card-label">
                                         <i class="fas fa-users"></i>
@@ -887,36 +963,46 @@
                                     </div>
                                 </div>
 
-                                @php
-                                    $lapangPerOrang = $playTogether->price_per_person ?? 0;
-                                    $joinPerOrang = 0;
+                                {{-- Jika user adalah peserta yang sudah approved, tampilkan rincian biaya --}}
+                                @if($userParticipant && $userParticipant->approval_status === 'approved')
+                                    @php
+                                        // Gunakan model methods untuk menghitung biaya
+                                        $showPayButton = $booking->shouldShowPayButtonFor(auth()->id());
+                                        $lapangFee = $booking->getLapangPerPerson(); // bagian biaya lapang per orang
+                                        $joinFee = $booking->getJoinFee(); // biaya join fee
+                                        $biayaPerOrang = $lapangFee + $joinFee; // total biaya per orang
+                                        $displayTotal = $booking->getDisplayTotalAmount(); // untuk tampilan di UI
 
-                                    if ($playTogether->type === 'paid') {
-                                        // fallback: join = lapang kalau join belum disimpan
-                                        $joinPerOrang = $playTogether->price_per_person_input 
-                                            ?? $playTogether->join_price 
-                                            ?? $lapangPerOrang;
-                                    }
+                                        // Label tombol berdasarkan komponen biaya
+                                        $payLabel = 'Bayar Bagian Saya';
+                                        if($lapangFee > 0 && $joinFee > 0) {
+                                            $payLabel = 'Bayar Lapang + Join';
+                                        } elseif($lapangFee > 0) {
+                                            $payLabel = 'Bayar Lapang';
+                                        } elseif($joinFee > 0) {
+                                            $payLabel = 'Bayar Join';
+                                        }
+                                    @endphp
 
-                                    $biayaPerOrang = $lapangPerOrang + $joinPerOrang;
-                                @endphp
-
-                                <div class="card-row">
-                                    <div class="card-label">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                        Biaya
+                                    {{-- Tampilan Biaya --}}
+                                    <div class="card-row">
+                                        <div class="card-label">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                            Biaya
+                                        </div>
+                                        <div class="card-value">
+                                            @if($biayaPerOrang > 0)
+                                                <span class="badge badge-cost">
+                                                    Rp {{ number_format($displayTotal, 0, ',', '.') }} / orang
+                                                </span>
+                                            @else
+                                                <span class="badge badge-free">GRATIS</span>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <div class="card-value">
-                                        @if($biayaPerOrang > 0)
-                                            <span class="badge badge-cost">
-                                                Rp {{ number_format($biayaPerOrang, 0, ',', '.') }} / orang
-                                            </span>
-                                        @else
-                                            <span class="badge badge-free">GRATIS</span>
-                                        @endif
-                                    </div>
-                                </div>
+                                @endif
 
+                                {{-- Informasi Jenis Kelamin yang diizinkan --}}
                                 <div class="card-row">
                                     <div class="card-label">
                                         <i class="fas fa-venus-mars"></i>
@@ -935,6 +1021,7 @@
                                     </div>
                                 </div>
 
+                                {{-- Informasi Host / Creator --}}
                                 <div class="card-row">
                                     <div class="card-label">
                                         <i class="fas fa-user"></i>
@@ -945,6 +1032,7 @@
                                     </div>
                                 </div>
 
+                                {{-- Informasi Apakah Perlu Persetujuan Host --}}
                                 <div class="card-row">
                                     <div class="card-label">
                                         <i class="fas fa-user-check"></i>
@@ -967,11 +1055,12 @@
                             <div class="card-footer">
                                 <div class="action-buttons">
                                     @php
+                                        // Tentukan route untuk detail berdasarkan role user
                                         $detailRoute = auth()->check() && auth()->user()->role === 'buyer' 
                                             ? route('buyer.main_bareng.show', $playTogether->id) 
                                             : route('guest.main_bareng.show', $playTogether->id);
                                         
-                                        // Check if user is participant and approved
+                                        // Inisialisasi variabel untuk tombol bayar
                                         $userParticipant = null;
                                         $showPayButton = false;
                                         $remainingToPay = 0;
@@ -988,16 +1077,49 @@
                                             }
                                         }
                                     @endphp
+                                    
+                                    {{-- Tombol Detail --}}
                                     <button class="btn-action btn-view" onclick="window.location.href='{{ $detailRoute }}'">
                                         <i class="fas fa-eye"></i> Detail
                                     </button>
                                     
-                                    @if($showPayButton)
+                                    @php
+                                        // Hitung ulang untuk memastikan data terbaru sebelum tombol bayar
+                                        $showPayButton = false;
+                                        $remainingToPay = 0;
+                                        $lapangFee = 0;
+                                        $joinFee = 0;
+                                        $payLabel = 'Bayar Bagian Saya';
+
+                                        if(auth()->check()) {
+                                            $userParticipant = $playTogether->participants
+                                                ->where('user_id', auth()->id())
+                                                ->where('approval_status', 'approved')
+                                                ->first();
+
+                                            if($userParticipant) {
+                                                $showPayButton = $booking->shouldShowPayButtonFor(auth()->id());
+                                                $remainingToPay = $booking->getParticipantPaymentAmount(auth()->id());
+                                                
+                                                $lapangFee = $booking->getLapangPerPerson();
+                                                $joinFee = $booking->getJoinFee();
+
+                                                if($lapangFee > 0 && $joinFee > 0) {
+                                                    $payLabel = 'Bayar Lapang + Join';
+                                                } elseif($lapangFee > 0) {
+                                                    $payLabel = 'Bayar Lapang';
+                                                } elseif($joinFee > 0) {
+                                                    $payLabel = 'Bayar Join';
+                                                }
+                                            }
+                                        }
+                                    @endphp
+
+                                    {{-- Tombol Bayar (muncul jika ada sisa pembayaran) --}}
+                                    @if($showPayButton && $remainingToPay > 0)
                                         <button class="btn-pay" onclick="payParticipant({{ $playTogether->id }})">
-                                            <i class="fas fa-wallet"></i> Bayar
-                                            @if($remainingToPay > 0)
-                                                <small>{{ number_format($biayaPerOrang, 0, ',', '.') }}</small>
-                                            @endif
+                                            <i class="fas fa-wallet"></i> {{ $payLabel }}
+                                            Rp {{ number_format($displayTotal, 0, ',', '.') }}
                                         </button>
                                     @endif
                                 </div>
@@ -1005,6 +1127,7 @@
                         </div>
                     @endif
                 @empty
+                    {{-- Tampilan jika tidak ada data main bareng --}}
                     <div class="no-data">
                         <i class="fas fa-futbol"></i>
                         <h3>Tidak ada Main Bareng</h3>
@@ -1018,6 +1141,7 @@
             </div>
 
             <!-- Pagination -->
+            {{-- Menampilkan link pagination jika data lebih dari satu halaman --}}
             @if($playTogethers->hasPages())
                 <div class="pagination">
                     @if($playTogethers->onFirstPage())
@@ -1043,13 +1167,15 @@
             @endif
         </main>
 
-        <!-- Bottom Nav -->
+        {{-- Bottom Navigation Bar (menu bawah) --}}
         @include('layouts.bottom-nav')
 
         <!-- Toast Notification Container -->
+        {{-- Container untuk notifikasi sementara (toast) --}}
         <div class="toast-container" id="toastContainer"></div>
 
         <!-- Loading Overlay -->
+        {{-- Overlay loading yang muncul saat proses async (seperti pembayaran) --}}
         <div id="loadingOverlay" class="loading-overlay">
             <div class="loading-spinner"></div>
             <div class="loading-text" id="loadingText">Memproses...</div>
@@ -1060,6 +1186,7 @@
 
 @push('scripts')
     {{-- MIDTRANS SNAP JS --}}
+    {{-- Memuat library Midtrans Snap untuk pembayaran, konfigurasi berdasarkan setting dari database --}}
     @php
         $setting = \App\Models\Setting::first();
         $isProduction = $setting->midtrans_is_production ?? false;
@@ -1071,7 +1198,15 @@
     <script src="{{ $snapJsUrl }}" data-client-key="{{ $midtransClientKey }}"></script>
 
     <script>
-        // Search function dengan delay untuk performa
+        // =========================================================================
+        // KOMENTAR FUNGSI JAVASCRIPT
+        // =========================================================================
+        
+        /**
+         * FITUR SEARCH DENGAN DEBOUNCE
+         * Menunda submit form pencarian selama 500ms setelah user selesai mengetik
+         * untuk menghindari terlalu banyak request ke server.
+         */
         let searchTimeout;
         const searchInput = document.getElementById('searchMainBareng');
         if (searchInput) {
@@ -1084,7 +1219,11 @@
         }
 
         /**
-         * Participant Payment Logic
+         * FUNGSI PEMBAYARAN PESERTA (payParticipant)
+         * - Menampilkan loading overlay
+         * - Fetch Snap Token dari endpoint server
+         * - Memanggil Snap Midtrans untuk menampilkan popup pembayaran
+         * - Menangani callback success, pending, error, dan close
          */
         function payParticipant(playTogetherId) {
             const btn = event.currentTarget;
@@ -1097,6 +1236,7 @@
                 .then(data => {
                     hideLoading();
                     if (data.success) {
+                        // Buka popup pembayaran Midtrans Snap
                         window.snap.pay(data.snap_token, {
                             onSuccess: function(result) {
                                 updatePaymentStatus(playTogetherId, result);
@@ -1123,6 +1263,11 @@
                 });
         }
 
+        /**
+         * FUNGSI UPDATE STATUS PEMBAYARAN (updatePaymentStatus)
+         * - Mengirim request POST ke server untuk memperbarui status pembayaran peserta
+         * - Setelah sukses, reload halaman untuk menampilkan status terbaru
+         */
         function updatePaymentStatus(playTogetherId, result) {
             showLoading('Sinkronisasi status pembayaran...');
 
@@ -1154,7 +1299,13 @@
             });
         }
 
-        // Toast notification
+        /**
+         * FUNGSI TOAST NOTIFICATION
+         * Menampilkan notifikasi sementara di pojok layar
+         * @param {string} message - Pesan yang akan ditampilkan
+         * @param {string} type - Tipe notifikasi (success, error, info, warning)
+         * @param {number} duration - Durasi tampil dalam milidetik (default 3000)
+         */
         function showToast(message, type = 'info', duration = 3000) {
             const container = document.getElementById('toastContainer');
             if (!container) return;
@@ -1172,7 +1323,7 @@
 
             container.appendChild(toast);
 
-            // Auto remove
+            // Hapus toast setelah durasi tertentu
             setTimeout(() => {
                 toast.style.animation = 'toastSlide 0.3s reverse';
                 setTimeout(() => {
@@ -1183,7 +1334,10 @@
             }, duration);
         }
 
-        // Header search function
+        /**
+         * FUNGSI HANDLE SEARCH (untuk header search)
+         * Menampilkan toast info saat melakukan pencarian dari header
+         */
         function handleSearch() {
             const searchTerm = document.querySelector('.mobile-header .search-input');
             if (searchTerm && searchTerm.value.trim()) {
@@ -1191,9 +1345,11 @@
             }
         }
 
-        // Initialize
+        /**
+         * INISIALISASI SAAT DOM READY
+         * Menambahkan event listener untuk tombol enter pada search input di header
+         */
         document.addEventListener('DOMContentLoaded', function () {
-            // Add enter key support for header search
             const headerSearchInput = document.querySelector('.mobile-header .search-input');
             if (headerSearchInput) {
                 headerSearchInput.addEventListener('keypress', function (e) {
@@ -1204,6 +1360,10 @@
             }
         });
 
+        /**
+         * FUNGSI MENAMPILKAN LOADING OVERLAY
+         * @param {string} message - Pesan yang ditampilkan saat loading
+         */
         function showLoading(message = 'Memproses...') {
             const overlay = document.getElementById('loadingOverlay');
             const text = document.getElementById('loadingText');
@@ -1213,6 +1373,9 @@
             }
         }
 
+        /**
+         * FUNGSI MENYEMBUNYIKAN LOADING OVERLAY
+         */
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {

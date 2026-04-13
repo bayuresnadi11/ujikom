@@ -8,9 +8,253 @@ Menampilkan daftar semua booking milik user yang sedang login
 @extends('layouts.main', ['title' => 'My Bookings'])
 
 @push('styles')
-{{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
-<link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    @include('buyer.booking.partials.booking-style')
+    <style>
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding-top: 70px; /* tinggi header fixed */
+            padding-bottom: 90px; /* tinggi bottom nav */
+            min-height: calc(100vh - 70px - 90px);
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            padding: 20px 16px 0;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #0A5C36;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0A5C36, #2ECC71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6C757D; /* text-light */
+            line-height: 1.4;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .single-column-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 100px;
+        }
+
+        .section-card {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .booking-card {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .booking-actions {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            text-decoration: none;
+        }
+
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            color: var(--text-light);
+            margin-bottom: 25px;
+        }
+
+        .card-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .card-action-btn:hover {
+            background: var(--background);
+            color: var(--text);
+        }
+
+        .btn-edit-card:hover {
+            color: var(--primary);
+        }
+
+        .btn-delete-card:hover {
+            color: var(--danger);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-paid {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success);
+        }
+
+        .badge-pending {
+            background: rgba(241, 196, 15, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-confirmed {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+        }
+
+        .badge-canceled {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
+
+        /* Modal QR Code */
+        .qr-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .qr-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .btn-show-qr {
+            margin-left: 10px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(52, 152, 219, .15);
+            color: #3498db;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-actions {
+                margin-top: 10px;
+            }
+        }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            text-align: center;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        .loading-text {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .loading-subtext {
+            font-size: 12px;
+            opacity: 0.8;
+            max-width: 250px;
+            line-height: 1.5;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+            </style>
+        {{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
+        <link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
@@ -232,220 +476,6 @@ Menampilkan daftar semua booking milik user yang sedang login
 
     @include('layouts.bottom-nav')
 </div>
-
-{{-- ====================== STYLE TAMBAHAN ====================== --}}
-<style>
-.single-column-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-bottom: 100px;
-}
-
-.section-card {
-    width: 100%;
-    margin-bottom: 0;
-}
-
-.booking-card {
-    width: 100%;
-    max-width: 100%;
-}
-
-.booking-actions {
-    padding: 15px 20px;
-    border-top: 1px solid var(--border);
-}
-
-.btn-pay {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-    text-decoration: none;
-}
-
-.btn-pay:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
-
-.empty-state i {
-    font-size: 64px;
-    color: var(--text-light);
-    margin-bottom: 20px;
-}
-
-.empty-state h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-    color: var(--text);
-}
-
-.empty-state p {
-    color: var(--text-light);
-    margin-bottom: 25px;
-}
-
-.card-action-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-light);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    font-size: 16px;
-}
-
-.card-action-btn:hover {
-    background: var(--background);
-    color: var(--text);
-}
-
-.btn-edit-card:hover {
-    color: var(--primary);
-}
-
-.btn-delete-card:hover {
-    color: var(--danger);
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-left: 8px;
-}
-
-.badge-paid {
-    background: rgba(39, 174, 96, 0.1);
-    color: var(--success);
-}
-
-.badge-pending {
-    background: rgba(241, 196, 15, 0.1);
-    color: var(--warning);
-}
-
-.badge-confirmed {
-    background: rgba(52, 152, 219, 0.1);
-    color: #3498db;
-}
-
-.badge-canceled {
-    background: rgba(231, 76, 60, 0.1);
-    color: var(--danger);
-}
-
-/* Modal QR Code */
-.qr-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.qr-content {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-    position: relative;
-}
-
-.btn-show-qr {
-    margin-left: 10px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: none;
-    background: rgba(52, 152, 219, .15);
-    color: #3498db;
-    font-size: 12px;
-    cursor: pointer;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .section-actions {
-        margin-top: 10px;
-    }
-}
-
-/* Loading Overlay Styles */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    color: white;
-    text-align: center;
-}
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(255, 255, 255, 0.3);
-    border-top: 5px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-}
-.loading-text {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-.loading-subtext {
-    font-size: 12px;
-    opacity: 0.8;
-    max-width: 250px;
-    line-height: 1.5;
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-</style>
-
 @endsection
 
 {{-- ====================== JAVASCRIPT ====================== --}}

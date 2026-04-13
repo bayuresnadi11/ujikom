@@ -1,35 +1,53 @@
+{{--
+=============================================================================
+VIEW: DASHBOARD LANDOWNER (HALAMAN UTAMA PEMILIK VENUE)
+Halaman dashboard untuk landowner/pemilik venue
+Menampilkan statistik, daftar venue, booking terbaru, dan tips manajemen
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Dashboard - SewaLap'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling home dari partial --}}
     @include('landowner.home.partials.home-style')
 @endpush
 
+{{-- Section konten utama --}}
 @section('content')
     <!-- Main App Container -->
     <div class="mobile-container" id="mobileContainer">
         <!-- Header -->
+        {{-- Memasukkan header dari layout terpisah --}}
         @include('layouts.header')
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Welcome Section -->
+            <!-- ====================== WELCOME SECTION ====================== -->
+            {{-- Section sambutan dengan nama user --}}
             <section class="welcome-section">
                 <h1 class="welcome-title">Selamat Datang, {{ Auth::user()->name }}!</h1>
                 <p class="welcome-subtitle">Kelola semua venue dan fasilitas olahraga Anda dengan mudah dan efisien</p>
             </section>
 
-            <!-- Quick Stats -->
+            <!-- ====================== QUICK STATS ====================== -->
+            {{-- Kartu statistik cepat (booking hari ini, pendapatan, total venue) --}}
             <div class="stats-grid">
+                {{-- Statistik Booking Hari Ini --}}
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
                     <div class="stat-number">{{ $totalBookingHariIni ?? 0 }}</div>
                     <div class="stat-label">Booking Hari Ini</div>
                 </div>
+                {{-- Statistik Pendapatan (dalam jutaan) --}}
                 <div class="stat-card" onclick="window.location.href='{{ route('landowner.report-lapangan.index') }}'">
                     <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
                     <div class="stat-number">{{ number_format(($pendapatanBulanIni ?? 0) / 1000000, 1) }}jt</div>
                     <div class="stat-label">Pendapatan</div>
                 </div>
+                {{-- Statistik Total Venue --}}
                 <div class="stat-card" onclick="window.location.href='{{ route('landowner.venue.index') }}'">
                     <div class="stat-icon"><i class="fas fa-map-marker-alt"></i></div>
                     <div class="stat-number">{{ $totalVenues ?? 0 }}</div>
@@ -37,7 +55,7 @@
                 </div>
             </div>
 
-            <!-- Daftar Venue -->
+            <!-- ====================== DAFTAR VENUE ====================== -->
             <h2 class="section-title">
                 Daftar Venue Saya
                 <a href="{{ route('landowner.venue.index') }}" class="view-all">Lihat Semua <i class="fas fa-arrow-right"></i></a>
@@ -45,6 +63,7 @@
 
             <div class="venues-container">
                 @if(($venues ?? collect())->isEmpty())
+                    {{-- Empty state: belum ada venue --}}
                     <div class="empty-state">
                         <i class="fas fa-store fa-3x"></i>
                         <h3>Belum Ada Venue</h3>
@@ -54,6 +73,7 @@
                         </button>
                     </div>
                 @else
+                    {{-- Slider daftar venue --}}
                     <div class="venues-slider" id="venuesSlider">
                         @foreach($venues as $venue)
                             {{-- Ambil jumlah lapangan di dalam venue ini (menggunakan relasi yang sudah di-load dengan withCount) --}}
@@ -61,11 +81,10 @@
                                 // Menggunakan venue_sections_count (snake_case from withCount)
                                 $sectionCount = $venue->venue_sections_count ?? 0;
 
-                                // Tentukan ikon berdasarkan category atau jenis olahraga
-                                $sportIcon = 'map-marker-alt'; // default
+                                // Tentukan ikon berdasarkan category atau jenis olahraga (default)
+                                $sportIcon = 'map-marker-alt';
 
-
-                                // Jika Anda memiliki data category atau jenis olahraga di venue
+                                // Jika venue memiliki kategori, tentukan ikon berdasarkan nama kategori
                                 if($venue->category) {
                                     $categoryName = strtolower($venue->category->category_name ?? '');
                                     if(str_contains($categoryName, 'futsal') || str_contains($categoryName, 'sepak bola')) {
@@ -86,21 +105,24 @@
                                 $location = $venue->location ?? 'Belum diatur';
                                 $categoryName = $venue->category->category_name ?? 'Multi Sport';
 
-                                // Ambil foto-foto venue
+                                // Ambil foto-foto venue untuk carousel
                                 $photos = $venue->photos ?? collect();
                                 $hasMultiplePhotos = $photos->count() > 1;
                             @endphp
 
+                            {{-- Kartu venue individual (dapat diklik) --}}
                             <div class="venue-card" onclick="window.location.href='{{ route('landowner.venue.show', $venue->id) }}'">
                                 <!-- Photo Carousel -->
                                 <div class="venue-img-carousel" data-venue-id="{{ $venue->id }}">
                                     @if($photos->count() > 0)
+                                        {{-- Tampilkan carousel jika memiliki multiple photos --}}
                                         @foreach($photos as $index => $photo)
                                             <img src="{{ asset('storage/' . $photo->photo_path) }}"
                                                  class="venue-carousel-img {{ $index === 0 ? 'active' : '' }}"
                                                  alt="{{ $venueName }} - Foto {{ $index + 1 }}">
                                         @endforeach
                                         @if($hasMultiplePhotos)
+                                            {{-- Indikator carousel --}}
                                             <div class="carousel-indicators">
                                                 @foreach($photos as $index => $photo)
                                                     <span class="indicator {{ $index === 0 ? 'active' : '' }}" data-index="{{ $index }}"></span>
@@ -109,8 +131,10 @@
                                             <div class="carousel-counter">{{ $photos->count() }} foto</div>
                                         @endif
                                     @elseif($venue->photo)
+                                        {{-- Single photo --}}
                                         <img src="{{ asset('storage/' . $venue->photo) }}" class="venue-carousel-img active" alt="{{ $venueName }}">
                                     @else
+                                        {{-- Placeholder jika tidak ada foto --}}
                                         <div class="venue-carousel-img active venue-placeholder">
                                             <i class="fas fa-{{ $sportIcon }}"></i>
                                         </div>
@@ -124,6 +148,7 @@
                                     </div>
                                     <div class="venue-details">
                                         <div class="venue-facilities">{{ $sectionCount }} Lapangan</div>
+                                        {{-- Status venue --}}
                                         @if(isset($venue->status))
                                             <div class="venue-status status-{{ $venue->status }}">
                                                 @if($venue->status == 'active')
@@ -137,16 +162,15 @@
                                                 @endif
                                             </div>
                                         @else
-                                            <div class="venue-status status-active">
-                                                Aktif
-                                            </div>
+                                            <div class="venue-status status-active">Aktif</div>
                                         @endif
                                     </div>
                                 </div>
                             </div>
                         @endforeach
 
-                        <!-- Card Tambah Venue Baru -->
+                        <!-- ====================== CARD TAMBAH VENUE BARU ====================== -->
+                        {{-- Kartu khusus untuk menambahkan venue baru --}}
                         <div class="venue-card" onclick="window.location.href='{{ route('landowner.venue.create') }}'">
                             <div class="venue-img venue-placeholder">
                                 <i class="fas fa-plus"></i>
@@ -166,7 +190,7 @@
                 @endif
             </div>
 
-            <!-- Booking Terbaru -->
+            <!-- ====================== BOOKING TERBARU ====================== -->
             <div class="bookings-section">
                 <h2 class="section-title" style="margin: 0 0 24px 0; padding-bottom: 16px;">
                     Booking Terbaru
@@ -176,6 +200,7 @@
                 </h2>
 
                 @if(($bookingTerbaru ?? collect())->isEmpty())
+                    {{-- Empty state: belum ada booking --}}
                     <div class="empty-state-small">
                         <i class="fas fa-calendar fa-2x"></i>
                         <p>Belum ada booking terbaru</p>
@@ -212,10 +237,10 @@
                             $jamMulai = $jadwal->start_time;
                             $jamSelesai = $jadwal->end_time;
 
-                            // Ambil booking pertama (karena hasMany)
+                            // Ambil booking pertama (karena relasi hasMany)
                             $booking = $jadwal->bookings->first();
 
-                            // Nama pengguna
+                            // Nama pengguna (penyewa)
                             $userName = optional(optional($booking)->user)->name ?? 'Guest';
 
                             // Nama venue/lapangan
@@ -227,6 +252,7 @@
                                 ? $jadwal->section->nama_section
                                 : 'Lapangan';
 
+                            // ====================== STATUS BOOKING ======================
                             // Status booking ditentukan berdasarkan perbandingan tanggal booking dengan waktu saat ini
                             $isToday = \Carbon\Carbon::parse($jadwal->date)->isToday();
                             $isTomorrow = \Carbon\Carbon::parse($jadwal->date)->isTomorrow();
@@ -239,8 +265,6 @@
                             if ($isPast) {
                                  $statusClass = 'status-completed'; // Gray
                                  $statusText = 'Selesai';
-
-
                             } elseif ($isToday) {
                                  $statusClass = 'status-confirmed'; // Green
                                  $statusText = 'Berlangsung';
@@ -253,7 +277,8 @@
                             }
                         @endphp
 
-                        <div class="booking-item" >
+                        {{-- Item booking individual --}}
+                        <div class="booking-item">
                             <div class="booking-sport {{ $sportClass }}">
                                 <i class="{{ $sportIcon }}"></i>
                             </div>
@@ -274,7 +299,8 @@
                 @endif
             </div>
 
-            <!-- Tips Section -->
+            <!-- ====================== TIPS SECTION ====================== -->
+            {{-- Section tips manajemen venue --}}
             <div class="tips-section">
                 <h2 class="tips-title">Tips Manajemen Venue</h2>
                 <p class="tips-desc">Optimalkan pendapatan venue Anda dengan mengelola jadwal secara efisien, memberikan promo di jam sepi, menjaga kualitas fasilitas, dan meningkatkan rating venue untuk menarik lebih banyak pelanggan.</p>
@@ -286,10 +312,13 @@
         </main>
 
         <!-- Bottom Nav -->
+        {{-- Navigasi bawah (bottom navigation bar) --}}
         @include('layouts.bottom-nav')
     </div>
 @endsection
 
+{{-- Section untuk menambahkan JavaScript khusus halaman ini --}}
 @push('scripts')
+    {{-- Memasukkan file JavaScript untuk fungsi home dari partial --}}
     @include('landowner.home.partials.home-script')
 @endpush

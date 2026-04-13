@@ -258,33 +258,6 @@
         margin-bottom: 24px;
     }
 
-    .btn-chat-large {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 12px;
-        background: transparent;
-        color: var(--text);
-        font-weight: 700;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .btn-chat-large:hover {
-        background: #f8f9fa;
-        border-color: #bbb;
-    }
-    
-    .btn-chat-large:hover {
-        background: #f8f9fa;
-        border-color: #bbb;
-    }
-    
     .bg-option i {
         font-size: 20px;
         width: 24px;
@@ -2078,20 +2051,6 @@
             <span>{{ ucfirst($community->type) }}</span>
             <span>{{ $community->location ?? 'Belum ada lokasi' }}</span>
         </div>
-        
-        <div class="visual-main-action">
-             @if($isMember || $isManager)
-             <a href="{{ route('buyer.communities.chat', $community->id) }}" class="btn-chat-large">
-                 <i class="far fa-comment-dots"></i> Chat
-             </a>
-             @elseif($isRemoved)
-                 <button onclick="requestRejoin()" class="btn-chat-large" style="background:#fff3cd; border-color:#ffeeba; color:#856404;">
-                     <i class="fas fa-undo"></i> Minta Bergabung Kembali
-                 </button>
-             @else
-                 {{-- Logic join default jika ada --}}
-             @endif
-        </div>
     </div>
 
     <main class="main-content" style="padding-top: 0;">
@@ -2414,23 +2373,6 @@
                 <i class="fas fa-users"></i>
             </div>
             <span class="nav-label">Anggota</span>
-        </a>
-        
-        <!-- Kompetisi -->
-        <a href="#" class="nav-item">
-            <div class="nav-icon">
-                <i class="fas fa-trophy"></i>
-            </div>
-            <span class="nav-label">Kompetisi</span>
-        </a>
-        
-        <!-- Galeri -->
-        <a href="{{ route('buyer.communities.galeri', $community->id) }}" 
-           class="nav-item {{ $isGaleriPage ? 'active' : '' }}">
-            <div class="nav-icon">
-                <i class="fas fa-images"></i>
-            </div>
-            <span class="nav-label">Galeri</span>
         </a>
     </nav>
 

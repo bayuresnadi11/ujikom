@@ -32,7 +32,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Kode Tiket</th>
+                                <th>Username</th>
                                 <th>Penyewa</th>
+                                <th>No Telepon</th>
                                 <th>Lapangan</th>
                                 <th>Tanggal</th>
                                 <th>Jam</th>
@@ -50,9 +52,18 @@
                                         {{ $booking->ticket_code }}
                                     </td>
 
+                                    <td>
+                                        {{ $booking->user->username ?? '-' }}
+                                    </td>
+
                                     {{-- PENYEWA --}}
                                     <td>
                                         {{ $booking->user->name ?? '-' }}
+                                    </td>
+
+                                    {{-- NO TELEPON --}}
+                                    <td>
+                                        {{ $booking->user->phone ?? '-' }}
                                     </td>
 
                                     {{-- LAPANGAN / SECTION --}}

@@ -41,11 +41,10 @@
             <table class="table" id="userTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>No</th>
                         <th>Nama</th>
                         <th>Telepon</th>
                         <th>Role</th>
-                   
                         <th>Dibuat Pada</th>
                         <th>Diperbarui</th>
                     </tr>
@@ -53,7 +52,7 @@
                 <tbody id="userTableBody">
                     @forelse($users as $user)
                         <tr class="user-row" data-role="{{ $user->role }}">
-                            <td><strong>{{ $user->id }}</strong></td>
+                            <td>{{ $loop->iteration }}</td>
                             <td>
                                 <strong>{{ $user->name }}</strong>
                                 @if($user->remember_token)

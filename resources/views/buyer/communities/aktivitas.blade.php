@@ -126,13 +126,6 @@
         margin-bottom: 20px;
     }
 
-    .btn-chat-large {
-        width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 12px;
-        background: white; color: var(--text); font-weight: 700; font-size: 14px;
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-        text-decoration: none; transition: all 0.2s ease;
-    }
-
     /* ================= FILTERS SECTION ================= */
     .filters-section {
         display: flex;
@@ -690,14 +683,6 @@
             <span>{{ ucfirst($community->type) }}</span>
             <span>{{ $community->location ?? 'Belum ada lokasi' }}</span>
         </div>
-        
-        <div class="visual-main-action">
-            @if($isMember || $isManager)
-            <a href="{{ route('buyer.communities.chat', $community->id) }}" class="btn-chat-large">
-                <i class="far fa-comment-dots"></i> Chat
-            </a>
-            @endif
-        </div>
     </div>
 
     {{-- Filters --}}
@@ -891,14 +876,6 @@
         <a href="{{ route('buyer.communities.members.index', $community->id) }}" class="nav-item">
             <div class="nav-icon"><i class="fas fa-users"></i></div>
             <span class="nav-label">Anggota</span>
-        </a>
-        <a href="#" class="nav-item">
-            <div class="nav-icon"><i class="fas fa-trophy"></i></div>
-            <span class="nav-label">Kompetisi</span>
-        </a>
-        <a href="{{ route('buyer.communities.galeri', $community->id) }}" class="nav-item">
-            <div class="nav-icon"><i class="fas fa-images"></i></div>
-            <span class="nav-label">Galeri</span>
         </a>
     </nav>
 

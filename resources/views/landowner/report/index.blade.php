@@ -42,6 +42,87 @@
             box-shadow: 0 0 0 2px rgba(15,118,110,0.15);
         }
 
+        /* CARD CONTAINER */
+        .history-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+            margin-bottom: 14px;
+            transition: 0.2s ease;
+        }
+
+        .history-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+
+        /* LEFT (AVATAR) */
+        .card-left .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+        }
+
+        /* MIDDLE */
+        .card-middle {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* NAME */
+        .user-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        /* PHONE */
+        .user-phone {
+            font-size: 12.5px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        /* VENUE */
+        .venue-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #0f766e;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* DATE */
+        .booking-date {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* RIGHT */
+        .card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        /* PRICE */
+        .price {
+            font-size: 14px;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
         /* BUTTON */
         .btn-download-month {
             background: #0f766e;
@@ -130,6 +211,10 @@
                     <div class="card-middle">
                         <h3 class="user-name">{{ $booking->user->name }}</h3>
 
+                        <p class="user-phone">
+                            {{ $booking->user->phone ?? '-' }}
+                        </p>
+
                         {{-- Menampilkan nama venue beserta bagian lapangannya --}}
                         <p class="venue-name">
                             {{ $booking->venue->venue_name }} -
@@ -217,46 +302,6 @@
                         <span>Rata-rata per Booking</span>
                         <strong>
                             Rp {{ number_format($allBookings->count() > 0 ? $allBookings->sum(fn($b) => $b->total_paid ?? $b->amount ?? 0) / $allBookings->count() : 0, 0, ',', '.') }}
-                        </strong>
-                    </li>
-
-                    <li>
-                        <span>Booking Terbanyak</span>
-                        <strong>
-                            {{-- Mengelompokkan booking berdasarkan nama venue lalu menghitung jumlah terbanyak menggunakan map & sortDesc --}}
-                            @php
-                                $venueCounts = $allBookings->groupBy(fn($b) => $b->venue->venue_name)->map(fn($g) => $g->count());
-                                $topVenue = $venueCounts->sortDesc()->keys()->first() ?? '-';
-                            @endphp
-                            {{ $topVenue }}
-                        </strong>
-                    </li>
-
-                    <li>
-                        <span>Lapangan Tersibuk</span>
-                        <strong>
-                            {{-- Menginisialisasi perhitungan jumlah booking pada masing-masing lapangan/section --}}
-                            @php
-                                $sectionCounts = $allBookings->filter(fn($b) => $b->schedule && $b->schedule->venueSection)
-                                    ->groupBy(fn($b) => $b->schedule->venueSection->section_name)
-                                    ->map(fn($g) => $g->count());
-                                $topSection = $sectionCounts->sortDesc()->keys()->first() ?? '-';
-                            @endphp
-                            {{ $topSection }}
-                        </strong>
-                    </li>
-
-                    <li>
-                        <span>Bulan Tersibuk</span>
-                        <strong>
-                            {{-- Menghitung bulan mana yang memiliki frekuensi booking tertinggi --}}
-                            @php
-                                $monthCounts = $allBookings->filter(fn($b) => $b->schedule)
-                                    ->groupBy(fn($b) => Carbon\Carbon::parse($b->schedule->date)->format('F Y'))
-                                    ->map(fn($g) => $g->count());
-                                $topMonth = $monthCounts->sortDesc()->keys()->first() ?? '-';
-                            @endphp
-                            {{ $topMonth }}
                         </strong>
                     </li>
                 </ul>

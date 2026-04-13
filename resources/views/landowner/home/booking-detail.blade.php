@@ -1,8 +1,20 @@
+{{--
+=============================================================================
+VIEW: DETAIL BOOKING (LANDOWNER - HALAMAN DETAIL BOOKING)
+Halaman untuk landowner/pemilik venue melihat detail booking dari penyewa
+Menampilkan informasi booking, detail lapangan, info penyewa, dan status pembayaran
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Detail Booking'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling home dari partial --}}
     @include('landowner.home.partials.home-style')
     <style>
+        /* ====================== HEADER HALAMAN DETAIL ====================== */
         .detail-page-header {
             background: var(--gradient-dark);
             color: white;
@@ -14,6 +26,7 @@
             margin-bottom: 24px;
         }
 
+        /* Navigasi header dengan tombol kembali putih */
         .header-nav {
             display: flex;
             align-items: center;
@@ -54,12 +67,13 @@
             margin-top: 5px;
         }
 
+        /* ====================== KONTEN DETAIL ====================== */
         .detail-content {
             padding: 0 20px 40px;
             margin-top: -20px;
         }
 
-        /* Hero Status Card */
+        /* ====================== STATUS CARD (HERO) ====================== */
         .status-card {
             background: white;
             border-radius: 24px;
@@ -98,7 +112,7 @@
             display: inline-block;
         }
 
-        /* Status Colors */
+        /* Variasi warna status */
         .status-wrapper-upcoming .status-icon-wrapper {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
@@ -120,7 +134,7 @@
         }
         .status-wrapper-completed .status-title { color: #7f8c8d; }
 
-        /* Detail Sections */
+        /* ====================== SECTION DETAIL ====================== */
         .detail-section {
             background: white;
             border-radius: 20px;
@@ -129,6 +143,7 @@
             box-shadow: var(--shadow-sm);
         }
 
+        /* Header setiap section dengan icon */
         .section-header {
             display: flex;
             align-items: center;
@@ -156,7 +171,7 @@
             color: var(--text);
         }
 
-        /* Info Rows */
+        /* ====================== BARIS INFORMASI ====================== */
         .info-row {
             display: flex;
             justify-content: space-between;
@@ -186,7 +201,7 @@
             font-weight: 800;
         }
 
-        /* User Profile */
+        /* ====================== KARTU PENYEWA ====================== */
         .user-card {
             display: flex;
             align-items: center;
@@ -215,6 +230,7 @@
             margin: 0;
         }
 
+        /* ====================== TOMBOL WHATSAPP ====================== */
         .btn-wa {
             background: #25D366;
             color: white;
@@ -238,15 +254,15 @@
             background: #20BD5A;
             color: white;
         }
-
     </style>
 @endpush
 
 @section('content')
     <div class="mobile-container">
-        <!-- Header Cashier Style -->
+        <!-- ====================== HEADER CASHIER STYLE ====================== -->
         <header class="mobile-header">
             <div class="header-top">
+                {{-- Tombol kembali ke halaman home landowner --}}
                 <a href="{{ route('landowner.home') }}" class="logo">
                     <i class="fas fa-arrow-left logo-icon"></i>
                     <span>Kembali</span>
@@ -256,11 +272,13 @@
 
         <main class="main-content">
             @php
+                // Ambil data dari relasi booking
                 $jadwal = $booking->schedule;
                 $venue = $jadwal->section->venue;
                 $user = $booking->user;
                 
-                // Status Logic
+                // ====================== LOGIKA STATUS ======================
+                // Menentukan status booking berdasarkan tanggal jadwal
                 $isToday = \Carbon\Carbon::parse($jadwal->date)->isToday();
                 $isTomorrow = \Carbon\Carbon::parse($jadwal->date)->isTomorrow();
                 $isPast = \Carbon\Carbon::parse($jadwal->date)->isPast() && !$isToday;
@@ -282,44 +300,47 @@
                      $wrapperClass = 'status-wrapper-upcoming';
                      $icon = 'fas fa-hourglass-half';
                 } else {
-                     // Future
+                     // Jadwal di masa depan
                      $statusText = 'Segera';
                      $wrapperClass = 'status-wrapper-upcoming';
                      $icon = 'fas fa-hourglass-half';
                 }
             @endphp
 
-            <!-- Page Header -->
+            <!-- ====================== HEADER HALAMAN ====================== -->
             <section class="section-title" style="margin-top: 0; margin-bottom: 20px; border: none; padding-bottom: 0;">
                 <div>
                     <h1 style="font-size: 24px; font-weight: 800; margin: 0; color: var(--text);">Detail Booking</h1>
                     <p style="font-size: 14px; color: var(--text-light); margin: 5px 0 0 0;">
+                        {{-- Menampilkan ID booking dan tanggal --}}
                         #{{ $booking->id }} • {{ \Carbon\Carbon::parse($jadwal->date)->translatedFormat('d F Y') }}
                     </p>
                 </div>
             </section>
 
             <div class="detail-content" style="padding: 0 20px 40px; margin-top: 0;">
-            <!-- Status Card -->
-            <div class="status-card {{ $wrapperClass }}" style="display: flex; align-items: center; justify-content: space-between; padding: 20px 25px; text-align: left;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div class="status-icon-wrapper" style="width: 50px; height: 50px; margin: 0; font-size: 24px;">
-                        <i class="{{ $icon }}"></i>
-                    </div>
-                    <div>
-                        <div class="status-title" style="font-size: 18px; margin-bottom: 2px;">{{ $statusText }}</div>
-                        <div class="status-subtitle" style="font-size: 12px;">Kode Booking: #{{ $booking->id }}</div>
+                <!-- ====================== STATUS CARD ====================== -->
+                {{-- Kartu status booking dengan layout horizontal (flex) --}}
+                <div class="status-card {{ $wrapperClass }}" style="display: flex; align-items: center; justify-content: space-between; padding: 20px 25px; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="status-icon-wrapper" style="width: 50px; height: 50px; margin: 0; font-size: 24px;">
+                            <i class="{{ $icon }}"></i>
+                        </div>
+                        <div>
+                            <div class="status-title" style="font-size: 18px; margin-bottom: 2px;">{{ $statusText }}</div>
+                            <div class="status-subtitle" style="font-size: 12px;">Kode Booking: #{{ $booking->id }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-                <!-- User Info -->
+                <!-- ====================== INFORMASI PENYEWA ====================== -->
                 <div class="detail-section">
                     <div class="section-header">
                         <div class="section-icon"><i class="fas fa-user"></i></div>
                         <div class="section-name">Informasi Penyewa</div>
                     </div>
                     <div class="user-card" style="margin-bottom: 5px;">
+                        {{-- Foto profil penyewa (jika ada) --}}
                         @if($user->photo)
                             <img src="{{ asset('storage/' . $user->photo) }}" class="user-img" alt="{{ $user->name }}">
                         @else
@@ -335,24 +356,28 @@
                     </div>
                 </div>
 
-                <!-- Venue Info -->
+                <!-- ====================== DETAIL LAPANGAN ====================== -->
                 <div class="detail-section">
                     <div class="section-header">
                         <div class="section-icon"><i class="fas fa-map-marked-alt"></i></div>
                         <div class="section-name">Detail Lapangan</div>
                     </div>
+                    {{-- Nama venue --}}
                     <div class="info-row">
                         <span class="info-label">Venue</span>
                         <span class="info-value">{{ $venue->venue_name }}</span>
                     </div>
+                    {{-- Nama lapangan (section) --}}
                     <div class="info-row">
                         <span class="info-label">Lapangan</span>
                         <span class="info-value">{{ $jadwal->section->section_name }}</span>
                     </div>
+                    {{-- Tanggal main --}}
                     <div class="info-row">
                         <span class="info-label">Tanggal</span>
                         <span class="info-value">{{ \Carbon\Carbon::parse($jadwal->date)->translatedFormat('d F Y') }}</span>
                     </div>
+                    {{-- Waktu main (start - end) --}}
                     <div class="info-row">
                         <span class="info-label">Jam</span>
                         <span class="info-value">
@@ -360,26 +385,30 @@
                             {{ \Carbon\Carbon::parse($jadwal->end_time)->format('H:i') }}
                         </span>
                     </div>
+                    {{-- Durasi sewa --}}
                     <div class="info-row">
                         <span class="info-label">Durasi</span>
                         <span class="info-value">{{ $jadwal->rental_duration }} Jam</span>
                     </div>
                 </div>
 
-                <!-- Payment Info -->
+                <!-- ====================== INFORMASI PEMBAYARAN ====================== -->
                 <div class="detail-section">
                     <div class="section-header">
                         <div class="section-icon"><i class="fas fa-receipt"></i></div>
                         <div class="section-name">Pembayaran</div>
                     </div>
+                    {{-- Total harga --}}
                     <div class="info-row">
                         <span class="info-label">Total Harga</span>
                         <span class="info-value highlight">Rp {{ number_format($jadwal->rental_price, 0, ',', '.') }}</span>
                     </div>
+                    {{-- Metode pembayaran --}}
                     <div class="info-row">
                         <span class="info-label">Metode</span>
                         <span class="info-value">Transfer Bank</span>
                     </div>
+                    {{-- Status pembayaran (LUNAS) --}}
                     <div class="info-row" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee;">
                         <span class="info-label">Status</span>
                         <span class="info-value">
@@ -392,6 +421,6 @@
             </div>
         </main>
     </div>
+    {{-- Bottom Navigation Bar --}}
     @include('layouts.bottom-nav')
-
-    @endsection
+@endsection

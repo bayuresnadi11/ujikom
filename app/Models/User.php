@@ -16,6 +16,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'phone',
+        'username',
         'password',
         'role',
         'can_switch_to_landowner',

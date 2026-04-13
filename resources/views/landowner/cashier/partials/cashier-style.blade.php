@@ -203,30 +203,18 @@
         background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
     }
 
-    /* MAIN CONTENT - SESUAI DENGAN MENU */
+    /* MAIN CONTENT */
     .main-content {
         padding-top: 50px;
         padding-bottom: 90px;
-        min-height: calc(100vh - 80px);
+        min-height: calc(100vh - 170px);
     }
 
     .page-header {
-        padding: 20px;
-        background: var(--gradient-light);
+        padding: 30px 20px;
         position: relative;
         overflow: hidden;
         border-bottom: 1px solid var(--light-gray);
-    }
-
-    .page-header::before {
-        content: "";
-        position: absolute;
-        top: -100px;
-        right: -100px;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(139, 21, 56, 0.15) 0%, transparent 70%);
-        border-radius: 50%;
     }
 
     .page-title {

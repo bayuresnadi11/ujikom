@@ -1,10 +1,15 @@
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Profil - SewaLap'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling profil dari partial --}}
     @include('landowner.profile.partials.profile-style')
+    {{-- Memasukkan file CSS untuk styling visual header dari partial --}}
     @include('landowner.profile.partials.visual-header-style')
     <style>
         /* ================= LOADING OVERLAY ================= */
+        /* Overlay loading untuk proses async (upload background, dll) */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -22,6 +27,7 @@
             text-align: center;
         }
 
+        /* Spinner animasi loading */
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -52,7 +58,8 @@
 @endpush
 
 @section('content')
-    <!-- Success Popup -->
+    <!-- ================= SUCCESS POPUP ================= -->
+    {{-- Popup custom untuk menampilkan pesan sukses --}}
     <div class="alert-popup" id="successPopup">
         <div class="alert-popup-content">
             <i class="fas fa-check-circle alert-popup-icon success"></i>
@@ -64,7 +71,8 @@
         </div>
     </div>
 
-    <!-- Error Popup -->
+    <!-- ================= ERROR POPUP ================= -->
+    {{-- Popup custom untuk menampilkan pesan error --}}
     <div class="alert-popup" id="errorPopup">
         <div class="alert-popup-content">
             <i class="fas fa-exclamation-circle alert-popup-icon error"></i>
@@ -76,7 +84,8 @@
         </div>
     </div>
 
-    <!-- Modal untuk pengajuan baru -->
+    <!-- ================= MODAL SWITCH TO LANDOWNER ================= -->
+    {{-- Modal untuk pengajuan menjadi pemilik lapangan (jika user ingin switch dari buyer ke landowner) --}}
     <div class="modal" id="switchModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -102,10 +111,12 @@
     <!-- Main App Container -->
     <div class="mobile-container" id="mobileContainer">
         <!-- Header -->
+        {{-- Memasukkan header dari layout terpisah (berisi logo, notifikasi, dll) --}}
         @include('layouts.header')
 
         <!-- Main Content -->
         <main class="main-content">
+            {{-- Menampilkan pesan sukses dari session (jika ada) --}}
             @if(session('success'))
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
@@ -114,6 +125,7 @@
                 </script>
             @endif
 
+            {{-- Menampilkan pesan error dari session (jika ada) --}}
             @if(session('error'))
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
@@ -122,72 +134,86 @@
                 </script>
             @endif
 
-            <!-- Visual Header with Background -->
+            <!-- ================= VISUAL HEADER WITH BACKGROUND ================= -->
+            {{-- Header visual dengan background gambar atau gradien --}}
             <section class="visual-header" style="{{ $user->landowner_background ? "background-image: url('" . asset('storage/' . $user->landowner_background) . "');" : 'background: linear-gradient(135deg, #8B1538 0%, #6B0F2A 100%);' }}">
                 <div class="visual-top-bar">
+                    {{-- Tombol untuk mengedit profil (ke halaman edit) --}}
                     <a href="{{ route('landowner.profile.edit') }}" class="visual-btn">
                         <i class="fas fa-cog"></i>
                     </a>
                 </div>
                 <!-- Camera Button -->
+                {{-- Tombol kamera untuk mengubah background header --}}
                 <button class="camera-btn" onclick="openBackgroundModal()" title="Ubah Background">
                     <i class="fas fa-camera"></i>
                 </button>
             </section>
 
-            <!-- Profile Section -->
+            <!-- ================= PROFILE SECTION ================= -->
+            {{-- Section foto profil dan nama user --}}
             <section class="visual-profile-section">
                 <div class="visual-avatar-wrapper">
+                    {{-- Link ke halaman edit profil --}}
                     <a href="{{ route('landowner.profile.edit') }}" style="display: block; width: 100%; height: 100%;">
                         @if($user->avatar)
+                            {{-- Tampilkan avatar jika ada --}}
                             <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" class="visual-avatar">
                         @else
+                            {{-- Tampilkan icon default jika tidak ada avatar --}}
                             <div class="visual-avatar" style="display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-user" style="font-size: 40px; color: #ccc;"></i>
                             </div>
                         @endif
                     </a>
-
-
                 </div>
 
+                {{-- Nama lengkap user --}}
                 <h1 class="visual-name">{{ $user->name ?? 'User' }}</h1>
 
+                {{-- Badge status akun Landowner --}}
                 <div style="display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--success); font-size: 13px; margin-bottom: 20px;">
                     <i class="fas fa-check-circle"></i>
                     <span>Akun Landowner</span>
                 </div>
             </section>
 
-            <!-- Deposit Balance Card -->
+            <!-- ================= DEPOSIT BALANCE CARD ================= -->
+            {{-- Kartu saldo deposit dengan fitur toggle visibility --}}
             <section class="deposit-summary">
                 <div class="deposit-card">
                     <div class="deposit-info">
                         <div class="deposit-label">Saldo Deposit</div>
-                       <div class="deposit-amount" data-original="Rp {{ number_format(auth()->user()->deposit->balance ?? 0, 0, ',', '.') }}">
+                        {{-- data-original menyimpan nilai asli untuk toggle --}}
+                        <div class="deposit-amount" data-original="Rp {{ number_format(auth()->user()->deposit->balance ?? 0, 0, ',', '.') }}">
                              Rp {{ number_format($balance, 0, ',', '.') }}
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button type="button" class="deposit-action" onclick="toggleDeposit()" style="border: none; cursor: pointer; padding: 0.6rem 0.8rem; justify-content: center;">
-                            <i class="fas fa-eye" id="depositToggleIcon"></i>
+                        {{-- Tombol toggle untuk menyembunyikan/menampilkan saldo --}}
+                        <button type="button"
+                            class="deposit-action"
+                            onclick="toggleDeposit()"
+                            style="border: none; cursor: pointer; padding: 0.6rem 0.8rem; justify-content: center; z-index: 10; position: relative;">
+                                <i class="fas fa-eye" id="depositToggleIcon"></i>
                         </button>
-                        <a href="{{ route('landowner.deposit.index') }}" class="deposit-action">
+                        <!-- <a href="{{ route('landowner.deposit.index') }}" class="deposit-action">
                             <i class="fas fa-wallet"></i>
                             <span>Detail</span>
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </section>
 
-
-            <!-- Profile Details -->
+            <!-- ================= PROFILE DETAILS ================= -->
+            {{-- Section detail informasi profil user --}}
             <section class="profile-details">
                 <h2 class="details-title">
                     <i class="fas fa-user-circle"></i>
                     Detail Profil
                 </h2>
                 <ul class="details-list">
+                    {{-- Nama Bisnis --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-phone"></i>
@@ -197,6 +223,7 @@
                             <div class="detail-value" id="detailBusiness">{{ $user->business_name }}</div>
                         </div>
                     </li>
+                    {{-- Nomor Telepon --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-phone"></i>
@@ -206,6 +233,7 @@
                             <div class="detail-value" id="detailPhone">{{ $user->phone }}</div>
                         </div>
                     </li>
+                    {{-- Alamat --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-map-marker-alt"></i>
@@ -215,6 +243,7 @@
                             <div class="detail-value" id="detailAddress">{{ $user->address ?? 'belum di atur' }}</div>
                         </div>
                     </li>
+                    {{-- Jenis Kelamin (dengan konversi teks) --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-venus-mars"></i>
@@ -241,6 +270,7 @@
                             </div>
                         </div>
                     </li>
+                    {{-- Tanggal Bergabung --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-calendar-alt"></i>
@@ -253,13 +283,15 @@
                 </ul>
             </section>
 
-            <!-- Menu Pengaturan, Bantuan & Logout -->
+            <!-- ================= SETTINGS & HELP MENU ================= -->
+            {{-- Menu pengaturan, bantuan, switch role, dan logout --}}
             <section class="settings-menu">
                 <h2 class="menu-title">
                     <i class="fas fa-cog"></i>
                     Pengaturan & Bantuan
                 </h2>
                 <ul class="menu-list">
+                    {{-- Menu Kelola Lapangan - mengarah ke halaman daftar venue landowner --}}
                     <li class="menu-list-item" onclick="window.location.href='{{ route('landowner.venue.index') }}'">
                         <div class="menu-icon">
                             <i class="fas fa-calendar-check"></i>
@@ -272,6 +304,7 @@
                             <i class="fas fa-chevron-right"></i>
                         </div>
                     </li>
+                    {{-- Menu Bantuan - membuka pusat bantuan --}}
                     <li class="menu-list-item" onclick="openHelpCenter()">
                         <div class="menu-icon">
                             <i class="fas fa-question-circle"></i>
@@ -284,23 +317,25 @@
                             <i class="fas fa-chevron-right"></i>
                         </div>
                     </li>
-                        <!-- Switch to Buyer Button -->
-                        <div class="menu-list-item" onclick="directSwitchToBuyer()" style="cursor: pointer;">
-                            <div class="menu-icon">
-                                <i class="fas fa-exchange-alt"></i>
-                            </div>
-                            <div class="menu-content">
-                                <div class="menu-item-title">Switch ke Penyewa</div>
-                                <div class="menu-item-desc">Kembali ke mode penyewa app</div>
-                            </div>
-                            <div class="menu-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
+                    {{-- Switch ke Penyewa - mengubah role dari landowner menjadi buyer --}}
+                    <div class="menu-list-item" onclick="directSwitchToBuyer()" style="cursor: pointer;">
+                        <div class="menu-icon">
+                            <i class="fas fa-exchange-alt"></i>
                         </div>
+                        <div class="menu-content">
+                            <div class="menu-item-title">Switch ke Penyewa</div>
+                            <div class="menu-item-desc">Kembali ke mode penyewa app</div>
+                        </div>
+                        <div class="menu-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
 
+                    {{-- Form logout tersembunyi --}}
                     <form action="{{ route('logout') }}" method="POST" id="logoutForm" style="display: none;">
                         @csrf
                     </form>
+                    {{-- Menu Logout --}}
                     <li class="logout-menu-item" onclick="confirmLogout(event)">
                         <div class="logout-menu-icon">
                             <i class="fas fa-sign-out-alt"></i>
@@ -314,13 +349,16 @@
         </main>
 
         <!-- Bottom Nav - Modified: Dashboard changed to Menu -->
+        {{-- Navigasi bawah (bottom navigation bar) --}}
         @include('layouts.bottom-nav')
 
-        <!-- Background Options Modal -->
+        <!-- ================= BACKGROUND OPTIONS MODAL ================= -->
+        {{-- Modal bottom sheet untuk memilih opsi ubah background header --}}
         <div class="bg-modal-overlay" id="bgOptionsModal" onclick="closeBackgroundModal()">
             <div class="bg-sheet" onclick="event.stopPropagation()">
                 <div class="bg-handle"></div>
                 
+                {{-- Tombol untuk memilih gambar dari galeri/kamera --}}
                 <button class="bg-option" onclick="triggerUpload()">
                     <i class="fas fa-image"></i>
                     <div style="flex:1;">
@@ -329,6 +367,7 @@
                     </div>
                 </button>
                 
+                {{-- Form tersembunyi untuk upload file --}}
                 <form id="bgForm" style="display:none;">
                     @csrf
                     <input type="file" id="bgInput" name="background" accept="image/*" onchange="uploadBackground(this)">
@@ -337,6 +376,7 @@
         </div>
 
         <!-- ================= LOADING OVERLAY ================= -->
+        {{-- Overlay loading yang muncul saat upload background atau proses lainnya --}}
         <div id="loadingOverlay" class="loading-overlay">
             <div class="loading-spinner"></div>
             <div class="loading-text" id="loadingText">Memproses...</div>
@@ -347,35 +387,57 @@
 
 
 @push('scripts')
+    {{-- Memasukkan file JavaScript untuk fungsi profil dari partial --}}
     @include('landowner.profile.partials.profile-script')
     <script>
+        /**
+         * FUNGSI TOGGLE DEPOSIT
+         * Menyembunyikan atau menampilkan saldo deposit (untuk privasi)
+         */
         function toggleDeposit() {
+            console.log('KECLICK'); 
+
             const amountEl = document.querySelector('.deposit-amount');
             const icon = document.getElementById('depositToggleIcon');
+
+            if (!amountEl || !icon) return;
+
             const originalValue = amountEl.getAttribute('data-original');
-            
+
+            // Jika sedang disembunyikan (berisi titik-titik), tampilkan nominal asli
             if (amountEl.textContent.includes('•')) {
                 amountEl.textContent = originalValue;
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
-                localStorage.setItem('depositVisible', 'true');
             } else {
+                // Jika sedang ditampilkan, sembunyikan dengan titik-titik
                 amountEl.textContent = 'Rp •••••••';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
-                localStorage.setItem('depositVisible', 'false');
             }
         }
 
+        /**
+         * INISIALISASI SAAT DOM READY
+         * Mengatur default saldo deposit dalam keadaan tersembunyi
+         */
         document.addEventListener('DOMContentLoaded', function() {
+            const amountEl = document.querySelector('.deposit-amount');
             const icon = document.getElementById('depositToggleIcon');
-            if(icon) {
+
+            if (amountEl && icon) {
+                // default: disembunyikan untuk privasi
+                amountEl.textContent = 'Rp •••••••';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
             }
         });
 
         // ================= LOADING FUNCTIONS =================
+        /**
+         * Menampilkan overlay loading dengan pesan tertentu
+         * @param {string} message - Pesan yang ditampilkan saat loading
+         */
         function showLoading(message = 'Memproses...') {
             const overlay = document.getElementById('loadingOverlay');
             const text = document.getElementById('loadingText');
@@ -385,6 +447,9 @@
             }
         }
 
+        /**
+         * Menyembunyikan overlay loading
+         */
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
@@ -392,8 +457,13 @@
             }
         }
 
+        /**
+         * FUNGSI DIRECT SWITCH TO BUYER
+         * Mengirim form POST untuk mengubah role dari landowner menjadi buyer
+         * Tanpa memerlukan konfirmasi modal (langsung switch)
+         */
         function directSwitchToBuyer() {
-            // Create a form dynamically and submit
+            // Membuat form secara dinamis dan submit
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = "{{ route('switch.to.buyer') }}";
@@ -409,29 +479,45 @@
         }
 
         // ================= BACKGROUND MODAL FUNCTIONS =================
+        /**
+         * Membuka modal bottom sheet untuk opsi ubah background
+         */
         function openBackgroundModal() {
             document.getElementById('bgOptionsModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
         
+        /**
+         * Menutup modal bottom sheet background
+         */
         function closeBackgroundModal() {
             document.getElementById('bgOptionsModal').classList.remove('active');
             document.body.style.overflow = '';
         }
         
+        /**
+         * Memicu upload file dengan mengklik input file tersembunyi
+         */
         function triggerUpload() {
             document.getElementById('bgInput').click();
         }
         
+        /**
+         * FUNGSI UPLOAD BACKGROUND
+         * Mengirim file gambar ke server untuk diupdate sebagai background header profil
+         * @param {HTMLInputElement} input - Elemen input file yang berisi gambar
+         */
         function uploadBackground(input) {
             if (input.files && input.files[0]) {
                 const formData = new FormData();
                 formData.append('background', input.files[0]);
                 formData.append('_token', '{{ csrf_token() }}');
                 
+                // Tutup modal dan tampilkan loading
                 closeBackgroundModal();
                 showLoading('Sedang mengupload background...');
                 
+                // Kirim request upload ke server
                 fetch("{{ route('landowner.profile.background.update') }}", {
                     method: 'POST',
                     body: formData
@@ -439,6 +525,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Reload halaman untuk menampilkan background baru
                         window.location.reload();
                     } else {
                         hideLoading();
@@ -451,6 +538,7 @@
                     showErrorPopup('Gagal mengupload background');
                 });
                 
+                // Reset input file
                 input.value = '';
             }
         }

@@ -44,7 +44,7 @@
             @if(!$cashiers->isEmpty())
             <!-- Action Bar -->
             <div class="action-bar">
-                <a href="{{ route('landowner.cashier.create') }}" class="btn-add">
+                <a href="{{ route('landowner.cashier.create') }}" class="btn-add" style="text-decoration: none;">
                     <i class="fas fa-plus-circle"></i> Tambah Cashier Baru
                 </a>
             </div>

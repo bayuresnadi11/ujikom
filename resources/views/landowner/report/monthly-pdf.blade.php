@@ -25,6 +25,7 @@
         <tr>
             <th>No</th>
             <th>Nama</th>
+            <th>No Telepon</th>
             <th>Lapangan</th>
             <th>Tanggal</th>
             <th>Total</th>
@@ -34,7 +35,8 @@
         @foreach($bookings as $b)
         <tr>
             <td>{{ $loop->iteration }}</td>
-            <td>{{ $b->user->name }}</td>                  
+            <td>{{ $b->user->name }}</td>         
+            <td>{{ $b->user->phone ?? '-' }}</td>                  
             <td>{{ $b->venue->venue_name }} - {{ $b->schedule->section->section_name ?? '-' }}</td>
             <td>{{ \Carbon\Carbon::parse($b->schedule->date)->format('d M Y') }}</td>
             <td>Rp {{ number_format($b->total_paid ?? $b->amount ?? 0,0,',','.') }}</td>

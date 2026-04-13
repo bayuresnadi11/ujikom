@@ -16,7 +16,7 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = 2;
+        $perPage = 5;
         
         // Get total count (tidak terpengaruh search)
         $totalCustomers = User::where('created_by', auth()->id())
@@ -33,7 +33,8 @@ class DashboardController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%");
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('username', 'like', "%{$search}%");
             });
         }
         
@@ -59,7 +60,25 @@ class DashboardController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
+    dd($request->all());
+    
+        $validated = $request->validate([
+            'name' => 'required|max:100',
+            'username' => 'nullable|unique:users,username',
+            'phone' => 'required'
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'username' => $request->username ?: null,
+            'phone' => $request->phone,
+            'role' => 'buyer',
+            'created_by' => auth()->id(),
+            'password' => Hash::make('password123')        
+        ]);
+
+        return back()->with('success', 'Penyewa berhasil ditambahkan');
     }
 
     /**

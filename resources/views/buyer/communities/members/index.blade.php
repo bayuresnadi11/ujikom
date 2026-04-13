@@ -2600,22 +2600,6 @@
             </div>
             <span class="nav-label">Anggota</span>
         </a>
-        
-        <!-- Kompetisi (sementara kosong) -->
-        <a href="#" class="nav-item">
-            <div class="nav-icon">
-                <i class="fas fa-trophy"></i>
-            </div>
-            <span class="nav-label">Kompetisi</span>
-        </a>
-        
-        <!-- Galeri -->
-        <a href="{{ route('buyer.communities.galeri', $communityId) }}" class="nav-item">
-            <div class="nav-icon">
-                <i class="fas fa-images"></i>
-            </div>
-            <span class="nav-label">Galeri</span>
-        </a>
     </nav>
 </div>
 

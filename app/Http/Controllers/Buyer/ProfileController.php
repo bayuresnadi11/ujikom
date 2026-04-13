@@ -69,6 +69,7 @@ public function profile()
         // =====================
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255|unique:users,username,' . $user->id, // ✅ TAMBAH INI
             'address' => 'nullable|string|max:255',
             'phone' => 'required|string|max:255',
             'gender' => 'nullable|string|in:male,female,other|max:255',

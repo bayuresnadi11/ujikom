@@ -821,14 +821,6 @@
             <div class="nav-icon"><i class="fas fa-users"></i></div>
             <span class="nav-label">Anggota</span>
         </a>
-        <a href="#" class="nav-item">
-            <div class="nav-icon"><i class="fas fa-trophy"></i></div>
-            <span class="nav-label">Kompetisi</span>
-        </a>
-        <a href="{{ route('buyer.communities.galeri', $community->id) }}" class="nav-item">
-            <div class="nav-icon"><i class="fas fa-images"></i></div>
-            <span class="nav-label">Galeri</span>
-        </a>
     </nav>
 
     <!-- Sticky Draft Footer -->

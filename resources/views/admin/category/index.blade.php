@@ -21,7 +21,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>No</th>
                         <th>Logo</th>
                         <th>Nama Kategori</th>
                         <th>Deskripsi</th>

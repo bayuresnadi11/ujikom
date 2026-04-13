@@ -1,14 +1,26 @@
+{{--
+=============================================================================
+VIEW: EDIT MAIN BARENG (HALAMAN EDIT)
+Halaman untuk mengedit informasi main bareng yang sudah dibuat (sebagai host)
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Edit Main Bareng - SewaLap'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling dari partial --}}
     @include('buyer.main_bareng_saya.partials.style')
 @endpush
 
 @section('content')
     <div class="mobile-container" id="mobileContainer">
-        <!-- Header -->
+        <!-- ====================== HEADER ====================== -->
+        {{-- Header khusus dengan tombol kembali --}}
         <header class="mobile-header">
             <div class="header-top">
+                {{-- Tombol kembali ke halaman sebelumnya --}}
                 <button class="header-icon" onclick="window.history.back()">
                     <i class="fas fa-arrow-left"></i>
                 </button>
@@ -30,13 +42,15 @@
                 </p>
             </div>
 
-            <!-- Booking Info Card -->
+            <!-- ====================== INFORMASI BOOKING (READONLY) ====================== -->
+            {{-- Menampilkan informasi booking yang tidak bisa diubah (sebagai referensi) --}}
             <div class="detail-section">
                 <h3 class="section-title">
                     <i class="fas fa-ticket-alt"></i>
                     Informasi Booking
                 </h3>
                 <div class="card" style="margin-bottom: 0;">
+                    {{-- Gambar venue --}}
                     <div class="card-image">
                         @if($playTogether->booking->venue->photo)
                             <img src="{{ asset('storage/' . $playTogether->booking->venue->photo) }}" 
@@ -45,9 +59,11 @@
                             <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
                                  alt="{{ $playTogether->booking->venue->venue_name }}" class="venue-image" />
                         @endif
+                        {{-- Kode booking --}}
                         <div class="card-booking-code">{{ $playTogether->booking->ticket_code }}</div>
                     </div>
                     <div class="card-body">
+                        {{-- Nama venue --}}
                         <div class="card-row">
                             <div class="card-label">
                                 <i class="fas fa-futbol"></i>
@@ -55,6 +71,7 @@
                             </div>
                             <div class="card-value">{{ $playTogether->booking->venue->venue_name }}</div>
                         </div>
+                        {{-- Tanggal main --}}
                         <div class="card-row">
                             <div class="card-label">
                                 <i class="fas fa-calendar-alt"></i>
@@ -62,6 +79,7 @@
                             </div>
                             <div class="card-value">{{ \Carbon\Carbon::parse($playTogether->date)->translatedFormat('d M Y') }}</div>
                         </div>
+                        {{-- Lokasi venue --}}
                         <div class="card-row">
                             <div class="card-label">
                                 <i class="fas fa-map-marker-alt"></i>
@@ -73,12 +91,13 @@
                 </div>
             </div>
 
-            <!-- Edit Form -->
+            <!-- ====================== FORM EDIT MAIN BARENG ====================== -->
+            {{-- Form untuk mengedit informasi main bareng (AJAX submit) --}}
             <form id="editForm" onsubmit="submitForm(event)">
                 @csrf
-                @method('PUT')
+                @method('PUT')  {{-- Method spoofing untuk PUT request --}}
 
-                <!-- Max Participants -->
+                <!-- ====================== JUMLAH PESERTA ====================== -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-users"></i>
@@ -97,7 +116,7 @@
                     </div>
                 </div>
 
-                <!-- Type & Price -->
+                <!-- ====================== TIPE & BIAYA ====================== -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-money-bill-wave"></i>
@@ -105,6 +124,7 @@
                     </h3>
                     <div class="form-group">
                         <label class="form-label">Metode Pembayaran *</label>
+                        {{-- Radio button untuk tipe gratis atau berbayar --}}
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" 
@@ -128,6 +148,7 @@
                         <div class="error-message" id="type_error"></div>
                     </div>
 
+                    {{-- Field biaya per peserta (hanya muncul jika tipe = paid) --}}
                     <div class="form-group" id="price_field" style="{{ $playTogether->type === 'paid' ? '' : 'display:none;' }}">
                         <label class="form-label">Biaya per Peserta (Rp) *</label>
                         <input type="number" 
@@ -141,7 +162,7 @@
                     </div>
                 </div>
 
-                <!-- Privacy -->
+                <!-- ====================== PRIVASI ====================== -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-lock"></i>
@@ -149,6 +170,7 @@
                     </h3>
                     <div class="form-group">
                         <label class="form-label">Tipe Privasi *</label>
+                        {{-- Radio button untuk privacy: public, private, community --}}
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" 
@@ -179,7 +201,7 @@
                     </div>
                 </div>
 
-                <!-- Gender -->
+                <!-- ====================== JENIS KELAMIN ====================== -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-venus-mars"></i>
@@ -196,7 +218,7 @@
                     </div>
                 </div>
 
-                <!-- Host Approval -->
+                <!-- ====================== PERSETUJUAN HOST ====================== -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-user-check"></i>
@@ -217,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- Description -->
+                <!-- ====================== DESKRIPSI ====================== -->
                 <div class="detail-section">
                     <h3 class="section-title">
                         <i class="fas fa-align-left"></i>
@@ -232,18 +254,21 @@
                                   maxlength="1000" 
                                   placeholder="Tambahkan deskripsi atau catatan...">{{ $playTogether->description }}</textarea>
                         <div class="error-message" id="description_error"></div>
+                        {{-- Counter karakter --}}
                         <p class="text-muted" style="margin-top: 6px;">
                             <span id="charCount">{{ strlen($playTogether->description ?? '') }}</span>/1000 karakter
                         </p>
                     </div>
                 </div>
 
-                <!-- Submit Buttons -->
+                <!-- ====================== TOMBOL AKSI ====================== -->
                 <div class="detail-section">
                     <div style="display: flex; gap: 10px;">
+                        {{-- Tombol Batal (kembali ke halaman sebelumnya) --}}
                         <button type="button" class="btn-cancel" onclick="window.history.back()" style="flex: 1;">
                             <i class="fas fa-times"></i> Batal
                         </button>
+                        {{-- Tombol Submit Simpan Perubahan --}}
                         <button type="submit" class="btn-submit" id="submitBtn" style="flex: 2;">
                             <i class="fas fa-save"></i> Simpan Perubahan
                         </button>
@@ -262,7 +287,11 @@
 
 @push('scripts')
     <script>
-        // Toggle price field
+        /**
+         * FUNGSI TOGGLE PRICE FIELD
+         * Menampilkan atau menyembunyikan field biaya per peserta
+         * berdasarkan pilihan metode pembayaran (Gratis / Berbayar)
+         */
         function togglePriceField() {
             const type = document.querySelector('input[name="type"]:checked').value;
             const priceField = document.getElementById('price_field');
@@ -270,20 +299,26 @@
             
             if (type === 'paid') {
                 priceField.style.display = 'block';
-                priceInput.required = true;
+                priceInput.required = true;  // Field menjadi required jika berbayar
             } else {
                 priceField.style.display = 'none';
-                priceInput.required = false;
-                priceInput.value = '';
+                priceInput.required = false; // Field tidak required jika gratis
+                priceInput.value = '';       // Kosongkan nilai
             }
         }
 
-        // Character count
+        /**
+         * COUNTER KARAKTER DESKRIPSI
+         * Menampilkan jumlah karakter yang sudah ditulis (maksimal 1000)
+         */
         document.getElementById('description').addEventListener('input', function() {
             document.getElementById('charCount').textContent = this.value.length;
         });
 
-        // Clear errors
+        /**
+         * FUNGSI CLEAR ERRORS
+         * Menghapus semua pesan error dan class error dari form
+         */
         function clearErrors() {
             document.querySelectorAll('.error-message').forEach(el => {
                 el.classList.remove('show');
@@ -294,7 +329,11 @@
             });
         }
 
-        // Show errors
+        /**
+         * FUNGSI SHOW ERRORS
+         * Menampilkan pesan error validasi dari server
+         * @param {object} errors - Object error dari response server
+         */
         function showErrors(errors) {
             clearErrors();
             for (const [field, messages] of Object.entries(errors)) {
@@ -310,27 +349,33 @@
             }
         }
 
-        // Submit form
+        /**
+         * FUNGSI SUBMIT FORM (AJAX)
+         * Mengirim data form secara asynchronous ke server
+         * @param {Event} event - Event submit form
+         */
         async function submitForm(event) {
-            event.preventDefault();
+            event.preventDefault();  // Mencegah reload halaman
 
             const form = event.target;
             const formData = new FormData(form);
             
-            // Convert checkbox value
+            // Konversi nilai checkbox ke 1 atau 0
             formData.set('host_approval', document.getElementById('host_approval').checked ? 1 : 0);
 
-            // Convert FormData to object
+            // Konversi FormData ke object untuk dikirim sebagai JSON
             const data = {};
             formData.forEach((value, key) => {
                 data[key] = value;
             });
 
+            // Disable tombol submit dan tampilkan loading
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
             try {
+                // Kirim request PUT ke server
                 const response = await fetch('{{ route('buyer.main_bareng_saya.update', $playTogether->id) }}', {
                     method: 'PUT',
                     headers: {
@@ -344,29 +389,39 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
+                    // Tampilkan toast sukses
                     showToast(result.message, 'success');
                     
-                    // Redirect after success
+                    // Redirect ke halaman detail setelah 1.5 detik
                     setTimeout(() => {
                         window.location.href = '{{ route('buyer.main_bareng_saya.show', $playTogether->id) }}';
                     }, 1500);
                 } else {
                     if (result.errors) {
+                        // Tampilkan error validasi
                         showErrors(result.errors);
                     } else {
+                        // Tampilkan pesan error umum
                         showToast(result.message || 'Terjadi kesalahan', 'error');
                     }
                 }
             } catch (error) {
+                // Tampilkan error jaringan
                 showToast('Terjadi kesalahan jaringan', 'error');
                 console.error('Error submitting form:', error);
             } finally {
+                // Kembalikan tombol submit ke state semula
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
             }
         }
 
-        // Show Toast
+        /**
+         * FUNGSI SHOW TOAST
+         * Menampilkan notifikasi toast sementara
+         * @param {string} message - Pesan yang akan ditampilkan
+         * @param {string} type - Tipe notifikasi (success / error / info)
+         */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -382,7 +437,11 @@
             `;
 
             container.appendChild(toast);
+            
+            // Animasi muncul
             setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Hapus setelah 5 detik
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);

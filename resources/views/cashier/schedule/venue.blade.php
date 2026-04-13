@@ -1,9 +1,21 @@
+{{--
+=============================================================================
+VIEW: DISPLAY JADWAL VENUE (KASIR - TAMPILAN JADWAL SEMUA LAPANGAN)
+Halaman untuk menampilkan jadwal semua lapangan dalam satu venue secara real-time
+Digunakan untuk display di kasir/monitor area venue (tampilan semua lapangan)
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Display Jadwal - ' . $venue->venue_name])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling venue schedule dari partial --}}
     @include('cashier.schedule.partials.style-venue')
 @endpush
 
+{{-- Section konten utama --}}
 @section('content')
 
 @php
@@ -20,38 +32,34 @@
             $startTime = Carbon::parse($schedule->start_time);
             $endTime   = Carbon::parse($schedule->end_time);
 
-            $booking = $schedule->booking; // 🔥 LANGSUNG
+            $booking = $schedule->booking; // 🔥 LANGSUNG akses relasi booking
 
             $isCurrent = $currentTime->between($startTime, $endTime);
             $isPassed  = $endTime->lt($currentTime);
 
-            // Check if booking is paid
+            // Cek apakah booking sudah lunas
             $isPaid = $booking && $booking->payment_status === 'paid';
 
             // PERBAIKAN: Mengutamakan nama dari User ID
-            // Jika ada booking, ambil nama user dari relasi user_id
-            // Jika tidak ada user (atau booking komunitas), ambil nama komunitas
+            // Prioritas: username user -> nama user -> nama komunitas -> default
             $customerName = 
-                $booking?->user?->name 
-                ?? $booking?->playTogether?->community?->name 
-                ?? 'LAPANGAN KOSONG';
+                $booking?->user?->username 
+                    ?: ($booking?->user?->name 
+                        ?? $booking?->playTogether?->community?->name 
+                        ?? 'LAPANGAN KOSONG');
 
+            // Simpan data jadwal ke collection
             $allSchedules->push([
                 'id' => $schedule->id,
                 'section_name' => $section->section_name,
-
-                // Ini menampung nama yang sudah diambil dari user_id
                 'customer_name' => $customerName,
-
                 'start_time' => $startTime->format('H:i'),
                 'end_time'   => $endTime->format('H:i'),
-
                 'is_booked' => $booking !== null,
                 'is_paid' => $isPaid,
                 'scan_status' => ($booking && !empty($booking->scan_status)) ? $booking->scan_status : ($booking ? 'belum_scan' : null),
                 'is_current' => $isCurrent,
                 'is_passed'  => $isPassed,
-
                 'start_datetime' => $startTime,
             ]);
         }
@@ -60,7 +68,7 @@
     // ===============================
     // URUTKAN & FILTER JADWAL
     // ===============================
-    // Urutkan berdasarkan waktu mulai
+    // Urutkan berdasarkan waktu mulai (terdekat ke terakhir)
     $allSchedules = $allSchedules->sortBy('start_datetime')->values();
 
     // Ambil jadwal yang belum lewat (mendatang)
@@ -72,8 +80,10 @@
     // Jadwal berikutnya yang akan tampil di grid (maksimal 9 item)
     $gridSchedules = $upcomingSchedules->where('is_current', false)->take(9)->values();
 
+    // Jadwal yang akan ditampilkan di panel kiri (active schedule)
     $displaySchedules = $currentRunningSchedules;
 
+    // Jika tidak ada jadwal sedang berlangsung, tampilkan 2 jadwal berikutnya
     if ($displaySchedules->isEmpty() && $gridSchedules->isNotEmpty()) {
         $displaySchedules = $gridSchedules->take(2);
         $gridSchedules = $gridSchedules->slice(2)->values();
@@ -82,11 +92,11 @@
     $displayTitle = $venue->venue_name;
 @endphp
 
-
 <!-- ===============================
 HEADER
 ================================ -->
 <header class="display-header">
+    {{-- Brand area dengan foto landowner --}}
     <div class="display-brand">
         <img 
             src="{{ $venue->owner && $venue->owner->avatar
@@ -100,6 +110,8 @@ HEADER
             <div>{{ $displayTitle }}</div>
         </div>
     </div>
+    
+    {{-- Jam dan tanggal real-time --}}
     <div class="display-clock">
         <div class="time" id="clockTime">00:00:00</div>
         <div class="date" id="clockDate">{{ Carbon::today()->format('d M Y') }}</div>
@@ -112,49 +124,48 @@ MAIN CONTENT
 <div class="display-content">
 
     <!-- ===============================
-    LEFT : ACTIVE SCHEDULE
+    LEFT PANEL : ACTIVE SCHEDULE (JADWAL SEDANG BERLANGSUNG)
     ================================ -->
     <div class="active-schedule-panel">
         <div class="active-schedule-card">
 
-            <div class="card-header ">
-    @if($sectionsSlides->isNotEmpty())
-        <div id="sectionCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner text-center">
-
-                @foreach($sectionsSlides as $index => $slide)
-                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                        <h5 class="m-0 py-2 fs-2 fw-bold ">
-                            {{ $slide['section_name'] }}
-                        </h5>
+            {{-- Header dengan carousel section slides (jika ada) --}}
+            <div class="card-header">
+                @if($sectionsSlides->isNotEmpty())
+                    {{-- Carousel untuk menampilkan nama section bergantian --}}
+                    <div id="sectionCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner text-center">
+                            @foreach($sectionsSlides as $index => $slide)
+                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                    <h5 class="m-0 py-2 fs-2 fw-bold ">
+                                        {{ $slide['section_name'] }}
+                                    </h5>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-                @endforeach
-
+                @elseif($gridSchedules->isNotEmpty())
+                    JADWAL BERIKUTNYA
+                @else
+                    TIDAK ADA JADWAL
+                @endif
             </div>
-        </div>
-    @elseif($gridSchedules->isNotEmpty())
-        JADWAL BERIKUTNYA
-    @else
-        TIDAK ADA JADWAL
-    @endif
-</div>
-
 
             <div class="card-body" id="activeScheduleBody">
                 @if($displaySchedules->isNotEmpty())
+                    {{-- Container slide untuk jadwal aktif (dapat di-slide jika lebih dari 1) --}}
                     <div class="slide-container">
                         <div class="slide-wrapper" id="slideWrapper">
-
                             @foreach($displaySchedules as $index => $schedule)
                                 @php
-                                    // Determine display mode
+                                    // Determine display mode based on scan status
                                     $isPaid = $schedule['is_paid'] ?? false;
                                     $scanStatus = $schedule['scan_status'] ?? null;
                                     $isMasukLapang = $scanStatus === 'masuk_lapang';
                                     $isBelumScan = $scanStatus === 'belum_scan';
                                     $isMasukVenue = $scanStatus === 'masuk_venue';
                                     
-                                    // Determine time class
+                                    // Determine time class based on scan status
                                     $timeClass = '';
                                     if ($isBelumScan) {
                                         $timeClass = 'time-belum-scan';
@@ -162,7 +173,7 @@ MAIN CONTENT
                                         $timeClass = 'time-masuk-venue';
                                     }
                                     
-                                    // Determine status for active display
+                                    // Determine status text and class for active display
                                     if ($schedule['is_booked'] && $scanStatus) {
                                         $scanStatusMap = [
                                             'belum_scan' => ['text' => 'BELUM SCAN', 'class' => 'status-belum-scan'],
@@ -187,7 +198,7 @@ MAIN CONTENT
                                      data-end-time="{{ $schedule['end_time'] }}">
 
                                     @if($isMasukLapang)
-                                        {{-- Countdown timer display for masuk_lapang --}}
+                                        {{-- Tampilkan countdown timer jika status = masuk_lapang --}}
                                         <div class="countdown-container">
                                             <div class="countdown-label">SISA WAKTU MAIN</div>
                                             <div class="countdown-timer" 
@@ -198,29 +209,24 @@ MAIN CONTENT
                                             <div class="countdown-schedule">
                                                 {{ $schedule['start_time'] }} - {{ $schedule['end_time'] }}
                                             </div>
-                                           
                                         </div>
                                     @else
-                                        {{-- Normal display with status badge --}}
+                                        {{-- Tampilan normal dengan badge status --}}
                                         <div class="current-schedule-time {{ $timeClass }}">
                                             {{ $schedule['start_time'] }} - {{ $schedule['end_time'] }}
                                         </div>
-
                                         <div class="current-schedule-label">WAKTU MAIN</div>
-
-                                        <div class="current-schedule-details">
-                                        </div>
-
+                                        <div class="current-schedule-details"></div>
                                         <div class="schedule-status {{ $activeStatusClass }}">
                                             {{ $activeStatusText }}
                                         </div>
                                     @endif
                                 </div>
                             @endforeach
-
                         </div>
                     </div>
 
+                    {{-- Indikator slide (muncul jika lebih dari 1 jadwal aktif) --}}
                     @if($displaySchedules->count() > 1)
                         <div class="slide-indicators" id="slideIndicators">
                             @foreach($displaySchedules as $index => $schedule)
@@ -230,6 +236,7 @@ MAIN CONTENT
                         </div>
                     @endif
                 @else
+                    {{-- Tidak ada jadwal aktif --}}
                     <div class="empty-state">
                         <div class="empty-icon">
                             <i class="fas fa-clock"></i>
@@ -245,7 +252,7 @@ MAIN CONTENT
     </div>
 
     <!-- ===============================
-    RIGHT : GRID JADWAL
+    RIGHT PANEL : GRID JADWAL (SEMUA JADWAL MENDATANG)
     ================================ -->
     <div class="schedules-grid-panel">
         <div class="schedules-header">
@@ -259,12 +266,12 @@ MAIN CONTENT
         <div class="schedules-container">
             @if($gridSchedules->isNotEmpty())
                 <div class="schedules-grid" id="schedulesGrid">
-
+                    {{-- Looping semua jadwal mendatang untuk ditampilkan di grid --}}
                     @foreach($gridSchedules as $index => $schedule)
                         @php
                             $customerName = $schedule['customer_name'] ?? 'KOSONG';
 
-                            // Determine status for grid display
+                            // Determine status badge for grid display based on scan status
                             if (($schedule['is_booked'] ?? false) && ($schedule['scan_status'] ?? null)) {
                                 $scanStatusMap = [
                                     'belum_scan' => ['text' => 'BELUM SCAN', 'class' => 'badge-belum-scan'],
@@ -283,6 +290,7 @@ MAIN CONTENT
                             }
                         @endphp
 
+                        {{-- Kartu jadwal dengan warna berbeda berdasarkan index --}}
                         <div class="schedule-card color-{{ $index % 6 }}"
                              data-schedule-id="{{ $schedule['id'] }}"
                              data-start-time="{{ $schedule['start_time'] }}"
@@ -301,7 +309,6 @@ MAIN CONTENT
                                         {{ $badgeText }}
                                     </div>
                                 </div>
-
                                 <div class="schedule-details">
                                     <div class="schedule-section-name">
                                         {{ $schedule['section_name'] }}
@@ -313,13 +320,11 @@ MAIN CONTENT
                             </div>
                         </div>
                     @endforeach
-
                 </div>
             @else
+                {{-- Tidak ada jadwal mendatang --}}
                 <div class="empty-state">
-                    <i class="fas fa-calendar-times fa-4x mb-3"
-                       style="opacity: .5;"></i>
-
+                    <i class="fas fa-calendar-times fa-4x mb-3" style="opacity: .5;"></i>
                     <div class="empty-title">
                         @if($currentRunningSchedules->isNotEmpty())
                             SEMUA JADWAL SEDANG BERLANGSUNG
@@ -327,7 +332,6 @@ MAIN CONTENT
                             TIDAK ADA JADWAL
                         @endif
                     </div>
-
                     <div class="empty-subtitle">
                         @if($currentRunningSchedules->isNotEmpty())
                             Semua jadwal sedang berlangsung ditampilkan di sebelah kiri
@@ -342,6 +346,8 @@ MAIN CONTENT
 </div>
 @endsection
 
+{{-- Section untuk menambahkan JavaScript khusus halaman ini --}}
 @push('scripts')
+    {{-- Memasukkan file JavaScript untuk fungsi venue schedule dari partial --}}
     @include('cashier.schedule.partials.script-venue')
 @endpush

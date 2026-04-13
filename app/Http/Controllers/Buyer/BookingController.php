@@ -25,10 +25,13 @@ use Midtrans\Config;
 
 class BookingController extends Controller
 {
-    // ====================== DAFTAR BOOKING USER ======================
+    // =========================================================================
+    // DAFTAR BOOKING USER
     // Menampilkan semua booking milik user yang sedang login
+    // =========================================================================
     public function index()
     {
+        // Ambil semua booking milik user yang sedang login dengan relasi yang diperlukan
         $bookings = Booking::with([
             'venue',
             'schedule.section',
@@ -44,39 +47,47 @@ class BookingController extends Controller
         return view('buyer.booking.index', compact('bookings', 'setting'));
     }
 
-    // ====================== FORM BUAT BOOKING BARU ======================
+    // =========================================================================
+    // FORM BUAT BOOKING BARU
     // Menampilkan form untuk membuat booking baru berdasarkan venue dan section yang dipilih
+    // =========================================================================
     public function create(Request $request)
     {
         $venueId = $request->input('venue_id');
         $sectionId = $request->input('section_id');
-        
+        $filterDate = $request->input('booking_date', now()->toDateString());
+
         $venue = null;
         $section = null;
         $schedules = collect();
-        
+
         if ($venueId && $sectionId) {
             $venue = Venue::findOrFail($venueId);
             $section = VenueSection::where('venue_id', $venueId)
                 ->where('id', $sectionId)
                 ->firstOrFail();
-            
+
+            // Filter jadwal berdasarkan tanggal yang dipilih
             $schedules = VenueSchedule::where('section_id', $sectionId)
-                ->where('date', '>=', now()->toDateString())
+                ->whereDate('date', $filterDate)
                 ->orderBy('date', 'asc')
                 ->orderBy('start_time', 'asc')
                 ->get();
         }
-        
+
+        // Ambil daftar komunitas yang dibuat oleh user (untuk opsi privacy = community)
         $myCommunities = Community::where('created_by', auth()->id())->get();
-        
-        return view('buyer.booking.create', compact('venue', 'section', 'schedules', 'myCommunities'));
+
+        return view('buyer.booking.create', compact('venue', 'section', 'schedules', 'myCommunities', 'filterDate'));
     }
 
-    // ====================== PROSES SIMPAN BOOKING ======================
+    // =========================================================================
+    // PROSES SIMPAN BOOKING
     // Menyimpan booking baru ke database dengan transaksi
+    // =========================================================================
     public function store(Request $request)
 {
+    // Validasi input form
     $request->validate([
         'venue_id' => 'required|exists:venues,id',
         'section_id' => 'required|exists:venue_sections,id',
@@ -87,9 +98,10 @@ class BookingController extends Controller
     DB::beginTransaction();
     try {
         $schedule = VenueSchedule::findOrFail($request->schedule_id);
+        // Cek ketersediaan jadwal
         if (!$schedule->available) throw new \Exception("Jadwal tidak tersedia");
 
-        // Buat booking utama
+        // ====================== BUAT BOOKING UTAMA ======================
         $booking = Booking::create([
             'type' => $request->type,
             'user_id' => auth()->id(),
@@ -105,6 +117,7 @@ class BookingController extends Controller
         // ====================== PLAY TOGETHER ======================
         if ($request->type === 'play_together') {
 
+            // Buat data PlayTogether
             $playTogether = PlayTogether::create([
                 'booking_id' => $booking->id,
                 'name' => $request->pt_name,
@@ -126,13 +139,14 @@ class BookingController extends Controller
             $this->createHostDeposit($booking, $playTogether);
 
             // ====================== PARTICIPANT HOST ======================
+            // Jika host ingin disertakan sebagai participant
             if ($request->has('pt_include_host')) {
                 $this->createParticipant(auth()->id(), $booking, $playTogether, true);
             }
 
         } else {
             // ====================== REGULAR / SPARRING ======================
-            // Buat deposit negatif untuk booking reguler/sparring
+            // Buat deposit negatif untuk booking reguler/sparring (pending)
             Deposit::create([
                 'user_id' => auth()->id(),
                 'booking_id' => $booking->id,
@@ -144,6 +158,7 @@ class BookingController extends Controller
             ]);
         }
 
+        // Update jadwal menjadi tidak tersedia
         $schedule->update(['available' => false]);
 
         DB::commit();
@@ -156,10 +171,13 @@ class BookingController extends Controller
     }
 }
 
-    // ====================== FORM EDIT BOOKING ======================
+    // =========================================================================
+    // FORM EDIT BOOKING
     // Menampilkan form edit booking (hanya untuk booking dengan status pending)
+    // =========================================================================
     public function edit($id)
     {
+        // Ambil booking milik user yang sedang login
         $booking = Booking::with([
             'venue',
             'schedule.section',
@@ -169,11 +187,13 @@ class BookingController extends Controller
         ->where('user_id', auth()->id())
         ->findOrFail($id);
 
+        // Booking yang sudah dibayar tidak dapat diedit
         if ($booking->booking_payment !== 'pending') {
             return redirect()->route('buyer.booking.index')
                 ->withErrors(['error' => 'Booking yang sudah dibayar tidak dapat diedit']);
         }
 
+        // Ambil daftar jadwal yang tersedia untuk section ini
         $schedules = VenueSchedule::where('section_id', $booking->schedule->section_id)
             ->where('date', '>=', now()->toDateString())
             ->orderBy('date', 'asc')
@@ -185,23 +205,27 @@ class BookingController extends Controller
         return view('buyer.booking.edit', compact('booking', 'schedules', 'myCommunities'));
     }
 
-    // ====================== PROSES UPDATE BOOKING ======================
+    // =========================================================================
+    // PROSES UPDATE BOOKING
     // Mengupdate data booking yang sudah ada (hanya untuk status pending)
+    // =========================================================================
     public function update(Request $request, $id)
     {
         try {
             $booking = Booking::where('user_id', auth()->id())->findOrFail($id);
 
+            // Booking yang sudah dibayar tidak dapat diupdate
             if ($booking->booking_payment !== 'pending') {
                 return back()->withErrors(['error' => 'Booking yang sudah dibayar tidak dapat diupdate']);
             }
 
+            // ====================== VALIDASI DINAMIS ======================
             $rules = [
                 'schedule_id' => 'required|exists:venue_schedules,id',
                 'type' => 'required|in:regular,play_together,sparring',
             ];
 
-            // Dynamic validation based on type
+            // Validasi berdasarkan tipe booking
             if ($request->type === 'play_together') {
                 $rules['pay_by'] = 'required|in:host,participant';
                 $rules['pt_name'] = 'required|string|max:255';
@@ -233,11 +257,13 @@ class BookingController extends Controller
 
             $newSchedule = VenueSchedule::findOrFail($validatedData['schedule_id']);
             
+            // Cek ketersediaan jadwal baru (kecuali jadwal yang sama)
             if (!$newSchedule->available && $newSchedule->id != $booking->schedule_id) {
                 return back()->withErrors(['schedule_id' => 'Jadwal tidak tersedia'])->withInput();
             }
 
-            // Free old schedule if changed
+            // ====================== FREE OLD SCHEDULE ======================
+            // Jika jadwal berubah, bebaskan jadwal lama dan kunci jadwal baru
             if ($booking->schedule_id != $validatedData['schedule_id']) {
                 $booking->schedule->update(['available' => true]);
                 $newSchedule->update(['available' => false]);
@@ -247,7 +273,7 @@ class BookingController extends Controller
             $oldAmount = $booking->amount;
             $newAmount = $newSchedule->rental_price;
 
-            // Update booking
+            // ====================== UPDATE BOOKING ======================
             $booking->update([
                 'type' => $validatedData['type'],
                 'schedule_id' => $validatedData['schedule_id'],
@@ -276,7 +302,7 @@ class BookingController extends Controller
                 $booking->sparring()->delete();
             }
 
-            // Update or create Play Together
+            // ====================== UPDATE PLAY TOGETHER ======================
             if ($validatedData['type'] === 'play_together') {
                 $playTogetherData = [
                     'name' => $request->pt_name,
@@ -300,7 +326,7 @@ class BookingController extends Controller
                 );
             }
 
-            // Update or create Sparring
+            // ====================== UPDATE SPARRING ======================
             if ($validatedData['type'] === 'sparring') {
                 $sparringData = [
                     'name' => $request->sp_name,
@@ -332,15 +358,17 @@ class BookingController extends Controller
         }
     }
 
-    // ====================== HAPUS BOOKING ======================
+    // =========================================================================
+    // HAPUS BOOKING
     // Menghapus booking beserta deposit yang terkait
+    // =========================================================================
     public function destroy($id)
     {
         $booking = Booking::where('user_id', auth()->id())->findOrFail($id);
 
         DB::beginTransaction();
         try {
-            // Free the schedule
+            // Bebaskan jadwal yang terikat
             $booking->schedule->update(['available' => true]);
             
             // Hapus deposit yang terkait
@@ -348,7 +376,7 @@ class BookingController extends Controller
                 ->where('source_type', 'booking')
                 ->delete();
             
-            // Delete booking (will cascade delete play_together/sparring)
+            // Delete booking (akan cascade delete play_together/sparring)
             $booking->delete();
 
             DB::commit();
@@ -363,7 +391,10 @@ class BookingController extends Controller
         }
     }
 
-    // ====================== API ENDPOINTS ======================
+    // =========================================================================
+    // API ENDPOINTS (AJAX)
+    // =========================================================================
+    
     // Mengambil daftar section berdasarkan venue ID (AJAX)
     public function getSections($venueId)
     {
@@ -372,19 +403,28 @@ class BookingController extends Controller
     }
 
     // Mengambil daftar jadwal berdasarkan section ID (AJAX)
-    public function getSchedulesBySection($sectionId)
+    public function getSchedulesBySection(Request $request, $sectionId)
     {
-        $schedules = VenueSchedule::where('section_id', $sectionId)
-            ->where('date', '>=', now()->toDateString())
-            ->orderBy('date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get();
+        $query = VenueSchedule::where('section_id', $sectionId);
+
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
+        } else {
+            $query->whereDate('date', '>=', now()->toDateString());
+        }
+
+        $schedules = $query->orderBy('date', 'asc')
+                        ->orderBy('start_time', 'asc')
+                        ->get();
 
         return response()->json($schedules);
     }
 
-    // ====================== PEMBAYARAN MIDTRANS ======================
-    // Proses pembayaran booking (placeholder)
+    // =========================================================================
+    // PEMBAYARAN MIDTRANS
+    // =========================================================================
+    
+    // Proses pembayaran booking (placeholder - belum diimplementasikan)
     public function processPayment($id)
     {
         return back()->with('info', 'Fitur pembayaran akan segera tersedia');
@@ -409,7 +449,10 @@ class BookingController extends Controller
         ]);
     }
 
-    // Generate Snap Token Midtrans untuk pembayaran
+    // =========================================================================
+    // GENERATE SNAP TOKEN MIDTRANS
+    // Menghasilkan token pembayaran Midtrans untuk transaksi
+    // =========================================================================
     public function generateSnapToken($id)
     {
         $booking = Booking::findOrFail($id);
@@ -425,6 +468,7 @@ class BookingController extends Controller
         $orderId = 'BOOKING-' . $booking->id . '-U' . auth()->id() . '-' . time();
         $booking->update(['midtrans_order_id' => $orderId]);
 
+        // Untuk PlayTogether dengan pembayaran participant, buat record payment
         if (
             $booking->type === 'play_together'
             && $booking->pay_by === 'participant'
@@ -442,6 +486,7 @@ class BookingController extends Controller
             );            
         }        
 
+        // Hitung jumlah yang akan ditagihkan ke Midtrans
         $chargeAmount = $booking->getMidtransChargeAmount();
 
         if ($chargeAmount < 1) {
@@ -451,6 +496,7 @@ class BookingController extends Controller
             ], 422);
         }
         
+        // Parameter untuk Midtrans
         $params = [
             'transaction_details' => [
                 'order_id' => $orderId,
@@ -463,9 +509,10 @@ class BookingController extends Controller
         ];        
 
         try {
+            // Generate Snap Token dari Midtrans
             $snapToken = Snap::getSnapToken($params);
 
-            // Simpan Snap token di DB kalau mau digunakan ulang
+            // Simpan Snap token di DB untuk digunakan ulang
             $booking->update(['midtrans_snap_token' => $snapToken]);
 
             return response()->json([
@@ -485,11 +532,15 @@ class BookingController extends Controller
         }
     }
 
+    // =========================================================================
+    // GET QR CODE
     // Mendapatkan QR Code untuk tiket booking yang sudah lunas
+    // =========================================================================
     public function getQrCode($id)
     {
         $booking = Booking::findOrFail($id);
     
+        // QR code hanya tersedia untuk booking yang sudah lunas
         if ($booking->booking_payment !== 'full') {
             return response()->json([
                 'success' => false,
@@ -509,13 +560,16 @@ class BookingController extends Controller
         return response()->json(['message' => 'Test payment endpoint']);
     }
 
-    // ====================== WEBHOOK MIDTRANS ======================
-    // Callback dari Midtrans untuk update status pembayaran
+    // =========================================================================
+    // WEBHOOK MIDTRANS (CALLBACK)
+    // Callback dari Midtrans untuk update status pembayaran secara otomatis
+    // =========================================================================
     public function midtransCallback(Request $request)
     {
         $payload = $request->all();
         \Log::info('MIDTRANS CALLBACK', $payload);
     
+        // Cari booking berdasarkan midtrans_order_id
         $booking = Booking::where('midtrans_order_id', $payload['order_id'] ?? '')->first();
         if (!$booking) return response()->json(['message' => 'Booking tidak ditemukan'], 404);
     
@@ -523,6 +577,7 @@ class BookingController extends Controller
             $transactionStatus = $payload['transaction_status'] ?? null;
             $grossAmount = $payload['gross_amount'] ?? 0;
     
+            // ====================== PEMBAYARAN BERHASIL ======================
             if (in_array($transactionStatus, ['capture', 'settlement'])) {
     
                 if ($booking->type === 'play_together') {
@@ -532,7 +587,7 @@ class BookingController extends Controller
                         return;
                     }
     
-                    // ====================== Peserta ======================
+                    // ====================== PROSES PESERTA ======================
                     $totalPaid = 0;
                     foreach ($playTogether->participants as $participant) {
                         $amount = $this->calculateParticipantAmount($booking, $playTogether, $participant->user_id);
@@ -544,7 +599,7 @@ class BookingController extends Controller
                             'paid_at' => now(),
                         ]);
     
-                        // BookingParticipantPayment
+                        // Update BookingParticipantPayment
                         BookingParticipantPayment::updateOrCreate(
                             ['play_together_participant_id' => $participant->id],
                             [
@@ -556,8 +611,7 @@ class BookingController extends Controller
                             ]
                         );
     
-                        // ✅ FIX: Split deposits for better accounting
-                        // Calculate lapang and fee separately
+                        // ✅ Split deposits for better accounting
                         $rentalPrice = $booking->schedule->rental_price;
                         $maxParticipants = max(1, (int) $playTogether->max_participants);
                         $joinFee = (float) ($playTogether->price_per_person ?? 0);
@@ -567,7 +621,7 @@ class BookingController extends Controller
                             $lapangPerPerson = $rentalPrice / $maxParticipants;
                         }
 
-                        // 1️⃣ Deposit Lapang (if applicable)
+                        // 1️⃣ Deposit Lapang (jika ada)
                         if ($lapangPerPerson > 0) {
                             Deposit::create([
                                 'user_id' => $participant->user_id,
@@ -580,7 +634,7 @@ class BookingController extends Controller
                             ]);
                         }
 
-                        // 2️⃣ Deposit Join Fee (if applicable)
+                        // 2️⃣ Deposit Join Fee (jika ada)
                         if ($joinFee > 0) {
                             Deposit::create([
                                 'user_id' => $participant->user_id,
@@ -596,7 +650,7 @@ class BookingController extends Controller
                         $totalPaid += $amount;
                     }
     
-                    // ====================== Host bayar bagiannya ======================
+                    // ====================== HOST BAYAR BAGIANNYA ======================
                     if ($booking->pay_by === 'host') {
     
                         // 1️⃣ Deposit Lapang positif
@@ -610,8 +664,7 @@ class BookingController extends Controller
                             'description' => 'Pembayaran host PlayTogether - Lapang',
                         ]);
     
-                        // 2️⃣ Deposit Join Fee positif
-                        // ✅ FIX: Added type check to ensure join fee is recorded for paid events
+                        // 2️⃣ Deposit Join Fee positif (untuk paid events)
                         if ($playTogether->type === 'paid' && $playTogether->price_per_person > 0) {
                             Deposit::create([
                                 'user_id' => $booking->user_id,
@@ -625,7 +678,7 @@ class BookingController extends Controller
                         }
                     }
     
-                    // ====================== Hitung total_paid & status ======================
+                    // ====================== HITUNG TOTAL PAID & STATUS ======================
                     $totalPaid = Deposit::where('booking_id', $booking->id)
                         ->where('status', 'completed')
                         ->sum('amount');
@@ -645,7 +698,7 @@ class BookingController extends Controller
                     ]);
     
                 } else {
-                    // REGULAR / SPARRING
+                    // ====================== REGULAR / SPARRING ======================
                     Deposit::create([
                         'user_id' => $booking->user_id,
                         'booking_id' => $booking->id,
@@ -664,7 +717,9 @@ class BookingController extends Controller
                     ]);
                 }
     
-            } elseif (in_array($transactionStatus, ['cancel', 'expire', 'deny'])) {
+            } 
+            // ====================== PEMBAYARAN GAGAL / DIBATALKAN ======================
+            elseif (in_array($transactionStatus, ['cancel', 'expire', 'deny'])) {
                 $booking->update(['booking_payment' => 'failed', 'status' => 'canceled']);
                 optional($booking->schedule)->update(['available' => true]);
     
@@ -680,8 +735,10 @@ class BookingController extends Controller
         return response()->json(['message' => 'OK']);
     }
     
-    // ====================== UPDATE STATUS PEMBAYARAN MANUAL ======================
-    // Update status pembayaran secara manual (admin)
+    // =========================================================================
+    // UPDATE STATUS PEMBAYARAN MANUAL
+    // Update status pembayaran secara manual (admin/internal)
+    // =========================================================================
     public function updatePaymentStatus(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
@@ -693,18 +750,16 @@ class BookingController extends Controller
                 $playTogether = $booking->playTogether;
                 if (!$playTogether) return;
     
-                // ====================== Peserta ======================
+                // ====================== PESERTA ======================
                 foreach ($playTogether->participants as $participant) {
                     $amount = $this->calculateParticipantAmount($booking, $playTogether, $participant->user_id);
     
-                    // Update status peserta
                     $participant->update([
                         'payment_status' => 'paid',
                         'amount' => $amount,
                         'paid_at' => now(),
                     ]);
     
-                    // BookingParticipantPayment
                     BookingParticipantPayment::updateOrCreate(
                         ['play_together_participant_id' => $participant->id],
                         [
@@ -716,8 +771,7 @@ class BookingController extends Controller
                         ]
                     );
     
-                    // ✅ FIX: Split deposits for better accounting
-                    // Calculate lapang and fee separately
+                    // Split deposits
                     $rentalPrice = $booking->schedule->rental_price;
                     $maxParticipants = max(1, (int) $playTogether->max_participants);
                     $joinFee = (float) ($playTogether->price_per_person ?? 0);
@@ -727,7 +781,7 @@ class BookingController extends Controller
                         $lapangPerPerson = $rentalPrice / $maxParticipants;
                     }
 
-                    // 1️⃣ Deposit Lapang (if applicable)
+                    // Deposit Lapang
                     if ($lapangPerPerson > 0) {
                         Deposit::create([
                             'user_id' => $participant->user_id,
@@ -740,7 +794,7 @@ class BookingController extends Controller
                         ]);
                     }
 
-                    // 2️⃣ Deposit Join Fee (if applicable)
+                    // Deposit Join Fee
                     if ($joinFee > 0) {
                         Deposit::create([
                             'user_id' => $participant->user_id,
@@ -756,11 +810,11 @@ class BookingController extends Controller
                     $totalPaid += $amount;
                 }
     
-                // ====================== Host bayar ======================
+                // ====================== HOST BAYAR ======================
                 if ($booking->pay_by === 'host') {
                     $hostUserId = $booking->user_id;
 
-                    // Lapang
+                    // Deposit Lapang
                     Deposit::create([
                         'user_id' => $hostUserId,
                         'booking_id' => $booking->id,
@@ -771,8 +825,7 @@ class BookingController extends Controller
                         'description' => 'Pembayaran host PlayTogether - Lapang',
                     ]);
 
-                    // Join fee
-                    // ✅ FIX: Added type check to ensure join fee is recorded for paid events
+                    // Deposit Join Fee (untuk paid events)
                     if ($playTogether->type === 'paid' && $playTogether->price_per_person > 0) {
                         Deposit::create([
                             'user_id' => $hostUserId,
@@ -786,7 +839,7 @@ class BookingController extends Controller
                     }
                 }
     
-                // ====================== Hitung total_paid & status ======================
+                // ====================== HITUNG TOTAL PAID & STATUS ======================
                 $totalPaid = Deposit::where('booking_id', $booking->id)
                     ->where('status', 'completed')
                     ->sum('amount');
@@ -806,7 +859,7 @@ class BookingController extends Controller
                 ]);
     
             } else {
-                // REGULAR / SPARRING
+                // ====================== REGULAR / SPARRING ======================
                 Deposit::create([
                     'user_id' => $booking->user_id,
                     'booking_id' => $booking->id,
@@ -842,7 +895,9 @@ class BookingController extends Controller
         ]);
     }     
 
-    // ====================== FUNGSI BANTU (HELPERS) ======================
+    // =========================================================================
+    // FUNGSI BANTU (HELPERS)
+    // =========================================================================
     
     // Membuat deposit untuk host PlayTogether (negatif/pending)
     private function createHostDeposit($booking, $playTogether)
@@ -859,11 +914,13 @@ class BookingController extends Controller
         ]);
     }
 
-    // ====================== CREATE PARTICIPANT ======================
+    // =========================================================================
+    // CREATE PARTICIPANT
     // Membuat participant baru untuk PlayTogether
+    // =========================================================================
     private function createParticipant($userId, $booking, $playTogether, $isHost = false)
     {
-        // Hanya hitung lapang untuk booking_participant_payments
+        // Hitung biaya lapang per orang
         $lapangAmount = $this->calculateParticipantLapang($booking, $playTogether, $userId);
         $joinFee = $this->calculateParticipantJoinFee($booking, $playTogether, $userId);
 
@@ -877,7 +934,7 @@ class BookingController extends Controller
             'joined_at' => now(),
         ]);
 
-        // Simpan ke booking_participant_payments hanya lapang
+        // Simpan ke booking_participant_payments (hanya lapang)
         BookingParticipantPayment::updateOrCreate(
             ['booking_id' => $booking->id, 'user_id' => $userId],
             [
@@ -889,7 +946,7 @@ class BookingController extends Controller
         );
 
         // Simpan deposit:
-        // 1️⃣ Lapang
+        // 1️⃣ Deposit Lapang
         if ($lapangAmount > 0) {
             Deposit::create([
                 'user_id' => $userId,
@@ -902,7 +959,7 @@ class BookingController extends Controller
             ]);
         }
 
-        // 2️⃣ Join Fee
+        // 2️⃣ Deposit Join Fee
         if ($joinFee > 0) {
             Deposit::create([
                 'user_id' => $userId,
@@ -918,7 +975,10 @@ class BookingController extends Controller
         return $participant;
     }
 
+    // =========================================================================
+    // CALCULATE PARTICIPANT AMOUNT
     // Menghitung total pembayaran per participant (lapang + join fee)
+    // =========================================================================
     private function calculateParticipantAmount($booking, $playTogether, $userId)
     {
         $rentalPrice = $booking->schedule->rental_price;
@@ -929,14 +989,11 @@ class BookingController extends Controller
             // Setiap peserta bayar lapang + join fee, TERMASUK HOST
             $lapangPerPerson = $rentalPrice / $maxParticipants;
             
-            // ✅ FIX: Removed incorrect logic that zeroed join fee for host
-            // All participants (including host) should pay join fee when pay_by = 'participant'
-            
         } elseif ($booking->pay_by === 'host') {
             // Host bayar lapang sendiri → peserta lapang = 0
             $lapangPerPerson = 0;
             
-            // ✅ KEEP: Host tidak bayar join fee lagi kalau host yang bayar semua
+            // Host tidak bayar join fee lagi kalau host yang bayar semua
             if ($userId === $booking->user_id) {
                 $joinFee = 0;
             }
@@ -947,7 +1004,10 @@ class BookingController extends Controller
         return $lapangPerPerson + $joinFee;
     }
 
+    // =========================================================================
+    // CALCULATE PARTICIPANT LAPANG
     // Menghitung biaya lapang per participant
+    // =========================================================================
     private function calculateParticipantLapang($booking, $playTogether, $userId)
     {
         $rentalPrice = $booking->schedule->rental_price;
@@ -961,7 +1021,10 @@ class BookingController extends Controller
         return 0;
     }
 
+    // =========================================================================
+    // CALCULATE PARTICIPANT JOIN FEE
     // Menghitung join fee per participant
+    // =========================================================================
     private function calculateParticipantJoinFee($booking, $playTogether, $userId)
     {
         $joinFee = (float) ($playTogether->price_per_person ?? 0);

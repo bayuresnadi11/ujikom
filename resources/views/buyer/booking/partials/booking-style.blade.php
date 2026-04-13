@@ -217,37 +217,49 @@ body {
     opacity: 0.9;
 }
 
-/* MAIN CONTENT */
-.main-content {
-    padding: 100px 20px 140px;
+/* ===== MOBILE CONTAINER ===== */
+.mobile-container {
+    width: 100%;
     min-height: 100vh;
+    background: #ffffff;
+    position: relative;
+    overflow-x: hidden;
+    padding-bottom: 80px; /* ruang untuk bottom nav */
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 0 35px rgba(10, 92, 54, 0.12);
 }
 
-/* PAGE HEADER */
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    padding-top: 70px; /* tinggi header fixed */
+    padding-bottom: 90px; /* tinggi bottom nav */
+    min-height: calc(100vh - 70px - 90px);
+}
+
+/* ===== PAGE HEADER ===== */
 .page-header {
-    padding: 20px 0 10px 0;
-    background: var(--gradient-light);
-    position: relative;
-    overflow: hidden;
-    border-bottom: 1px solid var(--light-gray);
+    padding: 20px 16px 0;
+    margin-bottom: 20px;
 }
 
 .page-title {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 900;
-    color: var(--text);
+    color: #0A5C36;
     margin-bottom: 8px;
-    position: relative;
-    z-index: 1;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #0A5C36, #2ECC71);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .page-subtitle {
-    font-size: 16px;
-    color: var(--text-light);
-    line-height: 1.6;
+    font-size: 14px;
+    color: #6C757D; /* text-light */
+    line-height: 1.4;
+    margin: 0;
     font-weight: 500;
-    position: relative;
-    z-index: 1;
 }
 
 /* STATS GRID */

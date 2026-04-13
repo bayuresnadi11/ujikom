@@ -281,28 +281,6 @@ body {
     min-height: 100vh;
 }
 
-/* ================ PAGE HEADER ================ */
-.page-header {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.page-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 6px;
-    line-height: 1.3;
-}
-
-.page-subtitle {
-    font-size: 13px;
-    color: var(--text-light);
-    line-height: 1.4;
-    max-width: 280px;
-    margin: 0 auto;
-}
-
 /* ================ TABS ================ */
 .tabs {
     display: flex;

@@ -5,14 +5,13 @@
 @endpush
 
 @section('content')
-<div class="container-fluid">
-    <div class="page-header-section">
+<div class="container-fluid">    
+    <div class="page-header-box">
         <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
                 <h2 class="page-title">
                     <i class="bi bi-people-fill"></i> Daftar Komunitas
                 </h2>
-                <p class="page-subtitle">Kelola dan pantau semua komunitas yang terdaftar</p>
             </div>
             <div class="total-badge">
                 <i class="bi bi-grid"></i>
@@ -62,9 +61,10 @@
 
     <div class="komunitas-grid" id="komunitasGrid">
         @forelse( $communities as $item)
-        <div class="komunitas-card" data-type="{{ $item->type }}" 
-             data-name="{{ strtolower($item->name) }}"
-             data-description="{{ strtolower($item->deskripsi) }}">
+        <div class="komunitas-card {{ $item->is_banned ? 'banned' : '' }}" 
+            data-type="{{ $item->type }}"
+            data-name="{{ strtolower($item->name) }}"
+            data-description="{{ strtolower($item->description) }}">
             <div class="card-header-section">
                 @if($item->logo)
                     <img src="{{ asset('storage/' . $item->logo) }}" alt="{{ $item->name }}" class="komunitas-avatar">
@@ -78,6 +78,12 @@
                         <i class="bi {{ $item->type == 'public' ? 'bi-globe' : 'bi-shield-lock' }}"></i>
                         {{ $item->type == 'public' ? 'Public' : 'Private' }}
                     </span>
+
+                    @if($item->is_banned)
+                        <span class="banned-badge">
+                            <i class="bi bi-slash-circle"></i> Banned
+                        </span>
+                    @endif
                 </div>
             </div>
             
@@ -106,10 +112,22 @@
             </div>
             
             <div class="card-footer-section">
-                <div class="komunitas-id">#{{ $item->id }}</div>
-                <button class="detail-button view-detail" data-id="{{ $item->id }}">
-                    <i class="bi bi-eye"></i> Detail
-                </button>
+                @if(!$item->is_banned)
+                    <button class="detail-button btn-ban" data-id="{{ $item->id }}">
+                        <i class="bi bi-slash-circle"></i> Banned
+                    </button>
+                @else
+                    <button class="detail-button btn-ban" disabled>
+                        <i class="bi bi-slash-circle"></i> Sudah Dibanned
+                    </button>
+                @endif
+
+                @if(!$item->is_banned)
+                    <button class="detail-button view-detail" data-id="{{ $item->id }}">
+                        <i class="bi bi-eye"></i> Detail
+                    </button>
+                @else
+                @endif
             </div>
         </div>
         @empty
@@ -125,6 +143,7 @@
         @endforelse
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection
 
 @push('scripts')

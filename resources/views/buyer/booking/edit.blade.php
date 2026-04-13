@@ -5,17 +5,58 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
 =============================================================================
 --}}
 
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Edit Booking'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
-{{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
-<link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    {{-- Memasukkan file CSS untuk styling booking dari partial --}}
+    @include('buyer.booking.partials.booking-style')
+    <style>
+        /* ===== MAIN CONTENT ===== */
+        /* Area konten utama dengan padding untuk menghindari fixed header dan bottom nav */
+        .main-content {
+            padding-top: 70px;           /* tinggi header fixed */
+            padding-bottom: 90px;        /* tinggi bottom nav */
+            min-height: calc(100vh - 70px - 90px);
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            padding: 20px 16px 0;
+            margin-bottom: 20px;
+        }
+
+        /* Judul halaman dengan gradien teks */
+        .page-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #0A5C36;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0A5C36, #2ECC71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6C757D; /* text-light */
+            line-height: 1.4;
+            margin: 0;
+            font-weight: 500;
+        }
+    </style>
+    
+    {{-- CSS tambahan untuk halaman booking dan SweetAlert2 --}}
+    <link rel="stylesheet" href="{{ asset('/css/booking-style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
 
 <div class="mobile-container">
+    {{-- Header - include dari layout terpisah --}}
     @include('layouts.header')
 
     <main class="main-content">
@@ -27,21 +68,22 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
 
         {{-- ====================== FORM EDIT BOOKING ====================== --}}
         <div class="booking-form-container">
+            {{-- Form untuk mengupdate booking, menggunakan method PUT karena update --}}
             <form action="{{ route('buyer.booking.update', $booking->id) }}" method="POST" id="bookingForm">
                 @csrf
-                @method('PUT')
+                @method('PUT')   {{-- Method spoofing untuk PUT request --}}
 
                 {{-- Hidden fields untuk venue dan section (tidak bisa diubah) --}}
                 <input type="hidden" name="venue_id" value="{{ $booking->venue_id }}">
                 <input type="hidden" name="section_id" value="{{ $booking->schedule->section_id }}">
 
-                {{-- Informasi Venue (readonly) --}}
+                {{-- Informasi Venue (readonly - tidak bisa diubah) --}}
                 <div class="form-group">
                     <label class="form-label">Venue</label>
                     <input type="text" class="form-control" value="{{ $booking->venue->venue_name }}" readonly>
                 </div>
 
-                {{-- Informasi Section (readonly) --}}
+                {{-- Informasi Section (readonly - tidak bisa diubah) --}}
                 <div class="form-group">
                     <label class="form-label">Section</label>
                     <input type="text" class="form-control" value="{{ $booking->schedule->section->section_name }}" readonly>
@@ -51,6 +93,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                 <div class="form-group">
                     <label class="form-label">Pilih Jadwal <span style="color: red;">*</span></label>
                     <div class="schedule-cards-container">
+                        {{-- Looping semua jadwal yang tersedia untuk section ini --}}
                         @foreach($schedules as $schedule)
                             @php
                                 $isCurrent = $schedule->id == $booking->schedule_id;      // Jadwal yang sedang dipilih saat ini
@@ -59,12 +102,12 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                             <div class="schedule-card {{ $isCurrent ? 'selected' : '' }} {{ $isUnavailable ? 'unavailable' : '' }}" 
                                  data-schedule-id="{{ $schedule->id }}" 
                                  onclick="{{ $isUnavailable ? '' : 'selectSchedule('.$schedule->id.', '.$schedule->rental_price.')' }}">
-                                {{-- Tanggal --}}
+                                {{-- Bagian tanggal jadwal --}}
                                 <div class="schedule-date {{ $isUnavailable ? 'unavailable-date' : '' }}">
                                     <div class="date-day">{{ \Carbon\Carbon::parse($schedule->date)->format('d') }}</div>
                                     <div class="date-month">{{ \Carbon\Carbon::parse($schedule->date)->format('M') }}</div>
                                 </div>
-                                {{-- Detail jadwal --}}
+                                {{-- Detail jadwal (waktu, harga, status) --}}
                                 <div class="schedule-details">
                                     <div class="schedule-time">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</div>
                                     <div class="schedule-price">Rp {{ number_format($schedule->rental_price, 0, ',', '.') }}</div>
@@ -79,6 +122,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                             </div>
                         @endforeach
                     </div>
+                    {{-- Hidden input untuk menyimpan ID jadwal yang dipilih --}}
                     <input type="hidden" name="schedule_id" id="schedule_id" value="{{ $booking->schedule_id }}" required>
                     @error('schedule_id')
                         <span style="color: red; font-size: 12px;">{{ $message }}</span>
@@ -86,6 +130,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                 </div>
 
                 {{-- ====================== KARTU INFO JADWAL TERPILIH ====================== --}}
+                {{-- Kartu yang menampilkan detail jadwal yang sedang dipilih --}}
                 <div id="scheduleInfoCard" class="schedule-info-card" style="display: {{ $booking->schedule_id ? 'block' : 'none' }};">
                     <h4><i class="fas fa-info-circle"></i> Detail Jadwal Terpilih</h4>
                     <div class="schedule-details-grid">
@@ -114,7 +159,6 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                     <select class="form-control" name="type" id="bookingType" required onchange="toggleBookingType()">
                         <option value="regular" {{ $booking->type == 'regular' ? 'selected' : '' }}>Regular</option>
                         <option value="play_together" {{ $booking->type == 'play_together' ? 'selected' : '' }}>Main Bareng</option>
-                        <option value="sparring" {{ $booking->type == 'sparring' ? 'selected' : '' }}>Sparring</option>
                     </select>
                     @error('type')
                         <span style="color: red; font-size: 12px;">{{ $message }}</span>
@@ -122,6 +166,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                 </div>
 
                 {{-- ====================== PEMBAYARAN OLEH (HOST/PARTICIPANT) ====================== --}}
+                {{-- Section ini muncul untuk tipe play_together atau sparring --}}
                 <div id="payBySection" style="display: {{ in_array($booking->type, ['play_together', 'sparring']) ? 'block' : 'none' }};">
                     <div class="form-group">
                         <label class="form-label">Lapangan Dibayar Oleh <span style="color: red;">*</span></label>
@@ -138,11 +183,13 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                 @endphp
 
                 {{-- ====================== SECTION PLAY TOGETHER ====================== --}}
+                {{-- Form khusus untuk tipe Main Bareng --}}
                 <div id="playTogetherSection" class="form-section" style="display: {{ $booking->type == 'play_together' ? 'block' : 'none' }};">
                     <div class="form-section-header">
                         <i class="fas fa-users"></i> Informasi Main Bareng
                     </div>
 
+                    {{-- Nama Main Bareng --}}
                     <div class="form-group">
                         <label class="form-label">Nama Main Bareng <span style="color: red;">*</span></label>
                         <input type="text" class="form-control" name="pt_name" value="{{ $playTogether->name ?? '' }}" placeholder="Masukkan nama play together">
@@ -151,6 +198,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                         @enderror
                     </div>
 
+                    {{-- Privasi (Public/Private/Community) --}}
                     <div class="form-group">
                         <label class="form-label">Privasi <span style="color: red;">*</span></label>
                         <select class="form-control" name="pt_privacy" id="pt_privacy" onchange="toggleCommunitySelect()">
@@ -174,6 +222,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                         @enderror
                     </div>
 
+                    {{-- Maksimal Participant --}}
                     <div class="form-group">
                         <label class="form-label">Maksimal Participant <span style="color: red;">*</span></label>
                         <input type="number" class="form-control" name="pt_max_participants" id="pt_max_participants" min="2" value="{{ $playTogether->max_participants ?? '' }}" placeholder="Contoh: 10" onchange="updateCalculator()">
@@ -182,6 +231,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                         @enderror
                     </div>
 
+                    {{-- Metode Pembayaran Main Bareng (Free/Paid) --}}
                     <div class="form-group">
                         <label class="form-label">Metode Pembayaran Main Bareng <span style="color: red;">*</span></label>
                         <select class="form-control" name="pt_type" id="pt_type" onchange="togglePricePerPerson()">
@@ -200,6 +250,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                     </div>
 
                     {{-- ====================== KALKULATOR BIAYA ====================== --}}
+                    {{-- Kalkulator untuk menghitung biaya per participant --}}
                     <div id="calculatorHelper" class="schedule-info-card" style="display: none;">
                         <h4><i class="fas fa-calculator"></i> Kalkulator Biaya</h4>
                         <div class="schedule-details-grid">
@@ -226,21 +277,25 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                         </div>
                     </div>
 
+                    {{-- Gender yang diizinkan --}}
                     <div class="form-group">
                         <label class="form-label">Gender</label>
                         <input type="text" class="form-control" name="pt_gender" value="{{ $playTogether->gender ?? '' }}" placeholder="Contoh: Laki-laki / Perempuan / Campur">
                     </div>
 
+                    {{-- Deskripsi --}}
                     <div class="form-group">
                         <label class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="pt_description" rows="3" placeholder="Deskripsi play together">{{ $playTogether->description ?? '' }}</textarea>
                     </div>
 
+                    {{-- Batas waktu pembayaran --}}
                     <div class="form-group">
                         <label class="form-label">Payment Deadline</label>
                         <input type="datetime-local" class="form-control" name="pt_payment_deadline" value="{{ $playTogether ? \Carbon\Carbon::parse($playTogether->payment_deadline)->format('Y-m-d\TH:i') : '' }}">
                     </div>
 
+                    {{-- Perlu persetujuan host --}}
                     <div class="form-group">
                         <label>
                             <input type="checkbox" name="pt_host_approval" value="1" {{ ($playTogether->host_approval ?? false) ? 'checked' : '' }}>
@@ -255,6 +310,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
                 @endphp
 
                 {{-- ====================== SECTION SPARRING ====================== --}}
+                {{-- Form khusus untuk tipe Sparring (opsional, bisa diaktifkan jika diperlukan) --}}
                 <div id="sparringSection" class="form-section" style="display: {{ $booking->type == 'sparring' ? 'block' : 'none' }};">
                     <div class="form-section-header">
                         <i class="fas fa-trophy"></i> Informasi Sparring
@@ -323,6 +379,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     </main>
 
     {{-- ====================== BOTTOM NAVIGATION ====================== --}}
+    {{-- Navigasi bawah dengan item aktif "Booking" --}}
     <nav class="bottom-nav">
         <a href="{{ route('buyer.home') }}" class="nav-item">
             <i class="fas fa-home nav-icon"></i>
@@ -349,6 +406,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
 
 {{-- ====================== STYLE TAMBAHAN ====================== --}}
 <style>
+/* Container form booking utama */
 .booking-form-container {
     background: var(--card-bg);
     border-radius: var(--radius);
@@ -358,10 +416,12 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     border: 1px solid var(--border);
 }
 
+/* Group form field */
 .form-group {
     margin-bottom: 25px;
 }
 
+/* Label form */
 .form-label {
     display: block;
     margin-bottom: 10px;
@@ -370,6 +430,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     font-size: 14px;
 }
 
+/* Input form control */
 .form-control {
     width: 100%;
     padding: 14px 16px;
@@ -381,12 +442,14 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     transition: all 0.3s ease;
 }
 
+/* Focus state untuk input */
 .form-control:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
 }
 
+/* Container kartu jadwal */
 .schedule-cards-container {
     display: flex;
     flex-direction: column;
@@ -394,6 +457,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     margin-bottom: 10px;
 }
 
+/* Kartu jadwal individual */
 .schedule-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -406,16 +470,19 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     transition: all 0.3s ease;
 }
 
+/* Hover effect kartu jadwal */
 .schedule-card:hover {
     transform: translateX(5px);
     border-color: var(--primary);
 }
 
+/* State selected untuk kartu jadwal */
 .schedule-card.selected {
     border-color: var(--primary);
     background: rgba(39, 174, 96, 0.05);
 }
 
+/* Bagian tanggal pada kartu jadwal */
 .schedule-date {
     display: flex;
     flex-direction: column;
@@ -439,6 +506,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     text-transform: uppercase;
 }
 
+/* Detail jadwal */
 .schedule-details {
     flex: 1;
 }
@@ -455,6 +523,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     margin-bottom: 5px;
 }
 
+/* Status ketersediaan */
 .schedule-status {
     font-size: 12px;
     padding: 3px 8px;
@@ -472,6 +541,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     color: #E74C3C;
 }
 
+/* Kartu jadwal tidak tersedia */
 .schedule-card.unavailable {
     opacity: 0.7;
     background: #f8f9fa;
@@ -484,6 +554,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     background: #95a5a6;
 }
 
+/* Kartu informasi jadwal terpilih */
 .schedule-info-card {
     background: rgba(39, 174, 96, 0.05);
     border: 1px solid rgba(39, 174, 96, 0.2);
@@ -502,6 +573,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     gap: 10px;
 }
 
+/* Grid detail jadwal */
 .schedule-details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -528,6 +600,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     color: var(--text);
 }
 
+/* Section form untuk Play Together / Sparring */
 .form-section {
     background: rgba(39, 174, 96, 0.03);
     border-radius: var(--radius);
@@ -546,6 +619,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     gap: 10px;
 }
 
+/* Tombol aksi form */
 .form-actions {
     display: flex;
     gap: 15px;
@@ -591,6 +665,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
+/* Checkbox styling */
 .form-group label input[type="checkbox"] {
     margin-right: 10px;
     width: 18px;
@@ -598,6 +673,7 @@ Tampilan untuk mengedit booking yang sudah ada (status pending)
     accent-color: var(--primary);
 }
 
+/* Responsive untuk mobile */
 @media (max-width: 768px) {
     .schedule-details-grid {
         grid-template-columns: 1fr;
@@ -638,7 +714,7 @@ function selectSchedule(scheduleId, price) {
     document.getElementById('schedule_id').value = scheduleId;
     selectedSchedulePrice = price;
     
-    // Cari data jadwal lengkap dari array schedules
+    // Cari data jadwal lengkap dari array schedules (data dari server)
     const schedules = @json($schedules);
     const schedule = schedules.find(s => s.id === scheduleId);
     

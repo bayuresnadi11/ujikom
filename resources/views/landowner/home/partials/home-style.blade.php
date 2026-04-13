@@ -227,15 +227,14 @@
     /* Welcome Section */
     .welcome-section {
         padding: 40px 16px;
-        background: var(--gradient-light);
         position: relative;
         overflow: hidden;
         border-bottom: 1px solid var(--light-gray);
     }
 
     .welcome-title {
-        font-size: 20px;
-        font-weight: 800;
+        font-size: 32px;
+        font-weight: 900;
         color: var(--text);
         margin-bottom: 12px;
         line-height: 1.3;

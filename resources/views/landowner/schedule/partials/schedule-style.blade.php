@@ -44,11 +44,10 @@
         background: #ffffff;
         position: relative;
         box-shadow: 0 0 35px rgba(139, 21, 56, 0.12);
-        overflow-x: hidden;
-        padding-bottom: 80px;
+        overflow: hidden;
     }
-    
-    /* HEADER - STYLE YANG SAMA DENGAN MENU */
+
+    /* HEADER SAMA DENGAN MENU */
     .mobile-header {
         position: fixed;
         top: 0;
@@ -205,21 +204,19 @@
     }
 
     /* MAIN CONTENT - SESUAI DENGAN MENU */
+    /* MAIN CONTENT */
     .main-content {
-        padding-top: 50px; /* Adjusted to remove white gap */
+        padding-top: 50px;
         padding-bottom: 90px;
-        min-height: calc(100vh - 80px);
+        min-height: calc(100vh - 170px);
     }
 
     .page-header {
-        padding: 40px;
-        background: var(--gradient-light);
+        padding: 30px 20px;
         position: relative;
         overflow: hidden;
         border-bottom: 1px solid var(--light-gray);
     }
-
-
 
     .page-title {
         font-size: 32px;

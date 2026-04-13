@@ -36,17 +36,26 @@
         }
     }
 
-
-    
-
-
-
-    
-
-
     /* Push Page Header down to avoid overlap with fixed navbar */
     .page-header {
         padding-top: 85px !important;
+    }
+
+    .banned-overlay {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #ef4444;
+        color: white;
+        font-size: 10px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    .community-item.banned {
+        opacity: 0.5;
+        filter: grayscale(80%);
     }
 </style>
 @endpush
@@ -71,12 +80,24 @@
 
             <div id="communityList" class="community-grid">
                 @foreach ($allCommunities as $community)
-                    <a href="{{ route('buyer.communities.show', $community->id) }}" class="community-item">
+
+                    @if(!$community->is_banned)
+                        <a href="{{ route('buyer.communities.show', $community->id) }}" class="community-item">
+                    @else
+                        <div class="community-item banned">
+                    @endif
+
+                        <!-- 🔥 OVERLAY HARUS DI DALAM -->
+                        @if($community->is_banned)
+                            <div class="banned-overlay">BANNED</div>
+                        @endif
+
                         <div class="community-logo-wrapper">
                             <div class="community-logo-container">
                                 <img src="{{ $community->logo && $community->logo != 'default.png' ? asset('storage/' . $community->logo) : asset('images/default-community.png') }}" 
-                                     alt="{{ $community->name }}" class="community-logo-img">
+                                    alt="{{ $community->name }}" class="community-logo-img">
                             </div>
+
                             @if ($community->is_manager)
                                 <div class="community-badge-admin"><i class="fas fa-crown"></i></div>
                                 @if (($community->pending_count ?? 0) > 0)
@@ -86,11 +107,18 @@
                                 @endif
                             @endif
                         </div>
+
                         <div class="community-info">
                             <div class="community-name">{{ $community->name }}</div>
                             <div class="community-category">{{ $community->category->category_name ?? '-' }}</div>
                         </div>
-                    </a>
+
+                    @if(!$community->is_banned)
+                        </a>
+                    @else
+                        </div>
+                    @endif
+
                 @endforeach
             </div>
 

@@ -21,6 +21,16 @@
             animation: fadeInDown 0.6s ease;
         }
         
+        .page-header-box {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
+            margin-bottom: 30px;
+            border: 1px solid #e5f5ec;
+            animation: fadeInDown 0.6s ease;
+        }
+
         .page-title {
             font-size: 32px;
             font-weight: 700;

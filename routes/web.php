@@ -310,6 +310,7 @@ Route::middleware('auth')->group(function () {
 
             Route::resource('category', CategoryController::class);
             Route::resource('community', CommunityController::class);
+            Route::post('/community/{id}/ban', [CommunityController::class, 'ban'])->name('community.ban');
 
             // PERBAIKAN: Routing daftar_admin yang benar
             Route::prefix('daftar_admin')->name('daftar_admin.')->group(function () {

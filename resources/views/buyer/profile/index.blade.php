@@ -1,10 +1,23 @@
+{{--
+=============================================================================
+VIEW: PROFIL BUYER (HALAMAN PROFIL PENYEWA)
+Halaman untuk menampilkan profil user dengan role buyer/penyewa
+Menampilkan informasi profil, saldo deposit, dan menu pengaturan
+=============================================================================
+--}}
+
+{{-- Extend layout utama dan set judul halaman --}}
 @extends('layouts.main', ['title' => 'Profil - SewaLap'])
 
+{{-- Section untuk menambahkan CSS khusus halaman ini --}}
 @push('styles')
+    {{-- Memasukkan file CSS untuk styling profil dari partial --}}
     @include('buyer.profile.partials.profile-style')
+    {{-- Memasukkan file CSS untuk styling visual header dari partial --}}
     @include('buyer.profile.partials.visual-header-style')
     <style>
-        /* Guest Overlay Styles */
+        /* ================= GUEST OVERLAY STYLES ================= */
+        /* Efek blur untuk konten yang hanya bisa diakses user login */
         .guest-blur {
             filter: blur(5px);
             pointer-events: none;
@@ -16,6 +29,7 @@
             overflow: hidden;
         }
 
+        /* Overlay yang muncul untuk guest (belum login) */
         .guest-locked-overlay {
             position: absolute;
             top: 0;
@@ -91,7 +105,8 @@
 @endpush
 
 @section('content')
-    <!-- Success Popup -->
+    <!-- ====================== SUCCESS POPUP ====================== -->
+    {{-- Popup custom untuk menampilkan pesan sukses --}}
     <div class="alert-popup" id="successPopup">
         <div class="alert-popup-content">
             <i class="fas fa-check-circle alert-popup-icon success"></i>
@@ -103,7 +118,8 @@
         </div>
     </div>
 
-    <!-- Error Popup -->
+    <!-- ====================== ERROR POPUP ====================== -->
+    {{-- Popup custom untuk menampilkan pesan error --}}
     <div class="alert-popup" id="errorPopup">
         <div class="alert-popup-content">
             <i class="fas fa-exclamation-circle alert-popup-icon error"></i>
@@ -115,8 +131,8 @@
         </div>
     </div>
 
+    {{-- Modal untuk pengajuan menjadi pemilik lapangan (hanya untuk user login) --}}
     @auth
-    <!-- Modal untuk pengajuan baru (Only for Auth) -->
     <div class="modal" id="switchModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -143,10 +159,12 @@
     <!-- Main App Container -->
     <div class="mobile-container" id="mobileContainer">
         <!-- Header -->
+        {{-- Memasukkan header dari layout terpisah, dengan search dinonaktifkan --}}
         @include('layouts.header', ['showSearch' => false])
 
         <!-- Main Content -->
         <main class="main-content">
+            {{-- Menampilkan pesan sukses dari session (jika ada) --}}
             @if(session('success'))
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
@@ -155,6 +173,7 @@
                 </script>
             @endif
 
+            {{-- Menampilkan pesan error dari session (jika ada) --}}
             @if(session('error'))
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
@@ -163,24 +182,29 @@
                 </script>
             @endif
 
-            <!-- Visual Header with Background -->
+            <!-- ====================== VISUAL HEADER WITH BACKGROUND ====================== -->
+            {{-- Header visual dengan background gambar atau gradien --}}
             <section class="visual-header" style="{{ auth()->check() && $user->background ? "background-image: url('" . asset('storage/' . $user->background) . "');" : 'background: linear-gradient(135deg, #0A5C36 0%, #14452F 100%);' }}">
                 @auth
                 <div class="visual-top-bar">
+                    {{-- Tombol untuk mengedit profil (ke halaman edit) --}}
                     <a href="{{ route('buyer.profile.edit') }}" class="visual-btn">
                         <i class="fas fa-cog"></i>
                     </a>
                 </div>
                 <!-- Camera Button -->
+                {{-- Tombol kamera untuk mengubah background header --}}
                 <button class="camera-btn" onclick="openBackgroundModal()" title="Ubah Background">
                     <i class="fas fa-camera"></i>
                 </button>
                 @endauth
             </section>
 
-            <!-- Profile Section -->
+            <!-- ====================== PROFILE SECTION ====================== -->
+            {{-- Section foto profil dan nama user --}}
             <section class="visual-profile-section">
                 <div class="visual-avatar-wrapper">
+                    {{-- Link ke halaman edit profil (hanya untuk user login) --}}
                     <a href="{{ auth()->check() ? route('buyer.profile.edit') : '#' }}" style="display: block; width: 100%; height: 100%;">
                         @if(auth()->check() && $user->avatar)
                             <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" class="visual-avatar">
@@ -190,13 +214,13 @@
                             </div>
                         @endif
                     </a>
-
-
                 </div>
 
+                {{-- Nama user atau "Guest" jika belum login --}}
                 <h1 class="visual-name">{{ auth()->check() ? ($user->name ?? 'User') : 'Guest' }}</h1>
 
                 @auth
+                {{-- Badge status akun terverifikasi --}}
                 <div style="display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--success); font-size: 13px; margin-bottom: 20px;">
                     <i class="fas fa-check-circle"></i>
                     <span>Akun Terverifikasi</span>
@@ -204,38 +228,43 @@
                 @endauth
             </section>
 
-            <!-- Deposit Balance Card -->
+            <!-- ====================== DEPOSIT BALANCE CARD ====================== -->
+            {{-- Kartu saldo deposit dengan fitur toggle visibility --}}
             <section class="deposit-summary">
                 <div class="deposit-card">
                     <div class="deposit-info">
                         <div class="deposit-label">Saldo Deposit</div>
+                        {{-- data-original menyimpan nilai asli untuk toggle --}}
                         <div class="deposit-amount" data-original="Rp {{ number_format($balance, 0, ',', '.') }}">
                              Rp {{ number_format($balance, 0, ',', '.') }}
                         </div>
                     </div>
                     @auth
                     <div style="display: flex; gap: 10px;">
+                        {{-- Tombol toggle untuk menyembunyikan/menampilkan saldo --}}
                         <button type="button" class="deposit-action" onclick="toggleDeposit()" style="border: none; cursor: pointer; padding: 0.6rem 0.8rem; justify-content: center;">
                             <i class="fas fa-eye" id="depositToggleIcon"></i>
                         </button>
+                        {{-- Tombol detail deposit --}}
                         <a href="{{ route('buyer.deposit.index') }}" class="deposit-action">
                             <i class="fas fa-wallet"></i>
                             <span>Detail</span>
                         </a>
                     </div>
                     @else
-                    <!-- Guest View for Deposit -->
-                     <button type="button" onclick="window.location.href='{{ route('login') }}'" class="deposit-action" style="border:none; cursor:pointer;">
+                    {{-- Untuk guest: tombol login --}}
+                    <button type="button" onclick="window.location.href='{{ route('login') }}'" class="deposit-action" style="border:none; cursor:pointer;">
                         Login
                     </button>
                     @endauth
                 </div>
             </section>
 
-
-            <!-- Profile Details -->
+            <!-- ====================== PROFILE DETAILS ====================== -->
+            {{-- Section detail informasi profil user --}}
             <section class="profile-details guest-overlay-container">
                 @guest
+                {{-- Overlay untuk guest (belum login) --}}
                 <div class="guest-locked-overlay">
                     <i class="fas fa-lock guest-locked-icon"></i>
                     <span class="guest-locked-text">Login untuk melihat detail</span>
@@ -247,6 +276,7 @@
                     Detail Profil
                 </h2>
                 <ul class="details-list {{ auth()->check() ? '' : 'guest-blur' }}">
+                    {{-- Nomor Telepon --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-phone"></i>
@@ -256,6 +286,7 @@
                             <div class="detail-value" id="detailPhone">{{ auth()->check() ? $user->phone : '-' }}</div>
                         </div>
                     </li>
+                    {{-- Alamat --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-map-marker-alt"></i>
@@ -265,6 +296,7 @@
                             <div class="detail-value" id="detailAddress">{{ auth()->check() ? ($user->address ?? 'belum di atur') : '-' }}</div>
                         </div>
                     </li>
+                    {{-- Jenis Kelamin (dengan konversi teks) --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-venus-mars"></i>
@@ -295,6 +327,7 @@
                             </div>
                         </div>
                     </li>
+                    {{-- Tanggal Bergabung --}}
                     <li class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-calendar-alt"></i>
@@ -307,10 +340,12 @@
                 </ul>
             </section>
 
-            <!-- Menu Pengaturan, Bantuan & Logout -->
+            <!-- ====================== MENU PENGATURAN & BANTUAN ====================== -->
+            {{-- Menu pengaturan, bantuan, switch role, dan logout --}}
             <section class="settings-menu guest-overlay-container">
                 @guest
-                 <div class="guest-locked-overlay" style="background: rgba(255, 255, 255, 0.4);">
+                {{-- Overlay transparan untuk guest --}}
+                <div class="guest-locked-overlay" style="background: rgba(255, 255, 255, 0.4);">
                     {{-- Transparent overlay to prevent clicks but show content vaguely --}}
                 </div>
                 @endguest
@@ -320,6 +355,7 @@
                     Pengaturan & Bantuan
                 </h2>
                 <ul class="menu-list {{ auth()->check() ? '' : 'guest-blur' }}">
+                    {{-- Menu Booking Saya --}}
                     <li class="menu-list-item" onclick="window.location.href='{{ route('buyer.booking.index') }}'">
                         <div class="menu-icon">
                             <i class="fas fa-calendar-check"></i>
@@ -332,6 +368,7 @@
                             <i class="fas fa-chevron-right"></i>
                         </div>
                     </li>
+                    {{-- Menu Bantuan --}}
                     <li class="menu-list-item" onclick="openHelpCenter()">
                         <div class="menu-icon">
                             <i class="fas fa-question-circle"></i>
@@ -348,12 +385,12 @@
                     @auth
                         @php
                             $user = auth()->user();
-                            $isLandowner = $user->canSwitchToLandowner(); // Permission
-                            $hasPending = $user->hasPendingLandownerRequest();
+                            $isLandowner = $user->canSwitchToLandowner(); // Cek apakah user memiliki izin sebagai landowner
+                            $hasPending = $user->hasPendingLandownerRequest(); // Cek apakah ada pengajuan pending
                         @endphp
 
                         @if($hasPending)
-                            <!-- Tampilkan status pending -->
+                            {{-- Tampilkan status pending (sedang menunggu persetujuan admin) --}}
                             <div class="menu-list-item disabled" style="opacity: 0.6; cursor: not-allowed;">
                                 <div class="menu-icon">
                                     <i class="fas fa-clock"></i>
@@ -364,7 +401,7 @@
                                 </div>
                             </div>
                         @elseif($isLandowner)
-                            <!-- Sudah punya izin landowner - bisa switch -->
+                            {{-- Sudah punya izin landowner - bisa langsung switch --}}
                             <div class="menu-list-item" onclick="directSwitchToLandowner()" style="cursor: pointer;">
                                 <div class="menu-icon">
                                     <i class="fas fa-exchange-alt"></i>
@@ -378,7 +415,7 @@
                                 </div>
                             </div>
                         @else
-                            <!-- Belum punya izin - harus ajukan dulu -->
+                            {{-- Belum punya izin - harus ajukan terlebih dahulu --}}
                             <div class="menu-list-item" onclick="showSwitchModal()" style="cursor: pointer;">
                                 <div class="menu-icon">
                                     <i class="fas fa-exchange-alt"></i>
@@ -393,9 +430,11 @@
                             </div>
                         @endif
 
+                        {{-- Form logout tersembunyi --}}
                         <form action="{{ route('logout') }}" method="POST" id="logoutForm" style="display: none;">
                             @csrf
                         </form>
+                        {{-- Menu Logout --}}
                         <li class="logout-menu-item" onclick="confirmLogout(event)">
                             <div class="logout-menu-icon">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -408,7 +447,7 @@
                 </ul>
                 
                 @guest
-                <!-- Guest Login Button - Positioned outside the blur/overlay list for clarity or below it -->
+                {{-- Tombol Login untuk guest (di luar area blur) --}}
                 <div style="margin-top: 20px; padding: 0 16px;">
                     <a href="{{ route('login') }}" class="btn-primary" style="display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: 600;">
                         <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>
@@ -419,14 +458,16 @@
             </section>
         </main>
 
-        <!-- Bottom Nav - Modified: Dashboard changed to Menu -->
+        <!-- Bottom Nav -->
         @include('layouts.bottom-nav')
 
-        <!-- Background Options Modal -->
+        <!-- ====================== BACKGROUND OPTIONS MODAL ====================== -->
+        {{-- Modal bottom sheet untuk memilih opsi ubah background header --}}
         <div class="bg-modal-overlay" id="bgOptionsModal" onclick="closeBackgroundModal()">
             <div class="bg-sheet" onclick="event.stopPropagation()">
                 <div class="bg-handle"></div>
                 
+                {{-- Tombol untuk memilih gambar dari galeri/kamera --}}
                 <button class="bg-option" onclick="triggerUpload()">
                     <i class="fas fa-image"></i>
                     <div style="flex:1;">
@@ -435,6 +476,7 @@
                     </div>
                 </button>
                 
+                {{-- Form tersembunyi untuk upload file --}}
                 <form id="bgForm" style="display:none;">
                     @csrf
                     <input type="file" id="bgInput" name="background" accept="image/*" onchange="uploadBackground(this)">
@@ -442,7 +484,8 @@
             </div>
         </div>
 
-        <!-- ================= LOADING OVERLAY ================= -->
+        <!-- ====================== LOADING OVERLAY ====================== -->
+        {{-- Overlay loading yang muncul saat upload background atau proses lainnya --}}
         <div id="loadingOverlay" class="loading-overlay">
             <div class="loading-spinner"></div>
             <div class="loading-text" id="loadingText">Memproses...</div>
@@ -452,19 +495,26 @@
 @endsection
 
 @push('scripts')
+    {{-- Memasukkan file JavaScript untuk fungsi profil dari partial --}}
     @include('buyer.profile.partials.profile-script')
     <script>
+        /**
+         * FUNGSI TOGGLE DEPOSIT
+         * Menyembunyikan atau menampilkan saldo deposit (untuk privasi)
+         */
         function toggleDeposit() {
             const amountEl = document.querySelector('.deposit-amount');
             const icon = document.getElementById('depositToggleIcon');
             const originalValue = amountEl.getAttribute('data-original');
             
+            // Jika sedang disembunyikan (berisi titik-titik), tampilkan nominal asli
             if (amountEl.textContent.includes('•')) {
                 amountEl.textContent = originalValue;
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
                 localStorage.setItem('depositVisible', 'true');
             } else {
+                // Jika sedang ditampilkan, sembunyikan dengan titik-titik
                 amountEl.textContent = 'Rp •••••••';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
@@ -472,6 +522,10 @@
             }
         }
 
+        /**
+         * INISIALISASI SAAT DOM READY
+         * Mengatur default saldo deposit dalam keadaan tersembunyi
+         */
         document.addEventListener('DOMContentLoaded', function() {
             const amountEl = document.querySelector('.deposit-amount');
             const icon = document.getElementById('depositToggleIcon');
@@ -483,8 +537,13 @@
             }
         });
 
+        /**
+         * FUNGSI DIRECT SWITCH TO LANDOWNER
+         * Mengirim form POST untuk mengubah role dari buyer menjadi landowner
+         * (tanpa perlu konfirmasi modal karena sudah memiliki izin)
+         */
         function directSwitchToLandowner() {
-            // Create a form dynamically and submit
+            // Membuat form secara dinamis dan submit
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = "{{ route('switch.to.landowner') }}";
@@ -500,6 +559,10 @@
         }
 
         // ================= LOADING FUNCTIONS =================
+        /**
+         * Menampilkan overlay loading dengan pesan tertentu
+         * @param {string} message - Pesan yang ditampilkan saat loading
+         */
         function showLoading(message = 'Memproses...') {
             const overlay = document.getElementById('loadingOverlay');
             const text = document.getElementById('loadingText');
@@ -509,6 +572,9 @@
             }
         }
 
+        /**
+         * Menyembunyikan overlay loading
+         */
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
@@ -517,29 +583,45 @@
         }
 
         // ================= BACKGROUND MODAL FUNCTIONS =================
+        /**
+         * Membuka modal bottom sheet untuk opsi ubah background
+         */
         function openBackgroundModal() {
             document.getElementById('bgOptionsModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
         
+        /**
+         * Menutup modal bottom sheet background
+         */
         function closeBackgroundModal() {
             document.getElementById('bgOptionsModal').classList.remove('active');
             document.body.style.overflow = '';
         }
         
+        /**
+         * Memicu upload file dengan mengklik input file tersembunyi
+         */
         function triggerUpload() {
             document.getElementById('bgInput').click();
         }
         
+        /**
+         * FUNGSI UPLOAD BACKGROUND
+         * Mengirim file gambar ke server untuk diupdate sebagai background header profil
+         * @param {HTMLInputElement} input - Elemen input file yang berisi gambar
+         */
         function uploadBackground(input) {
             if (input.files && input.files[0]) {
                 const formData = new FormData();
                 formData.append('background', input.files[0]);
                 formData.append('_token', '{{ csrf_token() }}');
                 
+                // Tutup modal dan tampilkan loading
                 closeBackgroundModal();
                 showLoading('Sedang mengupload background...');
                 
+                // Kirim request upload ke server
                 fetch("{{ route('buyer.profile.background.update') }}", {
                     method: 'POST',
                     body: formData
@@ -547,6 +629,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Reload halaman untuk menampilkan background baru
                         window.location.reload();
                     } else {
                         hideLoading();
@@ -559,6 +642,7 @@
                     showErrorPopup('Gagal mengupload background');
                 });
                 
+                // Reset input file
                 input.value = '';
             }
         }
